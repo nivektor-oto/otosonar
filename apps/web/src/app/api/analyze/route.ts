@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { analyzeVehicle } from "@/lib/ai";
+import { prisma } from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/user-auth";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
 const inputSchema = z
   .object({
+    listingUrl: z.string().url().max(500).optional(),
     brand: z.string().max(60).optional(),
     model: z.string().max(60).optional(),
     variant: z.string().max(100).optional(),
@@ -68,10 +71,33 @@ export async function POST(req: NextRequest) {
 
   try {
     const { result, meta } = await analyzeVehicle(data);
+
+    // Feedback stub: only for logged-in users (so we can learn from real outcomes)
+    let feedbackId: string | null = null;
+    try {
+      const user = await getCurrentUser();
+      if (user) {
+        const fb = await prisma.analysisFeedback.create({
+          data: {
+            userId: user.id,
+            listingUrl: data.listingUrl ?? null,
+            inputSnapshot: data as object,
+            outputSnapshot: result as object,
+            providerMeta: meta as object,
+          },
+          select: { id: true },
+        });
+        feedbackId = fb.id;
+      }
+    } catch (fbErr) {
+      console.warn("[analyze] feedback stub failed:", fbErr instanceof Error ? fbErr.message : fbErr);
+    }
+
     return NextResponse.json({
       success: true,
       result,
       meta: { ...meta, timestamp: new Date().toISOString() },
+      feedbackId,
     });
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Bilinmeyen hata";

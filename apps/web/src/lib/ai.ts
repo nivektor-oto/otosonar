@@ -139,6 +139,7 @@ ANALİZ KURALLARI:
     - Sadece JSON döndür, başka hiçbir şey yazma (markdown code fence bile kullanma)`;
 
 export interface VehicleInput {
+  listingUrl?: string;
   brand?: string;
   model?: string;
   variant?: string;
@@ -362,6 +363,16 @@ function parseJsonResponse(raw: string): unknown {
 
 function formatVehicleForPrompt(v: VehicleInput): string {
   const lines: string[] = ["Aşağıdaki aracı analiz et:\n"];
+  if (v.listingUrl) {
+    const host = (() => {
+      try {
+        return new URL(v.listingUrl).hostname.replace(/^www\./, "");
+      } catch {
+        return "bilinmiyor";
+      }
+    })();
+    lines.push(`İlan Kaynağı: ${host} (URL referans amaçlıdır, içeriği çekmedik)`);
+  }
   if (v.brand) lines.push(`Marka: ${sanitizeUserInput(v.brand)}`);
   if (v.model) lines.push(`Model: ${sanitizeUserInput(v.model)}`);
   if (v.variant) lines.push(`Paket/Versiyon: ${sanitizeUserInput(v.variant)}`);

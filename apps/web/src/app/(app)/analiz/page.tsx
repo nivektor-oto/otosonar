@@ -17,6 +17,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { LogoMark } from "@/components/logo";
+import { parseListingUrl } from "@/lib/listing-url-parser";
+import { AnalysisFeedback } from "@/components/analysis-feedback";
 
 interface RedFlag {
   type: string;
@@ -48,8 +50,10 @@ export default function AnalysisPage() {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [meta, setMeta] = useState<Meta | null>(null);
+  const [feedbackId, setFeedbackId] = useState<string | null>(null);
 
   const [form, setForm] = useState({
+    listingUrl: "",
     brand: "",
     model: "",
     variant: "",
@@ -66,8 +70,33 @@ export default function AnalysisPage() {
   const update = (k: keyof typeof form, v: string) =>
     setForm((f) => ({ ...f, [k]: v }));
 
+  const fillFromUrl = () => {
+    const parsed = parseListingUrl(form.listingUrl);
+    if (!parsed) {
+      toast.error("URL geçersiz — Sahibinden / Arabam bağlantısı yapıştır");
+      return;
+    }
+    if (!parsed.source) {
+      toast.info("URL tanındı ama otomatik doldurma sadece Sahibinden / Arabam için çalışıyor. Alanları manuel doldur.");
+      return;
+    }
+    setForm((f) => ({
+      ...f,
+      brand: parsed.brand ?? f.brand,
+      model: parsed.model ?? f.model,
+      year: parsed.year ? String(parsed.year) : f.year,
+      km: parsed.km ? String(parsed.km) : f.km,
+      askingPrice: parsed.askingPrice ? String(parsed.askingPrice) : f.askingPrice,
+    }));
+    const filled = [parsed.brand, parsed.model, parsed.year, parsed.km, parsed.askingPrice].filter(Boolean).length;
+    toast.success(
+      `${parsed.source === "sahibinden" ? "Sahibinden" : "Arabam"} linki okundu — ${filled} alan dolduruldu. Kalan alanları tamamla.`,
+    );
+  };
+
   const fillSample = () => {
     setForm({
+      listingUrl: "",
       brand: "BMW",
       model: "5.20",
       variant: "F10 Executive",
@@ -90,6 +119,7 @@ export default function AnalysisPage() {
     setResult(null);
     try {
       const payload = {
+        listingUrl: form.listingUrl.trim() || undefined,
         brand: form.brand || undefined,
         model: form.model || undefined,
         variant: form.variant || undefined,
@@ -117,6 +147,7 @@ export default function AnalysisPage() {
       }
       setResult(data.result);
       setMeta(data.meta);
+      setFeedbackId(data.feedbackId ?? null);
       toast.success(`Analiz tamamlandı · ${(data.meta.durationMs / 1000).toFixed(1)}s`);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Bilinmeyen hata";
@@ -164,6 +195,34 @@ export default function AnalysisPage() {
           </div>
 
           <div className="card space-y-4">
+            <div className="rounded-xl border border-accent/20 bg-accent/5 p-3 sm:p-4 space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <label className="text-xs font-bold uppercase tracking-wide text-accent">
+                  İlan Linki (isteğe bağlı)
+                </label>
+                <span className="text-[10px] text-slate-500">Sahibinden / Arabam</span>
+              </div>
+              <div className="flex gap-2">
+                <input
+                  className="input flex-1 text-sm"
+                  placeholder="https://www.sahibinden.com/ilan/..."
+                  value={form.listingUrl}
+                  onChange={(e) => update("listingUrl", e.target.value)}
+                  inputMode="url"
+                  autoComplete="off"
+                />
+                <button
+                  onClick={fillFromUrl}
+                  disabled={!form.listingUrl.trim()}
+                  className="btn-ghost text-sm whitespace-nowrap disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  Linkden Doldur
+                </button>
+              </div>
+              <p className="text-[11px] text-slate-500 leading-relaxed">
+                Link'i yapıştır → marka, model, yıl, km, fiyat otomatik gelir. Kalan alanları (açıklama, hasar) manuel tamamla. Sahibinden / Arabam sunucularından veri çekmiyoruz — sadece link adresini okuyoruz.
+              </p>
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="Marka">
                 <input
@@ -310,7 +369,7 @@ export default function AnalysisPage() {
         <div className="lg:col-span-3" aria-live="polite">
           {!result && !loading && <EmptyState onSample={fillSample} />}
           {loading && <LoadingState />}
-          {result && <ResultPanel result={result} meta={meta} />}
+          {result && <ResultPanel result={result} meta={meta} feedbackId={feedbackId} />}
         </div>
       </div>
 
@@ -451,9 +510,11 @@ function LoadingState() {
 function ResultPanel({
   result,
   meta,
+  feedbackId,
 }: {
   result: AnalysisResult;
   meta: Meta | null;
+  feedbackId: string | null;
 }) {
   return (
     <div className="space-y-4 animate-fade-in">
@@ -540,6 +601,8 @@ function ResultPanel({
           {meta.retried && meta.retried > 0 ? ` · retry ${meta.retried}` : ""}
         </div>
       )}
+
+      <AnalysisFeedback feedbackId={feedbackId} />
     </div>
   );
 }

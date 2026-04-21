@@ -58,6 +58,7 @@ model User {
   broker        Broker?
   subscriptions Subscription[]
   analyses      Analysis[]
+  analysisFeedbacks AnalysisFeedback[]
   buyerPrefs    BuyerPreferences?
 
   @@index([userType])
@@ -217,6 +218,35 @@ model Analysis {
 
   @@index([userId, createdAt])
   @@index([listingId])
+}
+
+// ============================================================
+// ANALYSIS FEEDBACK (outcome loop — model learns from reality)
+// ============================================================
+
+model AnalysisFeedback {
+  id             String   @id @default(cuid())
+  userId         String
+  listingUrl     String?  @db.Text
+  inputSnapshot  Json     // VehicleInput (brand, model, year, km, ...)
+  outputSnapshot Json     // AnalysisResult (emsal, redFlags, ...)
+  providerMeta   Json?    // {provider, model, durationMs}
+
+  // User-supplied outcome (filled after the fact)
+  outcome      String?  // BOUGHT | SKIPPED | UNDECIDED
+  accuracy     String?  // CORRECT | WRONG | PARTIAL
+  actualPrice  Int?     // sale/purchase price if bought
+  expertiseOk  Boolean? // true if professional inspection matched report
+  notes        String?  @db.Text
+
+  createdAt    DateTime @default(now())
+  answeredAt   DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([outcome])
+  @@index([accuracy])
 }
 
 // ============================================================
