@@ -110,27 +110,37 @@ function Nav() {
       aria-label="Ana menü"
       className="sticky top-0 z-30 backdrop-blur-lg bg-bg/80 border-b border-border"
     >
-      <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-3">
         <Link
           href="/"
           aria-label="OtoSonar ana sayfa"
-          className="flex items-center gap-2"
+          className="flex items-center gap-2 shrink-0"
         >
-          <LogoMark size={28} />
-          <span className="text-xl font-black gradient-text">OtoSonar</span>
+          <LogoMark size={26} className="shrink-0" />
+          <span className="text-lg sm:text-xl font-black gradient-text whitespace-nowrap">
+            OtoSonar
+          </span>
         </Link>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           <Link
             href="/giris"
-            className="btn-ghost text-sm hidden sm:inline-flex"
+            className="hidden sm:inline-flex btn-ghost text-sm"
           >
             Giriş Yap
           </Link>
           <Link
-            href="/kayit"
-            className="btn-primary text-sm inline-flex items-center gap-2"
+            href="/giris"
+            className="sm:hidden text-sm font-semibold text-slate-300 hover:text-white px-2 py-2 whitespace-nowrap"
           >
-            Ücretsiz Başla
+            Giriş
+          </Link>
+          <Link
+            href="/kayit"
+            aria-label="Ücretsiz başla"
+            className="btn-primary text-sm whitespace-nowrap"
+          >
+            <span className="hidden sm:inline">Ücretsiz Başla</span>
+            <span className="sm:hidden">Başla</span>
             <ArrowRight className="w-4 h-4" aria-hidden strokeWidth={2.5} />
           </Link>
         </div>
