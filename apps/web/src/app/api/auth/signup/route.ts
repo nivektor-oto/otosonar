@@ -15,6 +15,7 @@ import {
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { logEvent } from "@/lib/analytics";
 import { logError } from "@/lib/error-log";
+import { sendEmail, verifyEmailTemplate, welcomeTemplate } from "@/lib/email";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -115,6 +116,11 @@ export async function POST(req: Request) {
       },
     });
     const verifyUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://otosonar.com"}/eposta-dogrula?token=${raw}`;
+
+    const verifyMail = verifyEmailTemplate(verifyUrl, user.fullName);
+    sendEmail({ to: user.email, subject: verifyMail.subject, html: verifyMail.html }).catch(() => undefined);
+    const welcome = welcomeTemplate(user.fullName, user.customerNumber);
+    sendEmail({ to: user.email, subject: welcome.subject, html: welcome.html }).catch(() => undefined);
 
     const ua = req.headers.get("user-agent");
     const { cookie } = await createSession(user.id, ua, hashIp(ip));

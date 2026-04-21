@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { hashToken, normalizeEmail, randomToken } from "@/lib/user-auth";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+import { passwordResetTemplate, sendEmail } from "@/lib/email";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -32,10 +33,9 @@ export async function POST(req: Request) {
         expiresAt: new Date(Date.now() + 60 * 60 * 1000),
       },
     });
-    // TODO: Resend entegrasyonu — şu an link sadece dev log'unda.
-    if (process.env.NODE_ENV !== "production") {
-      console.log(`[password-reset] ${process.env.NEXT_PUBLIC_SITE_URL}/sifre-sifirla?token=${raw}`);
-    }
+    const link = `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://otosonar.com"}/sifre-sifirla?token=${raw}`;
+    const tpl = passwordResetTemplate(link, user.fullName);
+    sendEmail({ to: user.email, subject: tpl.subject, html: tpl.html }).catch(() => undefined);
   }
 
   return NextResponse.json({ success: true });
