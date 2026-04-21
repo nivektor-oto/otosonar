@@ -60,6 +60,7 @@ model User {
   analyses      Analysis[]
   analysisFeedbacks AnalysisFeedback[]
   priceAlerts   PriceAlert[]
+  savedListings SavedListing[]
   buyerPrefs    BuyerPreferences?
   conversationsAsBuyer   Conversation[] @relation("ConversationBuyer")
   conversationsAsSeller  Conversation[] @relation("ConversationSeller")
@@ -538,11 +539,29 @@ model MarketplaceListing {
 
   bids          MarketplaceBid[]
   conversations Conversation[]
+  savedBy       SavedListing[]
 
   @@index([status, createdAt])
   @@index([brand, model, year])
   @@index([isAuction, auctionEndsAt])
   @@index([isUrgent, createdAt])
+}
+
+model SavedListing {
+  id          String   @id @default(cuid())
+  userId      String
+  listingId   String
+  note        String?  @db.VarChar(200)
+  savedPrice  Int      // fiyat düşüşünü tespit için kaydettiğin anki fiyat
+  notifyOnDrop Boolean @default(true)
+  createdAt   DateTime @default(now())
+
+  user    User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listing MarketplaceListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, listingId])
+  @@index([userId, createdAt])
+  @@index([listingId])
 }
 
 // AI ile üretilen ilan iyileştirme skor ve metin önerileri.

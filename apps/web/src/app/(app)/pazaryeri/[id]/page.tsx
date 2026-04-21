@@ -5,6 +5,7 @@ import Link from "next/link";
 import { BidForm } from "./bid-form";
 import { AcceptBidButton } from "./accept-button";
 import { MessageSellerButton } from "./message-seller-button";
+import { SaveListingButton } from "./save-button";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +28,13 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
   ]);
 
   if (!listing) notFound();
+
+  const savedRow = user
+    ? await prisma.savedListing.findUnique({
+        where: { userId_listingId: { userId: user.id, listingId: listing.id } },
+        select: { id: true },
+      })
+    : null;
 
   const isOwner = !!user && listing.sellerId === user.id;
   const canBid =
@@ -88,10 +96,17 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
               Bu ilan senin.
             </div>
           ) : user ? (
-            <MessageSellerButton
-              listingId={listing.id}
-              listingTitle={`${listing.brand} ${listing.model} ${listing.year}`}
-            />
+            <div className="space-y-3">
+              <MessageSellerButton
+                listingId={listing.id}
+                listingTitle={`${listing.brand} ${listing.model} ${listing.year}`}
+              />
+              <SaveListingButton
+                listingId={listing.id}
+                initiallySaved={!!savedRow}
+                savedId={savedRow?.id ?? null}
+              />
+            </div>
           ) : (
             <Link
               href={`/giris?next=/pazaryeri/${listing.id}`}

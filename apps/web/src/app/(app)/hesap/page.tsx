@@ -140,6 +140,7 @@ export default async function AccountPage() {
           <div className="flex flex-wrap gap-2 text-sm">
             <QuickLink href="/analiz">Yeni analiz</QuickLink>
             <QuickLink href="/hesap/mesajlar">Mesajlar</QuickLink>
+            <QuickLink href="/hesap/favoriler">Favorilerim</QuickLink>
             {user.userType === "DEALER" && <QuickLink href="/hesap/galerici/araclar">Stok araçlarım</QuickLink>}
             {user.userType === "DEALER" && <QuickLink href="/hesap/galerici/api">CRM API</QuickLink>}
             {user.userType === "DEALER" && <QuickLink href="/bozdurma">Bozdurma</QuickLink>}
