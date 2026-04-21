@@ -301,6 +301,9 @@ function Footer() {
         <LogoLockup size={20} />
         <div>© 2026 OtoSonar · NiVector Teknoloji Ltd. Şti.</div>
         <div className="flex gap-6 flex-wrap justify-center">
+          <Link href="/blog" className="hover:text-white transition">
+            Blog
+          </Link>
           <Link href="/gizlilik" className="hover:text-white transition">
             Gizlilik
           </Link>

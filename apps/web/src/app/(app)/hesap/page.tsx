@@ -118,6 +118,7 @@ export default async function AccountPage() {
           <div className="flex flex-wrap gap-2 text-sm">
             <QuickLink href="/analiz">Yeni analiz</QuickLink>
             {user.userType === "DEALER" && <QuickLink href="/hesap/galerici/araclar">Stok araçlarım</QuickLink>}
+            {user.userType === "DEALER" && <QuickLink href="/hesap/galerici/api">CRM API</QuickLink>}
             {user.userType === "DEALER" && <QuickLink href="/bozdurma">Bozdurma</QuickLink>}
             <QuickLink href="/hasar-tespit">Hasar tespit</QuickLink>
             <QuickLink href="/ariza-teshis">Arıza teşhis</QuickLink>
@@ -129,6 +130,7 @@ export default async function AccountPage() {
             <QuickLink href="/quiz">Persona quiz</QuickLink>
             <QuickLink href="/hesap/guvenlik">2FA güvenlik</QuickLink>
             {user.userType === "DEALER" && <QuickLink href="/bozdurma/masa">Trade-in masası</QuickLink>}
+            {user.userType === "DEALER" && <QuickLink href="/hesap/galerici/whatsapp">WhatsApp Bot</QuickLink>}
           </div>
         </section>
 

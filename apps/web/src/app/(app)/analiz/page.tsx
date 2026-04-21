@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import { LogoMark } from "@/components/logo";
 import { parseListingUrl } from "@/lib/listing-url-parser";
 import { AnalysisFeedback } from "@/components/analysis-feedback";
+import { VoiceRecorder, type VoiceExtracted } from "@/components/voice-recorder";
 
 interface RedFlag {
   type: string;
@@ -92,6 +93,31 @@ export default function AnalysisPage() {
     toast.success(
       `${parsed.source === "sahibinden" ? "Sahibinden" : "Arabam"} linki okundu — ${filled} alan dolduruldu. Kalan alanları tamamla.`,
     );
+  };
+
+  const applyVoiceExtract = (v: VoiceExtracted, transcript: string) => {
+    setForm((f) => {
+      const merged = { ...f };
+      const setIfEmpty = <K extends keyof typeof f>(key: K, value: string | undefined) => {
+        if (!merged[key] && value) merged[key] = value as typeof f[K];
+      };
+      setIfEmpty("brand", v.brand);
+      setIfEmpty("model", v.model);
+      setIfEmpty("variant", v.variant);
+      setIfEmpty("city", v.city);
+      setIfEmpty("damageStatus", v.damageStatus);
+      setIfEmpty("fuelType", v.fuelType);
+      setIfEmpty("transmission", v.transmission);
+      if (!merged.year && v.year) merged.year = String(v.year);
+      if (!merged.km && v.km) merged.km = String(v.km);
+      if (!merged.askingPrice && v.askingPrice) merged.askingPrice = String(v.askingPrice);
+      if (!merged.description && transcript) {
+        merged.description = transcript;
+      } else if (merged.description && transcript && merged.description.length < 20) {
+        merged.description = transcript;
+      }
+      return merged;
+    });
   };
 
   const fillSample = () => {
@@ -223,6 +249,17 @@ export default function AnalysisPage() {
                 Link'i yapıştır → marka, model, yıl, km, fiyat otomatik gelir. Kalan alanları (açıklama, hasar) manuel tamamla. Sahibinden / Arabam sunucularından veri çekmiyoruz — sadece link adresini okuyoruz.
               </p>
             </div>
+
+            <div className="rounded-xl border border-accent/15 bg-accent/[0.04] p-3 sm:p-4">
+              <div className="flex items-center justify-between gap-2 mb-2">
+                <label className="text-xs font-bold uppercase tracking-wide text-accent">
+                  Sesli doldur
+                </label>
+                <span className="text-[10px] text-slate-500">AI transkript</span>
+              </div>
+              <VoiceRecorder onResult={applyVoiceExtract} />
+            </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="Marka">
                 <input

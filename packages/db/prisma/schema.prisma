@@ -103,9 +103,26 @@ model Dealer {
 
   user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   vehicles Vehicle[]
+  apiKeys  DealerApiKey[]
 
   @@index([cityId, verificationStatus])
   @@index([handle])
+}
+
+model DealerApiKey {
+  id          String    @id @default(cuid())
+  dealerId    String
+  dealer      Dealer    @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  label       String    // "Galeri CRM", "Excel Makro", ...
+  keyHash     String    @unique    // SHA-256 of the raw key
+  prefix      String                // first 8 chars of the raw key, shown for display
+  createdAt   DateTime  @default(now())
+  lastUsedAt  DateTime?
+  revokedAt   DateTime?
+  requestsCount Int     @default(0)
+
+  @@index([dealerId])
+  @@index([keyHash])
 }
 
 // Galericinin stoğundaki bir araç — Excel yerine.

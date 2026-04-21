@@ -31,6 +31,7 @@ export interface DiagnoseInput {
   fuelType?: string;
   engineSize?: string;
   problem: string;
+  imagesBase64?: Array<{ data: string; mime: string }>;
 }
 
 const SYSTEM_PROMPT = `Sen OtoSonar'ın Türk otomotiv servis uzmanısın — 20 yıllık saha tecrübesi, marka bağımsız.
@@ -67,6 +68,9 @@ GÜVENLİK KURALLARI:
 - Elektrik kokusu + duman → ACIL
 - Fren sesi + titreme → YAKIN_SERVIS (üst limit ACIL)
 
+FOTOĞRAF KULLANIMI:
+- Eğer fotoğraf eklendiyse: dashboard uyarı lambaları, sızıntı izi, duman rengi, hasarlı parça gibi GÖRSEL ipuçlarını da sebeplere bağla. Fotoğraf yoksa sadece metinden yorumla.
+
 TAMİR TAHMİNİ:
 - Türkiye 2026 yetkili servis ortalaması kullan. Yan sanayi %40-60 daha ucuzdur, orta değer ver.
 - Belirsizsek null
@@ -77,13 +81,14 @@ export async function diagnose(
   input: DiagnoseInput,
 ): Promise<{ result: DiagnosisResult; provider: "gemini" | "anthropic"; durationMs: number }> {
   const msg = formatInput(input);
+  const images = (input.imagesBase64 ?? []).slice(0, 3);
   const geminiKey = process.env.GEMINI_API_KEY;
   const anthropicKey = process.env.ANTHROPIC_API_KEY;
 
   if (geminiKey) {
     try {
       const start = Date.now();
-      const result = await callGemini(msg, geminiKey);
+      const result = await callGemini(msg, geminiKey, images);
       return { result: diagnosisSchema.parse(result), provider: "gemini", durationMs: Date.now() - start };
     } catch (e) {
       if (!anthropicKey) throw e;
@@ -91,7 +96,7 @@ export async function diagnose(
   }
   if (anthropicKey) {
     const start = Date.now();
-    const result = await callAnthropic(msg, anthropicKey);
+    const result = await callAnthropic(msg, anthropicKey, images);
     return { result: diagnosisSchema.parse(result), provider: "anthropic", durationMs: Date.now() - start };
   }
   throw new Error("AI yapılandırılmamış");
@@ -109,7 +114,17 @@ function formatInput(v: DiagnoseInput): string {
   return lines.join("\n");
 }
 
-async function callGemini(userMsg: string, key: string): Promise<unknown> {
+async function callGemini(
+  userMsg: string,
+  key: string,
+  images: Array<{ data: string; mime: string }>,
+): Promise<unknown> {
+  const parts: Array<{ text: string } | { inlineData: { mimeType: string; data: string } }> = [
+    { text: userMsg },
+  ];
+  for (const img of images) {
+    parts.push({ inlineData: { mimeType: img.mime, data: img.data } });
+  }
   const res = await fetch(
     "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
     {
@@ -117,7 +132,7 @@ async function callGemini(userMsg: string, key: string): Promise<unknown> {
       headers: { "x-goog-api-key": key, "Content-Type": "application/json" },
       body: JSON.stringify({
         systemInstruction: { role: "user", parts: [{ text: SYSTEM_PROMPT }] },
-        contents: [{ role: "user", parts: [{ text: userMsg }] }],
+        contents: [{ role: "user", parts }],
         generationConfig: { temperature: 0.3, maxOutputTokens: 1500, responseMimeType: "application/json" },
       }),
     },
@@ -129,14 +144,28 @@ async function callGemini(userMsg: string, key: string): Promise<unknown> {
   return JSON.parse(text);
 }
 
-async function callAnthropic(userMsg: string, key: string): Promise<unknown> {
+async function callAnthropic(
+  userMsg: string,
+  key: string,
+  images: Array<{ data: string; mime: string }>,
+): Promise<unknown> {
   const client = new Anthropic({ apiKey: key });
+  const content: Anthropic.ContentBlockParam[] = [];
+  for (const img of images) {
+    const mt = img.mime;
+    if (mt === "image/jpeg" || mt === "image/png" || mt === "image/webp" || mt === "image/gif") {
+      content.push({ type: "image", source: { type: "base64", media_type: mt, data: img.data } });
+    } else {
+      console.warn(`[diagnose] anthropic fallback: skipping unsupported image mime ${mt}`);
+    }
+  }
+  content.push({ type: "text", text: userMsg });
   const res = await client.messages.create({
     model: "claude-haiku-4-5",
     max_tokens: 2000,
     temperature: 0.3,
     system: SYSTEM_PROMPT,
-    messages: [{ role: "user", content: userMsg }],
+    messages: [{ role: "user", content }],
   });
   const block = res.content.find((b) => b.type === "text") as { type: "text"; text: string } | undefined;
   if (!block) throw new Error("anthropic empty");

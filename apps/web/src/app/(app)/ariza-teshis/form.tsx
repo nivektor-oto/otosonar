@@ -1,8 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { AlertTriangle, Clock, Loader2, Sparkles, Wrench, ArrowRight } from "lucide-react";
+import { AlertTriangle, Camera, Clock, Loader2, Sparkles, Wrench, ArrowRight, X } from "lucide-react";
+
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+const MAX_IMAGES = 3;
+const ACCEPTED_MIMES = ["image/jpeg", "image/png", "image/webp"];
+
+interface Attached {
+  file: File;
+  previewUrl: string;
+}
 
 const TL = new Intl.NumberFormat("tr-TR", { style: "currency", currency: "TRY", maximumFractionDigits: 0 });
 
@@ -44,8 +53,51 @@ export function DiagnoseForm() {
     engineSize: "",
     problem: "",
   });
+  const [images, setImages] = useState<Attached[]>([]);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const update = (k: keyof typeof form, v: string) => setForm((f) => ({ ...f, [k]: v }));
+
+  useEffect(() => {
+    return () => {
+      images.forEach((a) => URL.revokeObjectURL(a.previewUrl));
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function onPickFiles(e: React.ChangeEvent<HTMLInputElement>) {
+    const list = e.target.files;
+    if (!list || list.length === 0) return;
+    const remainingSlots = MAX_IMAGES - images.length;
+    if (remainingSlots <= 0) {
+      toast.error(`En fazla ${MAX_IMAGES} fotoğraf ekleyebilirsin.`);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+    const incoming = Array.from(list).slice(0, remainingSlots);
+    const accepted: Attached[] = [];
+    for (const f of incoming) {
+      if (!ACCEPTED_MIMES.includes(f.type)) {
+        toast.error(`Desteklenmeyen format: ${f.name} (JPEG/PNG/WEBP olmalı)`);
+        continue;
+      }
+      if (f.size > MAX_IMAGE_BYTES) {
+        toast.error(`${f.name} 5MB'tan büyük — küçült ve tekrar ekle.`);
+        continue;
+      }
+      accepted.push({ file: f, previewUrl: URL.createObjectURL(f) });
+    }
+    if (accepted.length > 0) setImages((prev) => [...prev, ...accepted]);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
+  function removeImage(idx: number) {
+    setImages((prev) => {
+      const target = prev[idx];
+      if (target) URL.revokeObjectURL(target.previewUrl);
+      return prev.filter((_, i) => i !== idx);
+    });
+  }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -56,23 +108,29 @@ export function DiagnoseForm() {
     setLoading(true);
     setResult(null);
     try {
-      const payload = {
-        brand: form.brand,
-        model: form.model,
-        year: form.year ? parseInt(form.year, 10) : undefined,
-        km: form.km ? parseInt(form.km.replace(/\D/g, ""), 10) : undefined,
-        fuelType: form.fuelType || undefined,
-        engineSize: form.engineSize || undefined,
-        problem: form.problem,
-      };
-      const r = await fetch("/api/diagnose", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+      const fd = new FormData();
+      fd.append("brand", form.brand);
+      fd.append("model", form.model);
+      if (form.year) fd.append("year", String(parseInt(form.year, 10)));
+      if (form.km) fd.append("km", String(parseInt(form.km.replace(/\D/g, ""), 10)));
+      if (form.fuelType) fd.append("fuelType", form.fuelType);
+      if (form.engineSize) fd.append("engineSize", form.engineSize);
+      fd.append("problem", form.problem);
+      images.slice(0, MAX_IMAGES).forEach((a, i) => {
+        fd.append(`photo${i + 1}`, a.file);
       });
+      const r = await fetch("/api/diagnose", { method: "POST", body: fd });
       const data = await r.json();
       if (!r.ok || !data.success) {
-        toast.error(data.error === "rate_limited" ? "Limit aşıldı, 10 dk sonra tekrar dene." : "Teşhis başarısız.");
+        const msg =
+          data.error === "rate_limited"
+            ? "Limit aşıldı, 10 dk sonra tekrar dene."
+            : data.error === "image_too_large"
+            ? "Bir fotoğraf 5MB sınırını aştı."
+            : data.error === "invalid_image_mime"
+            ? "Fotoğraf formatı desteklenmiyor."
+            : "Teşhis başarısız.";
+        toast.error(msg);
         return;
       }
       setResult(data.result);
@@ -167,6 +225,54 @@ export function DiagnoseForm() {
             {form.problem.length} / 2000
           </div>
         </Field>
+
+        <div className="rounded-xl border border-dashed border-border bg-bg/40 p-4 space-y-3">
+          <div className="flex items-start gap-2">
+            <Camera className="w-4 h-4 text-accent2 mt-0.5 shrink-0" aria-hidden strokeWidth={2.5} />
+            <div className="flex-1">
+              <div className="text-sm font-semibold text-white">Fotoğraf ekle (opsiyonel)</div>
+              <p className="text-[11px] text-slate-400 leading-relaxed mt-0.5">
+                Motor ışığı yanıyorsa veya sızıntı görüyorsan fotoğraf ekle — AI görsel üzerinden daha doğru teşhis kurar.
+              </p>
+            </div>
+          </div>
+
+          {images.length > 0 && (
+            <div className="grid grid-cols-3 gap-2">
+              {images.map((a, i) => (
+                <div key={a.previewUrl} className="relative aspect-square rounded-lg overflow-hidden border border-border bg-bg">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={a.previewUrl} alt={`Ek foto ${i + 1}`} className="w-full h-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => removeImage(i)}
+                    aria-label="Fotoğrafı kaldır"
+                    className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/70 hover:bg-red-500/80 text-white flex items-center justify-center transition"
+                  >
+                    <X className="w-3.5 h-3.5" aria-hidden strokeWidth={2.5} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {images.length < MAX_IMAGES && (
+            <label className="flex items-center justify-center gap-2 rounded-lg border border-border bg-panel/60 hover:bg-panel cursor-pointer py-2.5 text-xs font-semibold text-slate-200 transition">
+              <Camera className="w-4 h-4" aria-hidden strokeWidth={2.5} />
+              Fotoğraf seç ({images.length}/{MAX_IMAGES})
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                multiple
+                capture="environment"
+                className="hidden"
+                onChange={onPickFiles}
+              />
+            </label>
+          )}
+          <p className="text-[10px] text-slate-500">JPEG / PNG / WEBP · her biri max 5MB · en fazla {MAX_IMAGES} adet</p>
+        </div>
 
         <button type="submit" disabled={loading} className="btn-primary w-full">
           {loading ? (
