@@ -55,10 +55,11 @@ export function InstallPrompt() {
 
   return (
     <div
+      data-install-prompt
       role="dialog"
       aria-live="polite"
       aria-labelledby="install-title"
-      className="fixed left-4 right-4 bottom-4 sm:left-auto sm:right-6 sm:bottom-6 sm:w-[360px] z-40 animate-fade-up"
+      className="fixed left-4 right-4 bottom-4 sm:left-auto sm:right-6 sm:bottom-6 sm:w-[360px] z-40 animate-fade-up print:hidden"
     >
       <div className="relative overflow-hidden rounded-2xl border border-border bg-panel/95 backdrop-blur-xl shadow-2xl shadow-accent/10">
         <div className="absolute inset-0 bg-gradient-to-br from-accent/10 via-transparent to-accent2/10 pointer-events-none" />
