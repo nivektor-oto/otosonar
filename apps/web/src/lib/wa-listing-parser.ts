@@ -6,9 +6,9 @@
  *   "BMW 520i 2019 165000 km 1.350.000 TL Konya dizel otomatik boyasız"
  * into a structured `ParsedListing`.
  *
- * Primary path: Gemini 2.5 Flash with `responseMimeType: application/json`.
+ * Primary path: LLM with `responseMimeType: application/json`.
  * Fallback: regex-based extractor (confidence < 0.5) when the AI fails or
- * no Gemini key is configured.
+ * no primary AI key is configured.
  */
 
 import { z } from "zod";
@@ -87,7 +87,7 @@ export async function parseWhatsappText(text: string): Promise<ParsedListing> {
       return { ...parsed, raw };
     } catch (e) {
       console.warn(
-        "[wa-parser] Gemini fail, using regex fallback:",
+        "[wa-parser] primary AI fail, using regex fallback:",
         e instanceof Error ? e.message.slice(0, 200) : e
       );
     }
@@ -96,7 +96,7 @@ export async function parseWhatsappText(text: string): Promise<ParsedListing> {
   return regexFallback(clipped, raw);
 }
 
-// ─── Gemini call ─────────────────────────────────────────────
+// ─── Primary AI call ─────────────────────────────────────────
 
 async function callGeminiParse(userMessage: string, apiKey: string): Promise<unknown> {
   const url =

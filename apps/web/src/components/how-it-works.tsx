@@ -12,7 +12,7 @@ const steps = [
     n: "02",
     Icon: Sparkles,
     title: "AI analiz etsin",
-    body: "Gemini 2.5 + Claude Haiku çift-model kontrol: gerçek pazar değeri, gizli arıza, pazarlık skoru.",
+    body: "OtoSonar AI çift-model kontrolü: iki bağımsız model çapraz doğrulama yapar, gerçek pazar değeri, gizli arıza, pazarlık skoru.",
     hint: "8 saniye",
   },
   {

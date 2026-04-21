@@ -23,7 +23,7 @@ const badges = [
     Icon: Award,
     title: "OtoSonar Onaylı",
     desc: "Her AI raporu çoklu model kontrol + güven skoruyla işaretlenir.",
-    source: "Gemini + Claude çift kontrol",
+    source: "OtoSonar AI çift-model kontrolü",
   },
 ];
 

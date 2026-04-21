@@ -228,10 +228,10 @@ function SlideSolution() {
       </p>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, flex: 1 }}>
         {[
-          ["AI İlan Analizi", "Gemini 2.5 + Claude", "Emsal değer, gizli arıza, pazarlık skoru"],
+          ["AI İlan Analizi", "OtoSonar AI çift-model", "Emsal değer, gizli arıza, pazarlık skoru"],
           ["Araç Bozdurma AI", "Galerici özel", "Alım fiyatı, marjı, redFlag, stok tahmini"],
-          ["Foto Hasar Tespiti", "Gemini Vision", "Boya, ezik, çizik, tampon ~TL"],
-          ["Plaka OCR", "Gemini Vision", "Türkiye plaka formatı + bölge"],
+          ["Foto Hasar Tespiti", "OtoSonar AI görü", "Boya, ezik, çizik, tampon ~TL"],
+          ["Plaka OCR", "OtoSonar AI görü", "Türkiye plaka formatı + bölge"],
           ["Pazaryeri", "Faz 2 BETA", "İlan + ihale + satıcı kabul"],
           ["Pazar Araştırma", "Model trend", "Marka/model fiyat bandı"],
           ["Persona Quiz", "5 soru", "Hangi paket sana uygun"],
@@ -316,7 +316,7 @@ function SlideAIStack() {
         <span className="gradient-text">Çift sağlayıcı</span> — sıfır down-time, düşük maliyet.
       </h2>
       <p className="muted" style={{ fontSize: 15, maxWidth: 620, marginBottom: 22 }}>
-        Gemini 2.5 Flash primary (ücretsiz tier 1500 req/gün), Anthropic Claude Haiku 4.5 fallback. Zod ile
+        OtoSonar AI çift-model doğrulama: birincil + yedek yapay zeka altyapısı, otomatik devralma. Zod ile
         çıktı validate edilir, prompt injection koruması aktif.
       </p>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, flex: 1 }}>
@@ -702,7 +702,7 @@ function SlideMetrics() {
             ["Vercel bandwidth", "100 GB/ay", "3.300 user"],
             ["Vercel serverless", "100 GB-h/ay", "5.000 user"],
             ["Neon Postgres compute", "190 h/ay", "500 user"],
-            ["Gemini free", "1.500 req/gün", "1.800 Plus user"],
+            ["AI birincil tier", "1.500 req/gün", "1.800 Plus user"],
             ["Concurrent conn.", "10 (pooler)", "Sınırsız"],
           ].map(([label, limit, cap]) => (
             <div key={label} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderTop: "1px solid rgba(255,255,255,.05)", fontSize: 12 }}>

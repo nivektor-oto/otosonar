@@ -522,7 +522,7 @@ function SlideHowItWorks() {
         <StepLarge
           num="02"
           title="AI 10 saniyede işini yapar"
-          subtitle="Gemini 2.5 Flash motoru emsal değerini hesaplar, ilan metnini tarar, pazarlık potansiyelini skorlar. Gerekirse fotoğrafları hasar için inceler."
+          subtitle="OtoSonar AI motoru emsal değerini hesaplar, ilan metnini tarar, pazarlık potansiyelini skorlar. Gerekirse fotoğrafları hasar için inceler."
           detail="Tüm analiz geçmişin panelde saklanır. Aynı ilanı ikinci kez analiz etmek zorunda kalmazsın."
         />
         <StepLarge

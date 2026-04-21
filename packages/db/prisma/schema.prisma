@@ -61,6 +61,9 @@ model User {
   analysisFeedbacks AnalysisFeedback[]
   priceAlerts   PriceAlert[]
   buyerPrefs    BuyerPreferences?
+  conversationsAsBuyer   Conversation[] @relation("ConversationBuyer")
+  conversationsAsSeller  Conversation[] @relation("ConversationSeller")
+  sentMessages           Message[]      @relation("MessageSender")
 
   @@index([userType])
   @@index([createdAt])
@@ -534,6 +537,7 @@ model MarketplaceListing {
   updatedAt       DateTime                 @updatedAt
 
   bids          MarketplaceBid[]
+  conversations Conversation[]
 
   @@index([status, createdAt])
   @@index([brand, model, year])
@@ -735,6 +739,47 @@ model CreditLedger {
   createdAt   DateTime   @default(now())
 
   @@index([userId, createdAt])
+}
+
+// ============================================================
+// IN-APP MESSAGING (marketplace buyer <-> seller)
+// ============================================================
+
+model Conversation {
+  id              String    @id @default(cuid())
+  listingId       String
+  listing         MarketplaceListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  buyerId         String
+  buyer           User      @relation("ConversationBuyer", fields: [buyerId], references: [id], onDelete: Cascade)
+  sellerId        String
+  seller          User      @relation("ConversationSeller", fields: [sellerId], references: [id], onDelete: Cascade)
+  lastMessageAt   DateTime  @default(now())
+  lastMessageBody String?   @db.VarChar(500)
+  lastSenderId    String?
+  buyerUnread     Int       @default(0)
+  sellerUnread    Int       @default(0)
+  buyerArchivedAt DateTime?
+  sellerArchivedAt DateTime?
+  createdAt       DateTime  @default(now())
+  messages        Message[]
+
+  @@unique([listingId, buyerId])
+  @@index([buyerId, lastMessageAt])
+  @@index([sellerId, lastMessageAt])
+}
+
+model Message {
+  id             String   @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       String
+  sender         User     @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  body           String   @db.VarChar(2000)
+  readAt         DateTime?
+  createdAt      DateTime @default(now())
+
+  @@index([conversationId, createdAt])
+  @@index([senderId])
 }
 
 // ============================================================

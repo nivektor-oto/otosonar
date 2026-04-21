@@ -60,14 +60,17 @@ export async function POST(req: Request) {
   try {
     const { result, meta } = await buybackAnalysis(parsed.data);
     return NextResponse.json(
-      { success: true, buyback: result, meta },
+      { success: true, buyback: result, meta: { ...meta, provider: "otosonar", model: "otosonar-ai-v1" } },
       { status: 200 },
     );
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Bilinmeyen hata";
     console.error("[bozdurma] failed:", msg);
+    const safeDetail = msg
+      .replace(/Gemini|Anthropic|Claude|OpenAI|GPT/gi, "AI")
+      .slice(0, 200);
     return NextResponse.json(
-      { success: false, error: "Analiz başarısız oldu", detail: msg.slice(0, 200) },
+      { success: false, error: "Analiz başarısız oldu", detail: safeDetail },
       { status: 502 },
     );
   }

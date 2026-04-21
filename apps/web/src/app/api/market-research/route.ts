@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       success: true,
       result,
-      meta: { ...meta, timestamp: new Date().toISOString() },
+      meta: { ...meta, provider: "otosonar", model: "otosonar-ai-v1", timestamp: new Date().toISOString() },
     });
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Bilinmeyen hata";

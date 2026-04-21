@@ -1,8 +1,10 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/user-auth";
+import Link from "next/link";
 import { BidForm } from "./bid-form";
 import { AcceptBidButton } from "./accept-button";
+import { MessageSellerButton } from "./message-seller-button";
 
 export const dynamic = "force-dynamic";
 
@@ -77,6 +79,26 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
           </div>
           {listing.description && (
             <p className="mt-4 whitespace-pre-wrap text-sm text-neutral-300">{listing.description}</p>
+          )}
+        </div>
+
+        <div className="rounded-2xl border border-neutral-800 bg-[#12121a] p-6">
+          {isOwner ? (
+            <div className="rounded-lg border border-neutral-800 bg-[#0a0a0f] px-4 py-3 text-center text-sm text-neutral-400">
+              Bu ilan senin.
+            </div>
+          ) : user ? (
+            <MessageSellerButton
+              listingId={listing.id}
+              listingTitle={`${listing.brand} ${listing.model} ${listing.year}`}
+            />
+          ) : (
+            <Link
+              href={`/giris?next=/pazaryeri/${listing.id}`}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-black hover:bg-emerald-400"
+            >
+              Satıcıyla iletişime geç
+            </Link>
           )}
         </div>
 

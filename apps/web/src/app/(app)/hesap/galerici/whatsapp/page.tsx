@@ -150,7 +150,7 @@ export default async function DealerWhatsappSetupPage() {
             Nasıl çalışır
           </h2>
           <ul className="list-disc list-inside space-y-1">
-            <li>WhatsApp’tan gelen serbest metin Gemini 2.5 Flash ile parse edilir.</li>
+            <li>WhatsApp’tan gelen serbest metin OtoSonar AI ile parse edilir.</li>
             <li>
               Marka + fiyat tespit edilirse pazaryerinde <span className="font-mono">DRAFT</span>{" "}
               durumunda ilan yaratılır — sen kontrol edip <b>Yayınla</b>’ya basarsın.

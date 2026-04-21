@@ -37,7 +37,8 @@ export async function POST(req: Request) {
   }
 
   try {
-    const { result, provider, durationMs } = await scoreListing(parsed.data);
+    const { result, provider: _provider, durationMs } = await scoreListing(parsed.data);
+    void _provider;
 
     // Auth'lu kullanıcıya snapshot kaydet
     const user = await getCurrentUser();
@@ -58,7 +59,7 @@ export async function POST(req: Request) {
       }).catch(() => undefined);
     }
 
-    return NextResponse.json({ success: true, result, meta: { provider, durationMs } });
+    return NextResponse.json({ success: true, result, meta: { provider: "otosonar", model: "otosonar-ai-v1", durationMs } });
   } catch (err) {
     await logError(err, { path: "/api/listing-score" });
     return NextResponse.json({ success: false, error: "score_failed" }, { status: 500 });

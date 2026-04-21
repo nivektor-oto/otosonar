@@ -56,7 +56,7 @@ export async function POST(req: Request) {
       },
     }).catch(() => null);
 
-    return NextResponse.json({ success: true, ...out, id: saved?.id ?? null });
+    return NextResponse.json({ success: true, ...out, model: "otosonar-ai-v1", provider: "otosonar", id: saved?.id ?? null });
   } catch (err) {
     await logError(err, { path: "/api/damage-detect", userId: user?.id });
     return NextResponse.json({ success: false, error: "analysis_failed" }, { status: 500 });

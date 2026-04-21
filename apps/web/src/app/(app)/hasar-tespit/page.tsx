@@ -9,7 +9,7 @@ export default function DamagePage() {
         <div>
           <h1 className="text-3xl font-bold">Fotoğraftan Hasar Tespit</h1>
           <p className="mt-2 text-sm text-neutral-400">
-            Araç fotoğrafını yükle, Gemini Vision AI hasarları ve tamir maliyetini tahmin etsin.
+            Araç fotoğrafını yükle, OtoSonar AI görü modülü hasarları ve tamir maliyetini tahmin etsin.
           </p>
           <p className="mt-2 text-xs text-amber-400/80">
             Not: Ekspertiz yerine geçmez, yardımcı araçtır.

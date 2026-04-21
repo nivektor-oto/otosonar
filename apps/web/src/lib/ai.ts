@@ -4,13 +4,13 @@
  * Güvenlik katmanları:
  *  - Prompt injection koruması (user input'u sterilize + AI'a "sistem talimatlarını yok say" kuralı)
  *  - Çıktı Zod şemasıyla validate edilir → UI tipli/güvenli değer alır
- *  - Gemini API key header'da (query string'de değil)
+ *  - AI API key header'da (query string'de değil)
  *  - Retry + exponential backoff (503/429 için)
  *  - Uzunluk sınırları enforced
  *
- * Multi-provider:
- *  1. GEMINI_API_KEY → Gemini 2.5 Flash (primary, ücretsiz tier)
- *  2. ANTHROPIC_API_KEY → Claude Haiku 4.5 (fallback)
+ * Birincil + yedek AI sağlayıcı:
+ *  1. GEMINI_API_KEY → birincil AI altyapısı
+ *  2. ANTHROPIC_API_KEY → yedek AI altyapısı
  */
 
 import Anthropic from "@anthropic-ai/sdk";
@@ -210,7 +210,7 @@ export async function analyzeVehicle(
         },
       };
     } catch (e) {
-      console.warn("[ai] Gemini fail, Anthropic trial:", e instanceof Error ? e.message.slice(0, 200) : e);
+      console.warn("[ai] primary fail, trying fallback:", e instanceof Error ? e.message.slice(0, 200) : e);
       if (!anthropicKey) throw e;
     }
   }
@@ -248,7 +248,7 @@ function enforceConsistency(r: AnalysisResult): AnalysisResult {
   return r;
 }
 
-// ─── Gemini ──────────────────────────────────────────────────
+// ─── Birincil sağlayıcı ──────────────────────────────────────
 
 async function callGeminiWithRetry(
   userMessage: string,
@@ -316,7 +316,7 @@ async function callGemini(userMessage: string, apiKey: string): Promise<unknown>
   return parseJsonResponse(text);
 }
 
-// ─── Anthropic ───────────────────────────────────────────────
+// ─── Yedek sağlayıcı ─────────────────────────────────────────
 
 async function callAnthropic(
   userMessage: string,
@@ -496,7 +496,7 @@ export async function marketResearch(
         },
       };
     } catch (e) {
-      console.warn("[market] Gemini fail:", e instanceof Error ? e.message.slice(0, 200) : e);
+      console.warn("[market] primary fail, trying fallback:", e instanceof Error ? e.message.slice(0, 200) : e);
       if (!anthropicKey) throw e;
     }
   }
@@ -764,7 +764,7 @@ export async function buybackAnalysis(
         meta: { provider: "gemini", model: "gemini-2.5-flash", durationMs: Date.now() - startTime, retried },
       };
     } catch (e) {
-      console.warn("[buyback] Gemini failed, trying Anthropic:", e);
+      console.warn("[buyback] primary failed, trying fallback:", e);
       if (!anthropicKey) throw e;
     }
   }

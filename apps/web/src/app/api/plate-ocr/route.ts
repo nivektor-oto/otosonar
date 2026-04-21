@@ -50,7 +50,7 @@ export async function POST(req: Request) {
         durationMs: out.durationMs,
       },
     }).catch(() => null);
-    return NextResponse.json({ success: true, ...out, id: saved?.id ?? null });
+    return NextResponse.json({ success: true, ...out, model: "otosonar-ai-v1", provider: "otosonar", id: saved?.id ?? null });
   } catch (err) {
     await logError(err, { path: "/api/plate-ocr", userId: user?.id });
     return NextResponse.json({ success: false, error: "ocr_failed" }, { status: 500 });

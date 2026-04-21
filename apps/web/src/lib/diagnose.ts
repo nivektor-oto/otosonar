@@ -156,7 +156,7 @@ async function callAnthropic(
     if (mt === "image/jpeg" || mt === "image/png" || mt === "image/webp" || mt === "image/gif") {
       content.push({ type: "image", source: { type: "base64", media_type: mt, data: img.data } });
     } else {
-      console.warn(`[diagnose] anthropic fallback: skipping unsupported image mime ${mt}`);
+      console.warn(`[diagnose] fallback provider: skipping unsupported image mime ${mt}`);
     }
   }
   content.push({ type: "text", text: userMsg });

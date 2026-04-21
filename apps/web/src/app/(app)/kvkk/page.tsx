@@ -43,8 +43,9 @@ export default function KvkkPage() {
           <p>
             Kişisel veriler yurt içi ve AB bölgesindeki hizmet sağlayıcılar (Vercel, Neon Postgres — Frankfurt)
             üzerinde barındırılır. Ödeme bilgileri PCI-DSS uyumlu İyzico/PayTR üzerinden işlenir ve OtoSonar
-            tarafında saklanmaz. AI analizi için minimum gerekli veri (ilan metni, fotoğraf) Google Gemini ve
-            Anthropic API'lerine iletilir — kimlik bilgisi aktarılmaz.
+            tarafında saklanmaz. AI analizi için minimum gerekli veri (ilan metni, fotoğraf) lisanslı 3. taraf
+            AI altyapı sağlayıcılarına (ABD/AB merkezli, KVKK uyumlu sözleşmeler kapsamında) iletilir — kimlik
+            bilgisi aktarılmaz.
           </p>
         </section>
 

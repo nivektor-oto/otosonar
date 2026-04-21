@@ -1,5 +1,5 @@
 /**
- * Gemini Vision wrapper — hasar tespiti + plaka OCR.
+ * Vision wrapper (primary + fallback) — hasar tespiti + plaka OCR.
  * `/api/damage-detect` ve `/api/plate-ocr` tarafından kullanılır.
  */
 import { z } from "zod";

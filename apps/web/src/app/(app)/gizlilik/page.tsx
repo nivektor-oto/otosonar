@@ -35,7 +35,7 @@ export default function PrivacyPage() {
               <b>Cloudflare</b>: DNS + DDoS koruma
             </li>
             <li>
-              <b>Google Gemini / Anthropic</b>: AI analizi — yalnızca anonim ilan metni/fotoğraf gönderilir
+              <b>Lisanslı 3. taraf AI altyapı sağlayıcıları</b> (ABD/AB merkezli, KVKK uyumlu sözleşmeler kapsamında): AI analizi — yalnızca anonim ilan metni/fotoğraf gönderilir
             </li>
             <li>
               <b>İyzico / PayTR</b>: Ödeme (PCI-DSS uyumlu; kart bilgisi OtoSonar'a ulaşmaz)

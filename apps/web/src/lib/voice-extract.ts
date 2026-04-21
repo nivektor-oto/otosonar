@@ -100,12 +100,12 @@ export async function extractFromVoice(
 
   if (!res.ok) {
     const err = await res.text().catch(() => "");
-    throw new Error(`Gemini voice HTTP ${res.status}: ${err.slice(0, 200)}`);
+    throw new Error(`voice provider HTTP ${res.status}: ${err.slice(0, 200)}`);
   }
 
   const data = await res.json();
   const text: string | undefined = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!text) throw new Error("Gemini voice boş cevap döndü");
+  if (!text) throw new Error("voice provider boş cevap döndü");
 
   let raw: unknown;
   try {

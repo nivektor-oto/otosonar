@@ -4,7 +4,7 @@
  * Flow:
  *  - GET : subscription verification challenge (Meta calls once at setup).
  *  - POST: inbound message delivery. Dealer texts a free-form listing,
- *          we parse it with Gemini and create a DRAFT MarketplaceListing.
+ *          we parse it with the primary AI provider and create a DRAFT MarketplaceListing.
  *
  * Security:
  *  - x-hub-signature-256 HMAC-SHA256 over the raw request body, compared

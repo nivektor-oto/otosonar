@@ -91,8 +91,9 @@ export async function POST(req: Request) {
   }
 
   try {
-    const { result, provider, durationMs } = await diagnose(parsed.data);
-    return NextResponse.json({ success: true, result, meta: { provider, durationMs } });
+    const { result, provider: _provider, durationMs } = await diagnose(parsed.data);
+    void _provider;
+    return NextResponse.json({ success: true, result, meta: { provider: "otosonar", model: "otosonar-ai-v1", durationMs } });
   } catch (err) {
     await logError(err, { path: "/api/diagnose" });
     return NextResponse.json({ success: false, error: "diagnose_failed" }, { status: 500 });

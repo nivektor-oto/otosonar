@@ -18,26 +18,47 @@ export default async function AccountPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/giris");
 
-  const [analysisCount, damageCount, plateCount, activeSub, sessions, creditDays, dealer, buyerPrefs, referral] =
-    await Promise.all([
-      prisma.analysis.count({ where: { userId: user.id } }),
-      prisma.damageAnalysis.count({ where: { userId: user.id } }),
-      prisma.plateRecognition.count({ where: { userId: user.id } }),
-      prisma.subscription.findFirst({
-        where: { userId: user.id, status: { in: ["ACTIVE", "TRIAL"] } },
-        orderBy: { createdAt: "desc" },
-      }),
-      prisma.userSession.findMany({
-        where: { userId: user.id, revokedAt: null, expiresAt: { gt: new Date() } },
-        orderBy: { lastSeenAt: "desc" },
-      }),
-      prisma.creditLedger
-        .aggregate({ where: { userId: user.id }, _sum: { amountDays: true } })
-        .then((r) => r._sum.amountDays ?? 0),
-      prisma.dealer.findUnique({ where: { userId: user.id } }),
-      prisma.buyerPreferences.findUnique({ where: { userId: user.id } }),
-      getStats(user.id),
-    ]);
+  const [
+    analysisCount,
+    damageCount,
+    plateCount,
+    activeSub,
+    sessions,
+    creditDays,
+    dealer,
+    buyerPrefs,
+    referral,
+    buyerUnreadAgg,
+    sellerUnreadAgg,
+  ] = await Promise.all([
+    prisma.analysis.count({ where: { userId: user.id } }),
+    prisma.damageAnalysis.count({ where: { userId: user.id } }),
+    prisma.plateRecognition.count({ where: { userId: user.id } }),
+    prisma.subscription.findFirst({
+      where: { userId: user.id, status: { in: ["ACTIVE", "TRIAL"] } },
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.userSession.findMany({
+      where: { userId: user.id, revokedAt: null, expiresAt: { gt: new Date() } },
+      orderBy: { lastSeenAt: "desc" },
+    }),
+    prisma.creditLedger
+      .aggregate({ where: { userId: user.id }, _sum: { amountDays: true } })
+      .then((r) => r._sum.amountDays ?? 0),
+    prisma.dealer.findUnique({ where: { userId: user.id } }),
+    prisma.buyerPreferences.findUnique({ where: { userId: user.id } }),
+    getStats(user.id),
+    prisma.conversation.aggregate({
+      where: { buyerId: user.id, buyerArchivedAt: null },
+      _sum: { buyerUnread: true },
+    }),
+    prisma.conversation.aggregate({
+      where: { sellerId: user.id, sellerArchivedAt: null },
+      _sum: { sellerUnread: true },
+    }),
+  ]);
+  const unreadTotal =
+    (buyerUnreadAgg._sum.buyerUnread ?? 0) + (sellerUnreadAgg._sum.sellerUnread ?? 0);
   const siteBase = process.env.NEXT_PUBLIC_SITE_URL ?? "https://otosonar.com";
   const inviteUrl = `${siteBase}/kayit?ref=${referral.code}`;
 
@@ -70,6 +91,7 @@ export default async function AccountPage() {
             value={activeSub ? `${activeSub.tier} (${activeSub.status})` : "Yok"}
           />
           <Card title="Kredi (gün)" value={String(creditDays)} highlight={creditDays > 0} />
+          <Card title="Okunmamış mesaj" value={String(unreadTotal)} highlight={unreadTotal > 0} />
           <Card title="Toplam analiz" value={String(analysisCount)} />
           <Card title="Hasar analizi" value={String(damageCount)} />
           <Card title="Plaka okuma" value={String(plateCount)} />
@@ -117,6 +139,7 @@ export default async function AccountPage() {
           <h2 className="mb-3 text-sm font-semibold">Hızlı erişim</h2>
           <div className="flex flex-wrap gap-2 text-sm">
             <QuickLink href="/analiz">Yeni analiz</QuickLink>
+            <QuickLink href="/hesap/mesajlar">Mesajlar</QuickLink>
             {user.userType === "DEALER" && <QuickLink href="/hesap/galerici/araclar">Stok araçlarım</QuickLink>}
             {user.userType === "DEALER" && <QuickLink href="/hesap/galerici/api">CRM API</QuickLink>}
             {user.userType === "DEALER" && <QuickLink href="/bozdurma">Bozdurma</QuickLink>}

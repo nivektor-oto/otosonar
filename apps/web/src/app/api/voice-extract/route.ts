@@ -60,18 +60,22 @@ export async function POST(req: Request) {
   try {
     const buf = Buffer.from(await file.arrayBuffer());
     const base64 = buf.toString("base64");
-    const { result, provider, durationMs } = await extractFromVoice(base64, mime);
+    const { result, provider: _provider, durationMs } = await extractFromVoice(base64, mime);
+    void _provider;
     return NextResponse.json({
       success: true,
       transcript: result.transcript,
       extracted: result.extracted,
-      meta: { provider, durationMs },
+      meta: { provider: "otosonar", model: "otosonar-ai-v1", durationMs },
     });
   } catch (err) {
     await logError(err, { path: "/api/voice-extract" });
     const msg = err instanceof Error ? err.message : "unknown";
+    const safeDetail = msg
+      .replace(/Gemini|Anthropic|Claude|OpenAI|GPT/gi, "AI")
+      .slice(0, 150);
     return NextResponse.json(
-      { success: false, error: "extract_failed", detail: msg.slice(0, 150) },
+      { success: false, error: "extract_failed", detail: safeDetail },
       { status: 500 },
     );
   }

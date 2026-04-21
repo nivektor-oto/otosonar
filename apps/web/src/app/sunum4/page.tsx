@@ -231,11 +231,11 @@ function Ozellikler() {
         13 modül, <span className="accent">hepsi çalışır</span>.
       </h2>
       <p className="lead" style={{ maxWidth: 600 }}>
-        Mayıs lansmanında hazır. AI modülleri Gemini 2.5 Flash + Claude Haiku 4.5 çift-kontrol ile çalışır.
+        Mayıs lansmanında hazır. AI modülleri OtoSonar AI çift-model doğrulama ile çalışır.
       </p>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginTop: 28, flex: 1 }}>
         <FeatureCard icon="📋" title="İlan URL Analizi" body="Sahibinden/Arabam linkini yapıştır, 8 sn rapor." />
-        <FeatureCard icon="🔧" title="Fotoğraftan Hasar" body="Gemini Vision — boya, değişen, tamir." new />
+        <FeatureCard icon="🔧" title="Fotoğraftan Hasar" body="OtoSonar AI görü — boya, değişen, tamir." new />
         <FeatureCard icon="🚨" title="Arıza Teşhis" body="Marka + arıza tarifi → aciliyet + maliyet." new />
         <FeatureCard icon="📸" title="Plaka OCR + VIN" body="Plakadan sorgu ve geçmiş." />
         <FeatureCard icon="💰" title="Bozdurma / Fiyat" body="Alım/max/hızlı/normal + stok takvimi." />
@@ -277,7 +277,7 @@ function Akis() {
       </p>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, marginTop: 44, flex: 1 }}>
         <Step n="01" title="İlanı yapıştır" body="Sahibinden / Arabam linkini kopyala. Ya da marka, model, km manuel gir." hint="3 saniye" />
-        <Step n="02" title="AI analiz etsin" body="Gemini + Claude çift kontrol: emsal değer, gizli arıza, pazarlık skoru." hint="8 saniye" />
+        <Step n="02" title="AI analiz etsin" body="OtoSonar AI çift-model doğrulama: emsal değer, gizli arıza, pazarlık skoru." hint="8 saniye" />
         <Step n="03" title="Karar ver" body="Al, pazarla ya da vazgeç. Rapor sonunda net tavsiye + PDF + QR." hint="Paylaş" />
       </div>
       <FooterBar page={5} total={9} />
@@ -431,7 +431,7 @@ function Guvenlik() {
         <div className="card card-strong">
           <h3>OtoSonar Onaylı</h3>
           <p style={{ marginTop: 6, color: "#065f46" }}>
-            Her AI raporu çoklu model kontrol (Gemini + Claude) + güven skoru. Düşük skor = manuel inceleme önerisi.
+            Her AI raporu OtoSonar AI çift-model kontrolü + güven skoru. Düşük skor = manuel inceleme önerisi.
           </p>
         </div>
       </div>
