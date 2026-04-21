@@ -2,10 +2,14 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/user-auth";
 import { prisma } from "@/lib/prisma";
+import { getStats } from "@/lib/referral";
 import { ProfileSection } from "./profile-section";
 import { SessionsSection } from "./sessions-section";
 import { PushToggle } from "./push-toggle";
 import { LogoutButton } from "./logout-button";
+import { ReferralMomentum } from "@/components/referral-momentum";
+
+const REFERRAL_BONUS_DAYS = 30;
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Hesabım — OtoSonar" };
@@ -14,7 +18,7 @@ export default async function AccountPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/giris");
 
-  const [analysisCount, damageCount, plateCount, activeSub, sessions, creditDays, dealer, buyerPrefs] =
+  const [analysisCount, damageCount, plateCount, activeSub, sessions, creditDays, dealer, buyerPrefs, referral] =
     await Promise.all([
       prisma.analysis.count({ where: { userId: user.id } }),
       prisma.damageAnalysis.count({ where: { userId: user.id } }),
@@ -32,7 +36,10 @@ export default async function AccountPage() {
         .then((r) => r._sum.amountDays ?? 0),
       prisma.dealer.findUnique({ where: { userId: user.id } }),
       prisma.buyerPreferences.findUnique({ where: { userId: user.id } }),
+      getStats(user.id),
     ]);
+  const siteBase = process.env.NEXT_PUBLIC_SITE_URL ?? "https://otosonar.com";
+  const inviteUrl = `${siteBase}/kayit?ref=${referral.code}`;
 
   const customerNum = `OS-${String(user.customerNumber).padStart(6, "0")}`;
   const persona = (user.quizResult as { persona?: string; recommendedTier?: string } | null)?.persona ?? null;
@@ -97,16 +104,25 @@ export default async function AccountPage() {
           }
         />
 
+        <ReferralMomentum
+          code={referral.code}
+          shareUrl={inviteUrl}
+          uses={referral.uses}
+          pendingReward={referral.pending * REFERRAL_BONUS_DAYS}
+          earnedDays={referral.granted * REFERRAL_BONUS_DAYS}
+          inviterName={user.fullName.split(" ")[0]}
+        />
+
         <section className="rounded-2xl border border-neutral-800 bg-[#12121a] p-6">
           <h2 className="mb-3 text-sm font-semibold">Hızlı erişim</h2>
           <div className="flex flex-wrap gap-2 text-sm">
             <QuickLink href="/analiz">Yeni analiz</QuickLink>
             {user.userType === "DEALER" && <QuickLink href="/bozdurma">Bozdurma</QuickLink>}
             <QuickLink href="/hasar-tespit">Hasar tespit</QuickLink>
+            <QuickLink href="/ariza-teshis">Arıza teşhis</QuickLink>
             <QuickLink href="/plaka-oku">Plaka oku</QuickLink>
             <QuickLink href="/pazaryeri">Pazaryeri</QuickLink>
             <QuickLink href="/gecmis">Geçmişim</QuickLink>
-            <QuickLink href="/davet">Davet et</QuickLink>
             <QuickLink href="/quiz">Persona quiz</QuickLink>
             <QuickLink href="/hesap/guvenlik">2FA güvenlik</QuickLink>
           </div>

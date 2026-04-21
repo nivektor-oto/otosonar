@@ -5,6 +5,23 @@ import Link from "next/link";
 import { Check, User, Building2, Sparkles } from "lucide-react";
 
 type Audience = "b2c" | "b2b";
+type Billing = "monthly" | "yearly";
+
+// Yıllık ödemede 2 ay hediye (Türkiye pazarı standardı, 10 × aylık)
+const YEARLY_MULTIPLIER = 10;
+
+function formatPrice(n: number): string {
+  return n.toLocaleString("tr-TR");
+}
+function yearlyPrice(monthly: string): string {
+  const n = Number(monthly.replace(/\D/g, ""));
+  return formatPrice(n * YEARLY_MULTIPLIER);
+}
+function monthlyEffective(yearlyFromMonthly: string, billing: Billing): string {
+  const n = Number(yearlyFromMonthly.replace(/\D/g, ""));
+  if (billing === "yearly") return formatPrice(Math.round((n * YEARLY_MULTIPLIER) / 12));
+  return formatPrice(n);
+}
 
 interface Tier {
   name: string;
@@ -120,6 +137,7 @@ const B2B_TIERS: Tier[] = [
 
 export function PricingTabs() {
   const [audience, setAudience] = useState<Audience>("b2c");
+  const [billing, setBilling] = useState<Billing>("monthly");
   const tiers = audience === "b2c" ? B2C_TIERS : B2B_TIERS;
 
   return (
@@ -133,11 +151,11 @@ export function PricingTabs() {
             Sade fiyat, <span className="gradient-text">net değer</span>
           </h2>
           <p className="mt-4 text-slate-300">
-            Yıllık al, <strong className="text-white">3 ay bedava</strong> · İlk 7-14 gün ücretsiz · İstediğin zaman iptal
+            <strong className="text-white">3 gün ücretsiz dene</strong> · Yıllık ödemede <strong className="text-accent">2 ay hediye</strong> · İstediğin zaman iptal
           </p>
         </div>
 
-        <div className="flex justify-center mb-10">
+        <div className="flex flex-col items-center gap-4 mb-10">
           <div
             role="tablist"
             aria-label="Abonelik türü"
@@ -158,6 +176,7 @@ export function PricingTabs() {
               sublabel="B2B · Ekip"
             />
           </div>
+          <BillingToggle value={billing} onChange={setBilling} />
         </div>
 
         {audience === "b2b" && (
@@ -197,20 +216,37 @@ export function PricingTabs() {
                     <>
                       <div className="flex items-baseline gap-2">
                         <span className="text-4xl font-black tabular-nums gradient-text">
-                          {t.founderPrice}
+                          {billing === "yearly" ? monthlyEffective(t.founderPrice, "yearly") : t.founderPrice}
                         </span>
                         <span className="text-slate-400 text-sm">TL/ay</span>
                       </div>
                       <div className="text-xs text-slate-500 mt-1.5">
-                        Normal: <span className="line-through">{t.price} TL</span>{" "}
-                        <span className="text-amber-400 font-semibold">· Kurucu %30</span>
+                        {billing === "yearly" ? (
+                          <>
+                            Yıllık: <strong className="text-white">{yearlyPrice(t.founderPrice)} TL</strong>{" "}
+                            <span className="text-accent font-semibold">· 2 ay hediye</span>
+                          </>
+                        ) : (
+                          <>
+                            Normal: <span className="line-through">{t.price} TL</span>{" "}
+                            <span className="text-amber-400 font-semibold">· Kurucu %30</span>
+                          </>
+                        )}
                       </div>
                     </>
                   ) : (
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-4xl font-black tabular-nums">{t.price}</span>
-                      <span className="text-slate-400 text-sm">TL/ay</span>
-                    </div>
+                    <>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-4xl font-black tabular-nums">{monthlyEffective(t.price, billing)}</span>
+                        <span className="text-slate-400 text-sm">TL/ay</span>
+                      </div>
+                      {billing === "yearly" && (
+                        <div className="text-xs text-slate-500 mt-1.5">
+                          Yıllık: <strong className="text-white">{yearlyPrice(t.price)} TL</strong>{" "}
+                          <span className="text-accent font-semibold">· 2 ay hediye</span>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
 
@@ -230,12 +266,12 @@ export function PricingTabs() {
                   ))}
                 </ul>
                 <Link
-                  href="/onboarding"
+                  href={`/onboarding?tier=${t.name.toLowerCase().replace(/\s+/g, "_")}&billing=${billing}`}
                   className={`text-center py-3 rounded-full font-bold transition ${
                     featured ? "btn-primary" : "btn-ghost"
                   } justify-center`}
                 >
-                  {t.cta}
+                  3 gün ücretsiz dene
                 </Link>
               </div>
             );
@@ -275,6 +311,40 @@ export function PricingTabs() {
         )}
       </div>
     </section>
+  );
+}
+
+function BillingToggle({ value, onChange }: { value: Billing; onChange: (b: Billing) => void }) {
+  return (
+    <div
+      role="tablist"
+      aria-label="Ödeme periyodu"
+      className="inline-flex items-center gap-1 p-1 rounded-full border border-border bg-panel/60 backdrop-blur-lg text-xs"
+    >
+      <button
+        role="tab"
+        aria-selected={value === "monthly"}
+        onClick={() => onChange("monthly")}
+        className={`px-4 py-1.5 rounded-full font-semibold transition ${
+          value === "monthly" ? "bg-panel text-white" : "text-slate-400 hover:text-white"
+        }`}
+      >
+        Aylık
+      </button>
+      <button
+        role="tab"
+        aria-selected={value === "yearly"}
+        onClick={() => onChange("yearly")}
+        className={`px-4 py-1.5 rounded-full font-semibold transition inline-flex items-center gap-2 ${
+          value === "yearly" ? "bg-panel text-white" : "text-slate-400 hover:text-white"
+        }`}
+      >
+        Yıllık
+        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-accent/20 text-accent uppercase tracking-wide">
+          2 ay hediye
+        </span>
+      </button>
+    </div>
   );
 }
 

@@ -22,15 +22,16 @@ import {
   Smartphone,
   Apple,
 } from "lucide-react";
-import StatsCountUp from "@/components/stats-countup";
 import RoiCalculator from "@/components/roi-calculator";
 import { LogoMark, LogoLockup } from "@/components/logo";
-import { DownloadSection } from "@/components/download-section";
 import { InstallPrompt } from "@/components/install-prompt";
 import { PricingTabs } from "@/components/pricing-tabs";
 import { CountdownTimer } from "@/components/countdown-timer";
 import { TrustBadges } from "@/components/trust-badges";
 import { CompetitionTable } from "@/components/competition-table";
+import { HowItWorks } from "@/components/how-it-works";
+import { FreeVsPremium } from "@/components/free-vs-premium";
+import { MarketplacePreview } from "@/components/marketplace-preview";
 
 type Feature = { Icon: LucideIcon; title: string; desc: string };
 
@@ -82,20 +83,20 @@ const features: Feature[] = [
   },
 ];
 
-export default function HomePage() {
+export default async function HomePage() {
   return (
     <main className="min-h-screen bg-bg text-white">
       <Nav />
       <CountdownTimer />
       <Hero />
-      <TrustBadges />
-      <TrustShelf />
-      <StatsCountUp />
+      <MarketplacePreview />
+      <HowItWorks />
       <Features />
+      <FreeVsPremium />
       <CompetitionTable />
+      <TrustBadges />
       <RoiCalculator />
       <PricingTabs />
-      <DownloadSection />
       <FAQ />
       <Footer />
       <InstallPrompt />
@@ -172,28 +173,6 @@ function Hero() {
         <p className="mt-5 text-sm text-slate-400">
           Kredi kartı gerekmez · 30 saniyede kurulum · İstediğin zaman iptal
         </p>
-      </div>
-    </section>
-  );
-}
-
-function TrustShelf() {
-  const badges = [
-    { Icon: ShieldCheck, label: "KVKK Uyumlu" },
-    { Icon: Lock, label: "VERBIS Kayıtlı" },
-    { Icon: CreditCard, label: "İyzico + PayTR" },
-    { Icon: Award, label: "3D Secure" },
-    { Icon: Sparkles, label: "AI Destekli" },
-  ];
-  return (
-    <section className="border-b border-border py-6 bg-panel/30">
-      <div className="max-w-6xl mx-auto px-6 flex flex-wrap items-center justify-center gap-x-10 gap-y-3 text-sm text-slate-400">
-        {badges.map((b) => (
-          <div key={b.label} className="inline-flex items-center gap-2">
-            <b.Icon className="w-4 h-4 text-accent" aria-hidden strokeWidth={2} />
-            <span>{b.label}</span>
-          </div>
-        ))}
       </div>
     </section>
   );

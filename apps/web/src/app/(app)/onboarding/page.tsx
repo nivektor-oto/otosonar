@@ -376,8 +376,7 @@ function StepRecommendation({
           ))}
         </ul>
         <div className="text-xs text-slate-400 italic border-t border-border pt-3">
-          🎁 İlk {userType === "dealer" ? "14 gün" : "7 gün"} ücretsiz — kredi
-          kartı gerekmez
+          🎁 İlk 3 gün ücretsiz · kredi kartı gerekmez · istediğin zaman iptal
         </div>
       </div>
 

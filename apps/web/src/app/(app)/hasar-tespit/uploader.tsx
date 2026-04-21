@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
+import Link from "next/link";
+import { FileDown, Share2 } from "lucide-react";
 
 const TL = new Intl.NumberFormat("tr-TR", { style: "currency", currency: "TRY", maximumFractionDigits: 0 });
 
@@ -16,6 +18,7 @@ interface DamageResult {
 export function DamageUploader() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<DamageResult | null>(null);
+  const [reportId, setReportId] = useState<string | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
 
   async function onUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -45,6 +48,7 @@ export function DamageUploader() {
           return;
         }
         setResult(data.result);
+        setReportId(data.id ?? null);
       } catch {
         toast.error("Ağ hatası.");
       } finally {
@@ -113,6 +117,49 @@ export function DamageUploader() {
           )}
 
           {result.notes && <p className="text-xs text-neutral-400">{result.notes}</p>}
+
+          {reportId && (
+            <div className="flex flex-col sm:flex-row gap-2 pt-3 border-t border-neutral-800">
+              <Link
+                href={`/rapor/hasar/${reportId}`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-black hover:bg-emerald-400 transition"
+              >
+                <FileDown className="w-4 h-4" aria-hidden strokeWidth={2.5} />
+                PDF raporu aç
+              </Link>
+              <button
+                type="button"
+                onClick={async () => {
+                  const url = `${window.location.origin}/rapor/hasar/${reportId}`;
+                  const nav = navigator as Navigator & { share?: (d: ShareData) => Promise<void> };
+                  if (typeof nav.share === "function") {
+                    try {
+                      await nav.share({
+                        title: "OtoSonar hasar raporu",
+                        text: "AI hasar analizi raporum",
+                        url,
+                      });
+                      return;
+                    } catch {
+                      // cancelled — fall through to clipboard
+                    }
+                  }
+                  try {
+                    await navigator.clipboard.writeText(url);
+                    toast.success("Rapor linki kopyalandı");
+                  } catch {
+                    toast.error("Kopyalanamadı");
+                  }
+                }}
+                className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg border border-neutral-700 px-4 py-2.5 text-sm font-semibold text-neutral-200 hover:border-emerald-500 hover:bg-neutral-900 transition"
+              >
+                <Share2 className="w-4 h-4" aria-hidden strokeWidth={2.5} />
+                Paylaş / QR kod
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

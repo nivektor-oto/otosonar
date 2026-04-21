@@ -89,6 +89,24 @@ export async function POST(req: Request) {
       },
     });
 
+    // 3 günlük ücretsiz PLUS denemesi — expire'ı cron siler
+    const TRIAL_DAYS = 3;
+    const now = new Date();
+    const trialEndsAt = new Date(now.getTime() + TRIAL_DAYS * 24 * 60 * 60 * 1000);
+    await prisma.subscription.create({
+      data: {
+        userId: user.id,
+        tier: "PLUS",
+        status: "TRIAL",
+        trialEndsAt,
+        currentPeriodStart: now,
+        currentPeriodEnd: trialEndsAt,
+        billingPeriod: "MONTHLY",
+      },
+    }).catch((err) => {
+      logError(err, { path: "/api/auth/signup", metadata: { step: "trial_subscription" } }).catch(() => undefined);
+    });
+
     if (referralCode) {
       const ref = await prisma.referralCode.findUnique({
         where: { code: referralCode.toUpperCase() },

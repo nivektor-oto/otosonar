@@ -80,6 +80,20 @@ export async function GET(req: Request) {
           }).catch(() => undefined);
         }
       }
+
+      // 3 günlük ücretsiz PLUS denemesi (OAuth yeni kullanıcı)
+      const trialEnd = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
+      await prisma.subscription.create({
+        data: {
+          userId: user.id,
+          tier: "PLUS",
+          status: "TRIAL",
+          trialEndsAt: trialEnd,
+          currentPeriodStart: new Date(),
+          currentPeriodEnd: trialEnd,
+          billingPeriod: "MONTHLY",
+        },
+      }).catch(() => undefined);
     } else {
       const existing = await prisma.oAuthAccount.findUnique({
         where: { provider_providerAccountId: { provider: "google", providerAccountId: profile.id } },
