@@ -493,8 +493,7 @@ function StepFinish({
         Hoş geldin! 🎉
       </h2>
       <p className="text-slate-400 mb-8 animate-fade-up [animation-delay:160ms]">
-        <span className="text-white font-semibold">{tier}</span> paketi deneme
-        süren başladı. İlk analizinle tanış.
+        <span className="text-white font-semibold">{tier}</span> paketinde <span className="text-accent font-semibold">3 gün ücretsiz denemen</span> başladı. İstediğin zaman iptal — kart çekilmez.
       </p>
       <div className="card text-left mb-8 animate-fade-up [animation-delay:240ms]">
         <div className="text-xs text-slate-400 uppercase tracking-wider mb-3 font-semibold">

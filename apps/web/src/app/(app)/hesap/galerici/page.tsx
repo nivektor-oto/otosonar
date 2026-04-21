@@ -24,6 +24,9 @@ export default async function DealerInfoPage() {
             dealer
               ? {
                   companyName: dealer.companyName,
+                  handle: dealer.handle,
+                  bio: dealer.bio,
+                  phone: dealer.phone,
                   cityId: dealer.cityId,
                   address: dealer.address,
                   taxNo: dealer.taxNo,

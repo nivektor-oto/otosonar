@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { getCurrentUser } from "@/lib/user-auth";
 import { getStats } from "@/lib/referral";
 import { CopyInviteLink } from "./copy";
@@ -42,6 +43,22 @@ export default async function ReferralPage() {
           <b className="text-neutral-300">Nasıl çalışır:</b> Arkadaşın linkinle kayıt olur, ilk ücretli
           aboneliğini aktive eder → sana bir ay Plus hediyesi düşer, ona %20 kupon.
         </div>
+
+        <Link
+          href="/davet/sirala"
+          className="block rounded-xl border border-accent/30 bg-gradient-to-r from-accent/10 to-accent2/5 p-4 hover:from-accent/20 transition"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center">
+              🏆
+            </div>
+            <div className="flex-1">
+              <div className="font-semibold text-white text-sm">Davet sıralaması</div>
+              <div className="text-xs text-slate-400 mt-0.5">En çok davet eden 20 kişi — sen de listeye girebilirsin</div>
+            </div>
+            <span className="text-accent text-sm font-bold">→</span>
+          </div>
+        </Link>
       </div>
     </main>
   );

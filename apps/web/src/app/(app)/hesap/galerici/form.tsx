@@ -6,6 +6,9 @@ import { toast } from "sonner";
 
 interface Initial {
   companyName: string;
+  handle: string | null;
+  bio: string | null;
+  phone: string | null;
   cityId: string;
   address: string | null;
   taxNo: string | null;
@@ -31,6 +34,9 @@ export function DealerForm({ initial }: { initial: Initial | null }) {
     const fd = new FormData(e.currentTarget);
     const body = {
       companyName: String(fd.get("companyName") ?? ""),
+      handle: String(fd.get("handle") ?? "").toLowerCase().trim() || undefined,
+      bio: String(fd.get("bio") ?? "") || undefined,
+      phone: String(fd.get("phone") ?? "") || undefined,
       cityId: String(fd.get("cityId") ?? ""),
       address: String(fd.get("address") ?? "") || undefined,
       taxNo: String(fd.get("taxNo") ?? "") || undefined,
@@ -50,7 +56,11 @@ export function DealerForm({ initial }: { initial: Initial | null }) {
     const data = await r.json();
     setLoading(false);
     if (!r.ok || !data.success) {
-      toast.error("Kayıt başarısız.");
+      if (data.error === "handle_taken") {
+        toast.error("Bu handle başkasında — farklı bir şey dene.");
+      } else {
+        toast.error("Kayıt başarısız.");
+      }
       return;
     }
     toast.success("Bilgiler kaydedildi. Doğrulama için ekibimiz inceleyecek.");
@@ -89,6 +99,53 @@ export function DealerForm({ initial }: { initial: Initial | null }) {
           maxLength={120}
           defaultValue={initial?.companyName ?? ""}
           className={input}
+        />
+      </label>
+
+      <label className="block">
+        <span className="mb-1 block text-xs text-neutral-400">
+          Public profil handle (otosonar.com/g/<b className="text-emerald-400">@handle</b>)
+        </span>
+        <div className="flex items-center">
+          <span className="px-3 py-2 rounded-l-lg border border-r-0 border-neutral-800 bg-[#0a0a0f] text-neutral-500 text-sm">
+            /g/
+          </span>
+          <input
+            name="handle"
+            maxLength={30}
+            minLength={3}
+            pattern="[a-z0-9][a-z0-9_-]{2,29}"
+            defaultValue={initial?.handle ?? ""}
+            className={`${input} rounded-l-none lowercase`}
+            placeholder="gunesgaleri"
+            title="2-30 karakter, küçük harf+rakam+_-"
+          />
+        </div>
+        <p className="mt-1 text-[10px] text-neutral-500">
+          Galericine sosyal medyada paylaşabileceğin tek-tık linki. Küçük harf, rakam, tire ve alt çizgi.
+        </p>
+      </label>
+
+      <label className="block">
+        <span className="mb-1 block text-xs text-neutral-400">Kısa tanıtım (bio)</span>
+        <textarea
+          name="bio"
+          maxLength={500}
+          rows={3}
+          defaultValue={initial?.bio ?? ""}
+          className={input}
+          placeholder="Örn: 15 yıldır Konya'da seçme 2. el otomobil. Her araç ekspertizli."
+        />
+      </label>
+
+      <label className="block">
+        <span className="mb-1 block text-xs text-neutral-400">Telefon</span>
+        <input
+          name="phone"
+          maxLength={30}
+          defaultValue={initial?.phone ?? ""}
+          className={input}
+          placeholder="+90 532 000 00 00"
         />
       </label>
 

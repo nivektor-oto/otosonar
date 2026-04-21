@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/user-auth";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { evaluateListingQuota, LISTING_FEE_TL } from "@/lib/marketplace-quota";
+import { fireMatchingAlerts } from "@/lib/alert-matcher";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -14,9 +15,15 @@ const createSchema = z.object({
   year: z.number().int().min(1980).max(new Date().getFullYear() + 1),
   km: z.number().int().min(0).max(2_000_000),
   city: z.string().min(2).max(40),
+  bodyType: z.string().max(30).optional(),
   askingPrice: z.number().int().min(10_000).max(50_000_000),
   description: z.string().max(2000).optional(),
   photos: z.array(z.string().url()).max(12).optional(),
+  paintMap: z.record(z.string(), z.enum(["ORIGINAL", "PAINTED", "CHANGED", "UNKNOWN"])).optional(),
+  isAuction: z.boolean().optional(),
+  auctionDays: z.number().int().min(1).max(14).optional(),
+  minBid: z.number().int().min(10_000).max(50_000_000).optional(),
+  isUrgent: z.boolean().optional(),
 }).strict();
 
 export async function GET() {
@@ -72,6 +79,27 @@ export async function POST(req: Request) {
     );
   }
 
+  // Açık arttırma sadece aktif Pro/Max aboneliğe izinli
+  if (parsed.data.isAuction) {
+    const sub = await prisma.subscription.findFirst({
+      where: {
+        userId: user.id,
+        status: { in: ["ACTIVE", "TRIAL"] },
+        tier: { in: ["PRO", "MAX"] },
+      },
+    });
+    if (!sub) {
+      return NextResponse.json(
+        { success: false, error: "auction_requires_pro" },
+        { status: 403 },
+      );
+    }
+  }
+
+  const isAuction = parsed.data.isAuction === true;
+  const auctionDays = parsed.data.auctionDays ?? 3;
+  const auctionEndsAt = isAuction ? new Date(Date.now() + auctionDays * 86_400_000) : null;
+
   const listing = await prisma.marketplaceListing.create({
     data: {
       sellerId: user.id,
@@ -80,12 +108,28 @@ export async function POST(req: Request) {
       year: parsed.data.year,
       km: parsed.data.km,
       city: parsed.data.city,
+      bodyType: parsed.data.bodyType ?? null,
       askingPrice: parsed.data.askingPrice,
       description: parsed.data.description ?? null,
       photosJson: (parsed.data.photos ?? null) as never,
+      paintMapJson: (parsed.data.paintMap ?? null) as never,
+      isAuction,
+      auctionEndsAt,
+      minBid: parsed.data.minBid ?? null,
+      isUrgent: parsed.data.isUrgent === true,
       status: "ACTIVE",
     },
   });
+
+  // Best-effort: eşleşen price alert'leri tetikle (push gönderir)
+  fireMatchingAlerts({
+    id: listing.id,
+    brand: listing.brand,
+    model: listing.model,
+    year: listing.year,
+    askingPrice: listing.askingPrice,
+    city: listing.city,
+  }).catch(() => undefined);
 
   return NextResponse.json({ success: true, listingId: listing.id, feeTL: 0, quotaReason: quota.reason });
 }

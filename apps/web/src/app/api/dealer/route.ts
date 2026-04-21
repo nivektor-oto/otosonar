@@ -7,8 +7,13 @@ import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+const HANDLE_RE = /^[a-z0-9][a-z0-9_-]{2,29}$/;
+
 const schema = z.object({
   companyName: z.string().min(2).max(120),
+  handle: z.string().regex(HANDLE_RE, "2-30 karakter, küçük harf+rakam+_-").optional().or(z.literal("")),
+  bio: z.string().max(500).optional(),
+  phone: z.string().max(30).optional(),
   cityId: z.string().min(2).max(40),
   address: z.string().max(300).optional(),
   taxNo: z.string().min(10).max(11).optional(),
@@ -38,30 +43,54 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: false, error: "validation", details: parsed.error.flatten() }, { status: 400 });
   }
 
-  const d = await prisma.dealer.upsert({
-    where: { userId: user.id },
-    create: {
-      userId: user.id,
-      companyName: parsed.data.companyName,
-      cityId: parsed.data.cityId,
-      address: parsed.data.address ?? null,
-      taxNo: parsed.data.taxNo ?? null,
-      mersisNo: parsed.data.mersisNo ?? null,
-      monthlyVolume: parsed.data.monthlyVolume ?? null,
-    },
-    update: {
-      companyName: parsed.data.companyName,
-      cityId: parsed.data.cityId,
-      address: parsed.data.address ?? null,
-      taxNo: parsed.data.taxNo ?? null,
-      mersisNo: parsed.data.mersisNo ?? null,
-      monthlyVolume: parsed.data.monthlyVolume ?? null,
-    },
-  });
-
-  if (user.userType !== "DEALER") {
-    await prisma.user.update({ where: { id: user.id }, data: { userType: "DEALER" } });
+  const handle = parsed.data.handle ? parsed.data.handle.toLowerCase() : null;
+  if (handle) {
+    const clash = await prisma.dealer.findFirst({
+      where: { handle, NOT: { userId: user.id } },
+    });
+    if (clash) {
+      return NextResponse.json({ success: false, error: "handle_taken" }, { status: 409 });
+    }
   }
 
-  return NextResponse.json({ success: true, dealer: d });
+  try {
+    const d = await prisma.dealer.upsert({
+      where: { userId: user.id },
+      create: {
+        userId: user.id,
+        companyName: parsed.data.companyName,
+        handle,
+        bio: parsed.data.bio ?? null,
+        phone: parsed.data.phone ?? null,
+        cityId: parsed.data.cityId,
+        address: parsed.data.address ?? null,
+        taxNo: parsed.data.taxNo ?? null,
+        mersisNo: parsed.data.mersisNo ?? null,
+        monthlyVolume: parsed.data.monthlyVolume ?? null,
+      },
+      update: {
+        companyName: parsed.data.companyName,
+        handle,
+        bio: parsed.data.bio ?? null,
+        phone: parsed.data.phone ?? null,
+        cityId: parsed.data.cityId,
+        address: parsed.data.address ?? null,
+        taxNo: parsed.data.taxNo ?? null,
+        mersisNo: parsed.data.mersisNo ?? null,
+        monthlyVolume: parsed.data.monthlyVolume ?? null,
+      },
+    });
+
+    if (user.userType !== "DEALER") {
+      await prisma.user.update({ where: { id: user.id }, data: { userType: "DEALER" } });
+    }
+
+    return NextResponse.json({ success: true, dealer: d });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "";
+    if (/Unique constraint.*handle/i.test(msg)) {
+      return NextResponse.json({ success: false, error: "handle_taken" }, { status: 409 });
+    }
+    throw err;
+  }
 }

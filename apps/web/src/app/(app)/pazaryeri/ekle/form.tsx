@@ -1,17 +1,92 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { Sparkles, Copy, Loader2 } from "lucide-react";
+import { PaintMapEditor, type PaintMap } from "@/components/paint-map";
+
+type BodyType = "sedan" | "hatchback" | "suv" | "station" | "coupe" | "cabrio" | "pickup" | "minivan" | "unknown";
 
 type QuotaInfo =
   | { allowed: true; reason: "b2c_free" | "dealer_quota"; freeRemaining: number; limit: number; used: number }
   | { allowed: false; reason: "b2c_over" | "dealer_over"; priceTL: number; limit: number; used: number };
 
+interface ScoreResult {
+  overallScore: number;
+  titleScore: number;
+  priceScore: number;
+  photoScore: number;
+  textScore: number;
+  aiTitle: string;
+  aiDescription: string;
+  photoOrder: string[];
+  tips: Array<{ label: string; severity: "info" | "warning" | "critical" }>;
+}
+
 export function NewListingForm() {
   const router = useRouter();
+  const formRef = useRef<HTMLFormElement>(null);
   const [loading, setLoading] = useState(false);
+  const [scoring, setScoring] = useState(false);
+  const [score, setScore] = useState<ScoreResult | null>(null);
   const [quota, setQuota] = useState<QuotaInfo | null>(null);
+  const [bodyType, setBodyType] = useState<BodyType>("sedan");
+  const [paintMap, setPaintMap] = useState<PaintMap>({});
+  const [isAuction, setIsAuction] = useState(false);
+  const [auctionDays, setAuctionDays] = useState(3);
+  const [minBid, setMinBid] = useState("");
+  const [isUrgent, setIsUrgent] = useState(false);
+
+  async function onAiScore() {
+    const form = formRef.current;
+    if (!form) return;
+    const fd = new FormData(form);
+    const photoStr = String(fd.get("photos") ?? "");
+    const photoCount = photoStr.split(/[\n,]/).filter((s) => /^https?:\/\//.test(s.trim())).length;
+    const brand = String(fd.get("brand") ?? "").trim();
+    const model = String(fd.get("model") ?? "").trim();
+    const city = String(fd.get("city") ?? "").trim();
+    if (!brand || !model || !city) {
+      toast.error("AI skor için marka, model ve şehir doldur.");
+      return;
+    }
+    setScoring(true);
+    try {
+      const r = await fetch("/api/listing-score", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          brand,
+          model,
+          year: Number(fd.get("year")) || new Date().getFullYear(),
+          km: Number(fd.get("km")) || 0,
+          city,
+          askingPrice: Number(fd.get("askingPrice")) || 100000,
+          currentDescription: String(fd.get("description") ?? "") || undefined,
+          photoCount,
+        }),
+      });
+      const data = await r.json();
+      if (!r.ok || !data.success) {
+        toast.error("AI skor hatası");
+        return;
+      }
+      setScore(data.result);
+      toast.success("AI analizi hazır — aşağıda öneriler var");
+    } catch {
+      toast.error("Ağ hatası");
+    } finally {
+      setScoring(false);
+    }
+  }
+
+  function applyAiSuggestions() {
+    if (!score || !formRef.current) return;
+    const desc = formRef.current.elements.namedItem("description") as HTMLTextAreaElement | null;
+    if (desc) desc.value = score.aiDescription;
+    toast.success("AI açıklaması forma uygulandı");
+  }
 
   useEffect(() => {
     fetch("/api/marketplace/quota")
@@ -37,9 +112,15 @@ export function NewListingForm() {
       year: Number(fd.get("year")),
       km: Number(fd.get("km")),
       city: String(fd.get("city") ?? ""),
+      bodyType: bodyType !== "unknown" ? bodyType : undefined,
       askingPrice: Number(fd.get("askingPrice")),
       description: String(fd.get("description") ?? "") || undefined,
       photos: photos.length ? photos : undefined,
+      paintMap: Object.keys(paintMap).length > 0 ? paintMap : undefined,
+      isAuction,
+      auctionDays: isAuction ? auctionDays : undefined,
+      minBid: isAuction && minBid ? parseInt(minBid.replace(/\D/g, ""), 10) : undefined,
+      isUrgent,
     };
 
     const r = await fetch("/api/marketplace/listings", {
@@ -72,6 +153,7 @@ export function NewListingForm() {
 
   return (
     <form
+      ref={formRef}
       onSubmit={onSubmit}
       className="space-y-4 rounded-2xl border border-neutral-800 bg-[#12121a] p-6"
     >
@@ -103,9 +185,90 @@ export function NewListingForm() {
         </label>
       </div>
       <label className="block">
+        <span className="mb-1 block text-xs text-neutral-400">Kasa tipi</span>
+        <select
+          value={bodyType}
+          onChange={(e) => setBodyType(e.target.value as BodyType)}
+          className={input}
+        >
+          <option value="sedan">Sedan</option>
+          <option value="hatchback">Hatchback</option>
+          <option value="suv">SUV</option>
+          <option value="station">Station</option>
+          <option value="coupe">Coupe</option>
+          <option value="cabrio">Cabrio</option>
+          <option value="pickup">Pickup</option>
+          <option value="minivan">Minivan</option>
+          <option value="unknown">Belirtme</option>
+        </select>
+      </label>
+
+      <label className="block">
         <span className="mb-1 block text-xs text-neutral-400">Açıklama</span>
         <textarea name="description" rows={4} maxLength={2000} className={input} />
       </label>
+
+      <div className="space-y-2">
+        <div className="text-xs text-neutral-400">Boya / Değişen şeması (isteğe bağlı)</div>
+        <PaintMapEditor bodyType={bodyType} onChange={setPaintMap} />
+      </div>
+
+      <div className="rounded-xl border border-border bg-panel/30 p-4 space-y-3">
+        <div className="text-xs font-semibold text-slate-300 uppercase tracking-wider">
+          İlan seçenekleri
+        </div>
+        <label className="flex items-start gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={isUrgent}
+            onChange={(e) => setIsUrgent(e.target.checked)}
+            className="mt-0.5"
+          />
+          <span>
+            <strong className="text-white">Acil sat</strong> bayrağı — ilan ana sayfada kırmızı rozetle öne çıkar.
+          </span>
+        </label>
+        <label className="flex items-start gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={isAuction}
+            onChange={(e) => setIsAuction(e.target.checked)}
+            className="mt-0.5"
+          />
+          <span>
+            <strong className="text-white">Açık arttırma</strong> (Pro ve Max paketler) — belirtilen süre sonunda en yüksek teklif kazanır.
+          </span>
+        </label>
+        {isAuction && (
+          <div className="grid grid-cols-2 gap-3 pl-6">
+            <label className="block">
+              <span className="mb-1 block text-[10px] text-neutral-400">Süre (gün)</span>
+              <select
+                value={auctionDays}
+                onChange={(e) => setAuctionDays(parseInt(e.target.value, 10))}
+                className={input}
+              >
+                <option value={1}>1 gün</option>
+                <option value={3}>3 gün</option>
+                <option value={7}>7 gün</option>
+                <option value={14}>14 gün</option>
+              </select>
+            </label>
+            <label className="block">
+              <span className="mb-1 block text-[10px] text-neutral-400">
+                Asgari teklif (TL — opsiyonel)
+              </span>
+              <input
+                value={minBid}
+                onChange={(e) => setMinBid(e.target.value)}
+                inputMode="numeric"
+                placeholder="500000"
+                className={input}
+              />
+            </label>
+          </div>
+        )}
+      </div>
       <label className="block">
         <span className="mb-1 block text-xs text-neutral-400">
           Fotoğraf URL'leri (virgül veya satır ayrı, max 12 adet)
@@ -120,6 +283,39 @@ export function NewListingForm() {
           Şu an sadece URL kabul ediyoruz. Dosya yükleme özelliği lansman sonrası.
         </p>
       </label>
+      <div className="rounded-xl border border-accent/30 bg-gradient-to-br from-accent/10 to-transparent p-4 space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <div className="text-sm font-bold flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-accent" aria-hidden strokeWidth={2.5} />
+              AI ilan iyileştirici
+            </div>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Fiyatını puanlayıp başlık + açıklama önerir, en iyi foto sırasını çıkarır.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onAiScore}
+            disabled={scoring}
+            className="btn-ghost text-xs whitespace-nowrap inline-flex items-center gap-1.5"
+          >
+            {scoring ? (
+              <>
+                <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden />
+                Analiz ediliyor…
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-3.5 h-3.5" aria-hidden strokeWidth={2.5} />
+                AI ile analiz et
+              </>
+            )}
+          </button>
+        </div>
+        {score && <ScorePanel result={score} onApply={applyAiSuggestions} />}
+      </div>
+
       <button
         disabled={loading}
         className="w-full rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-black hover:bg-emerald-400 disabled:opacity-50"
@@ -127,6 +323,104 @@ export function NewListingForm() {
         {loading ? "Yayınlanıyor…" : quota && !quota.allowed ? "Öde ve yayınla — 500 TL" : "İlan yayınla"}
       </button>
     </form>
+  );
+}
+
+function ScorePanel({ result, onApply }: { result: ScoreResult; onApply: () => void }) {
+  return (
+    <div className="space-y-3 pt-3 border-t border-accent/20">
+      <div className="grid grid-cols-5 gap-2 text-center">
+        <ScoreTile label="Genel" value={result.overallScore} big />
+        <ScoreTile label="Başlık" value={result.titleScore} />
+        <ScoreTile label="Fiyat" value={result.priceScore} />
+        <ScoreTile label="Foto" value={result.photoScore} />
+        <ScoreTile label="Metin" value={result.textScore} />
+      </div>
+
+      <div className="rounded-lg border border-border bg-panel/60 p-3">
+        <div className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold mb-1">
+          Önerilen başlık
+        </div>
+        <div className="text-sm font-semibold text-white flex items-start justify-between gap-2">
+          <span className="flex-1">{result.aiTitle}</span>
+          <button
+            type="button"
+            onClick={() => {
+              navigator.clipboard.writeText(result.aiTitle).then(() => toast.success("Kopyalandı"));
+            }}
+            className="shrink-0 text-slate-400 hover:text-white"
+            aria-label="Başlığı kopyala"
+          >
+            <Copy className="w-3.5 h-3.5" aria-hidden strokeWidth={2} />
+          </button>
+        </div>
+      </div>
+
+      <div className="rounded-lg border border-border bg-panel/60 p-3">
+        <div className="flex items-center justify-between mb-1">
+          <div className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">
+            Önerilen açıklama
+          </div>
+          <button
+            type="button"
+            onClick={onApply}
+            className="text-[11px] text-accent font-semibold hover:text-accent2"
+          >
+            Açıklamaya uygula →
+          </button>
+        </div>
+        <pre className="text-xs text-slate-200 whitespace-pre-wrap leading-relaxed max-h-40 overflow-auto">
+          {result.aiDescription}
+        </pre>
+      </div>
+
+      <div className="rounded-lg border border-border bg-panel/60 p-3">
+        <div className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold mb-2">
+          Önerilen foto sırası ({result.photoOrder.length})
+        </div>
+        <ol className="text-xs text-slate-300 space-y-0.5 list-decimal list-inside">
+          {result.photoOrder.map((p, i) => <li key={i}>{p}</li>)}
+        </ol>
+      </div>
+
+      <div className="rounded-lg border border-border bg-panel/60 p-3">
+        <div className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold mb-2">
+          İyileştirme önerileri
+        </div>
+        <ul className="text-xs space-y-1">
+          {result.tips.map((t, i) => (
+            <li
+              key={i}
+              className={`flex gap-2 ${
+                t.severity === "critical"
+                  ? "text-red-300"
+                  : t.severity === "warning"
+                  ? "text-amber-300"
+                  : "text-slate-300"
+              }`}
+            >
+              <span>•</span>
+              <span>{t.label}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+}
+
+function ScoreTile({ label, value, big }: { label: string; value: number; big?: boolean }) {
+  const color =
+    value >= 80
+      ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/30"
+      : value >= 60
+      ? "text-amber-300 bg-amber-500/10 border-amber-500/30"
+      : "text-red-400 bg-red-500/10 border-red-500/30";
+  return (
+    <div className={`rounded-lg border px-2 py-2 ${color}`}>
+      <div className={`font-black tabular-nums ${big ? "text-2xl" : "text-lg"}`}>{value}</div>
+      <div className="text-[9px] uppercase tracking-wider font-semibold opacity-80">{label}</div>
+    </div>
   );
 }
 

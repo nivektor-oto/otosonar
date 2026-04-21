@@ -117,14 +117,18 @@ export default async function AccountPage() {
           <h2 className="mb-3 text-sm font-semibold">Hızlı erişim</h2>
           <div className="flex flex-wrap gap-2 text-sm">
             <QuickLink href="/analiz">Yeni analiz</QuickLink>
+            {user.userType === "DEALER" && <QuickLink href="/hesap/galerici/araclar">Stok araçlarım</QuickLink>}
             {user.userType === "DEALER" && <QuickLink href="/bozdurma">Bozdurma</QuickLink>}
             <QuickLink href="/hasar-tespit">Hasar tespit</QuickLink>
             <QuickLink href="/ariza-teshis">Arıza teşhis</QuickLink>
             <QuickLink href="/plaka-oku">Plaka oku</QuickLink>
             <QuickLink href="/pazaryeri">Pazaryeri</QuickLink>
+            <QuickLink href="/hesap/alarmlarim">Fiyat alarmlarım</QuickLink>
+            <QuickLink href="/raporlar/trend">Trend raporu</QuickLink>
             <QuickLink href="/gecmis">Geçmişim</QuickLink>
             <QuickLink href="/quiz">Persona quiz</QuickLink>
             <QuickLink href="/hesap/guvenlik">2FA güvenlik</QuickLink>
+            {user.userType === "DEALER" && <QuickLink href="/bozdurma/masa">Trade-in masası</QuickLink>}
           </div>
         </section>
 
