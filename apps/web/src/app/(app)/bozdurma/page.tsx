@@ -599,12 +599,20 @@ function ResultPanel({ r, askedPrice }: { r: BuybackResult; askedPrice?: number 
         )}
       </div>
 
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <Metric
           icon={<DollarSign className="w-4 h-4" aria-hidden strokeWidth={2} />}
-          label="Tahmini satış"
+          label="Normal satış"
           value={fmt(r.emsalSaleValue)}
+          sublabel="Emsal piyasa"
           color="accent"
+        />
+        <Metric
+          icon={<TrendingDown className="w-4 h-4" aria-hidden strokeWidth={2} />}
+          label="Hızlı satış"
+          value={fmt(Math.round(r.emsalSaleValue * 0.9))}
+          sublabel="%10 iskontolu, 7-10 gün"
+          color="accent2"
         />
         <Metric
           icon={<TrendingUp className="w-4 h-4" aria-hidden strokeWidth={2} />}
@@ -621,6 +629,31 @@ function ResultPanel({ r, askedPrice }: { r: BuybackResult; askedPrice?: number 
           color="accent2"
         />
       </div>
+
+      {r.stockTimeDays > 7 && (
+        <div className="card p-5 border-slate-700 bg-panel/40">
+          <div className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold mb-3">
+            Stok eritme takvimi
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+            <TimelineStep
+              day="7. gün"
+              action="İlanı pin'le, fotoları ve açıklamayı yenile"
+              price={fmt(r.emsalSaleValue)}
+            />
+            <TimelineStep
+              day="14. gün"
+              action="Fiyatı %4-6 indir, yeni müşteri dalgası başlat"
+              price={fmt(Math.round(r.emsalSaleValue * 0.95))}
+            />
+            <TimelineStep
+              day="30. gün"
+              action="Hızlı satış moduna geç ya da bozdur — stokta tutmanın maliyeti kârı yiyor"
+              price={fmt(Math.round(r.emsalSaleValue * 0.88))}
+            />
+          </div>
+        </div>
+      )}
 
       <div className="card p-6">
         <div className="flex items-center justify-between mb-3">
@@ -682,6 +715,16 @@ function ResultPanel({ r, askedPrice }: { r: BuybackResult; askedPrice?: number 
         <ArrowLeft className="w-4 h-4" aria-hidden strokeWidth={2} />
         Kurucu paneline dön
       </Link>
+    </div>
+  );
+}
+
+function TimelineStep({ day, action, price }: { day: string; action: string; price: string }) {
+  return (
+    <div className="rounded-xl border border-slate-700/60 bg-panel/60 p-3 flex flex-col gap-1">
+      <div className="text-[10px] uppercase tracking-wider text-accent font-bold">{day}</div>
+      <div className="text-sm text-slate-200 leading-snug">{action}</div>
+      <div className="text-xs font-semibold text-white tabular-nums mt-1">{price}</div>
     </div>
   );
 }
