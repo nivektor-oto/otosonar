@@ -257,3 +257,228 @@ model AuditLog {
   @@index([actorId, createdAt])
   @@index([action, createdAt])
 }
+
+// ============================================================
+// AUTH TOKENS & SESSIONS
+// ============================================================
+
+enum AuthTokenKind {
+  EMAIL_VERIFY
+  PASSWORD_RESET
+  MAGIC_LINK
+}
+
+model AuthToken {
+  id        String        @id @default(cuid())
+  userId    String
+  kind      AuthTokenKind
+  tokenHash String        @unique  // sha256 of raw token
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime      @default(now())
+
+  @@index([userId, kind])
+  @@index([expiresAt])
+}
+
+model UserSession {
+  id           String    @id @default(cuid())
+  userId       String
+  tokenHash    String    @unique
+  userAgent    String?
+  ipHash       String?
+  expiresAt    DateTime
+  revokedAt    DateTime?
+  lastSeenAt   DateTime  @default(now())
+  createdAt    DateTime  @default(now())
+
+  @@index([userId, revokedAt])
+  @@index([expiresAt])
+}
+
+// ============================================================
+// RATE LIMIT (durable, Postgres-backed)
+// ============================================================
+
+model RateLimitBucket {
+  id         String   @id @default(cuid())
+  bucketKey  String   @unique  // "ip:1.2.3.4:/api/auth/login"
+  hits       Int      @default(1)
+  windowEnds DateTime
+  createdAt  DateTime @default(now())
+
+  @@index([windowEnds])
+}
+
+// ============================================================
+// ANALYTICS (self-hosted events)
+// ============================================================
+
+model AnalyticsEvent {
+  id         String   @id @default(cuid())
+  sessionId  String   // anonymous cookie id
+  userId     String?
+  event      String   // "pageview", "cta.click", "signup.complete", ...
+  path       String?
+  referer    String?
+  utmSource  String?
+  utmMedium  String?
+  utmCampaign String?
+  country    String?
+  device     String?  // "mobile" | "desktop" | "tablet"
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  @@index([event, createdAt])
+  @@index([sessionId])
+  @@index([userId, createdAt])
+}
+
+// ============================================================
+// ERROR LOG (self-hosted sentry-lite)
+// ============================================================
+
+enum ErrorLevel {
+  INFO
+  WARNING
+  ERROR
+  FATAL
+}
+
+model ErrorLog {
+  id          String     @id @default(cuid())
+  level       ErrorLevel @default(ERROR)
+  message     String     @db.Text
+  stack       String?    @db.Text
+  path        String?
+  userId      String?
+  sessionId   String?
+  userAgent   String?
+  fingerprint String     // hash of message+first-stack-frame for grouping
+  metadata    Json?
+  createdAt   DateTime   @default(now())
+
+  @@index([fingerprint, createdAt])
+  @@index([level, createdAt])
+  @@index([createdAt])
+}
+
+// ============================================================
+// REFERRAL
+// ============================================================
+
+model ReferralCode {
+  id         String   @id @default(cuid())
+  ownerId    String
+  code       String   @unique  // shortish "AHMET42"
+  usesCount  Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  @@index([ownerId])
+}
+
+model ReferralRedemption {
+  id          String   @id @default(cuid())
+  code        String
+  referredId  String   @unique  // invited user
+  bonusGrantedAt DateTime?
+  createdAt   DateTime @default(now())
+
+  @@index([code])
+}
+
+// ============================================================
+// MARKETPLACE (Faz 2 iskelet)
+// ============================================================
+
+enum MarketplaceListingStatus {
+  DRAFT
+  ACTIVE
+  SOLD
+  WITHDRAWN
+  EXPIRED
+}
+
+model MarketplaceListing {
+  id            String                   @id @default(cuid())
+  sellerId      String                   // User.id (dealer or buyer)
+  brand         String
+  model         String
+  year          Int
+  km            Int
+  city          String
+  askingPrice   Int
+  description   String?                  @db.Text
+  photosJson    Json?                    // array of urls
+  status        MarketplaceListingStatus @default(DRAFT)
+  closedAt      DateTime?
+  winningBidId  String?
+  createdAt     DateTime                 @default(now())
+  updatedAt     DateTime                 @updatedAt
+
+  bids          MarketplaceBid[]
+
+  @@index([status, createdAt])
+  @@index([brand, model, year])
+}
+
+model MarketplaceBid {
+  id          String   @id @default(cuid())
+  listingId   String
+  bidderId    String   // dealer user id
+  amount      Int
+  note        String?  @db.Text
+  retracted   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  listing MarketplaceListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@index([listingId, createdAt])
+  @@index([bidderId])
+}
+
+// ============================================================
+// PUSH NOTIFICATIONS
+// ============================================================
+
+model PushSubscription {
+  id         String   @id @default(cuid())
+  userId     String?
+  endpoint   String   @unique
+  p256dh     String
+  auth       String
+  userAgent  String?
+  createdAt  DateTime @default(now())
+  lastSeenAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+// ============================================================
+// PAYMENT (İyzico / PayTR soyut katman)
+// ============================================================
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REFUNDED
+}
+
+model PaymentIntent {
+  id             String        @id @default(cuid())
+  userId         String
+  subscriptionId String?
+  amountKurus    Int           // 249_00 = 249.00 TL
+  currency       String        @default("TRY")
+  provider       String        // "iyzico" | "paytr"
+  providerRef    String?
+  status         PaymentStatus @default(PENDING)
+  failReason     String?
+  metadata       Json?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([userId, createdAt])
+  @@index([status])
+}

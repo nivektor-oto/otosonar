@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { Toaster } from "sonner";
 import { ServiceWorkerRegister } from "@/components/sw-register";
+import { CookieBanner } from "@/components/cookie-banner";
+import { AnalyticsTracker } from "@/components/analytics-tracker";
 import "../styles/globals.css";
 
 const inter = Inter({
@@ -80,6 +82,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         {children}
         <ServiceWorkerRegister />
+        <AnalyticsTracker />
+        <CookieBanner />
         <Toaster
           position="top-right"
           theme="dark"
