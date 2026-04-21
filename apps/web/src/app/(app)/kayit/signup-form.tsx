@@ -4,6 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { OAuthButtons } from "@/components/oauth-buttons";
+import { trackEvent } from "@/lib/track";
 
 export function SignupForm() {
   const router = useRouter();
@@ -42,6 +44,7 @@ export function SignupForm() {
         toast.error(msg);
         return;
       }
+      trackEvent("signup.complete", { userType: body.userType });
       toast.success("Hesap açıldı. E-postanı doğrulamayı unutma.");
       router.push("/hesap");
       router.refresh();
@@ -54,6 +57,7 @@ export function SignupForm() {
 
   return (
     <form onSubmit={onSubmit} className="space-y-4 rounded-2xl border border-neutral-800 bg-[#12121a] p-6">
+      <OAuthButtons mode="kayit" />
       <label className="block space-y-1">
         <span className="text-xs font-medium text-neutral-400">Ad soyad</span>
         <input

@@ -4,6 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { OAuthButtons } from "@/components/oauth-buttons";
+import { trackEvent } from "@/lib/track";
 
 export function LoginForm() {
   const router = useRouter();
@@ -33,6 +35,7 @@ export function LoginForm() {
         toast.error(msg);
         return;
       }
+      trackEvent("login.success");
       toast.success("Giriş başarılı.");
       router.push("/hesap");
       router.refresh();
@@ -45,6 +48,7 @@ export function LoginForm() {
 
   return (
     <form onSubmit={onSubmit} className="space-y-4 rounded-2xl border border-neutral-800 bg-[#12121a] p-6">
+      <OAuthButtons mode="giris" />
       <label className="block space-y-1">
         <span className="text-xs font-medium text-neutral-400">E-posta</span>
         <input

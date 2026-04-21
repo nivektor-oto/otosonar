@@ -193,6 +193,18 @@ export default async function YoneticiPage() {
                   subtitle="Public duyuru sayfası"
                   icon={<ExternalLink className="w-4 h-4" aria-hidden strokeWidth={2} />}
                 />
+                <QuickAction
+                  href="/yonetici/ops"
+                  title="Ops paneli"
+                  subtitle="Hata, churn, push, analytics"
+                  icon={<Activity className="w-4 h-4" aria-hidden strokeWidth={2} />}
+                />
+                <QuickAction
+                  href="/yonetici/musteriler"
+                  title="Müşteriler"
+                  subtitle="Kayıtlı tüm kullanıcılar"
+                  icon={<Users className="w-4 h-4" aria-hidden strokeWidth={2} />}
+                />
               </div>
             </div>
 

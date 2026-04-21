@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/user-auth";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+import { sendToUser } from "@/lib/push";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -62,6 +63,13 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
       note: parsed.data.note ?? null,
     },
   });
+
+  sendToUser(listing.sellerId, {
+    title: "Yeni teklif var!",
+    body: `${listing.brand} ${listing.model} için ${parsed.data.amount.toLocaleString("tr-TR")} TL teklif geldi.`,
+    url: `/pazaryeri/${id}`,
+    tag: `new-bid-${id}`,
+  }).catch(() => undefined);
 
   return NextResponse.json({ success: true, bidId: bid.id });
 }

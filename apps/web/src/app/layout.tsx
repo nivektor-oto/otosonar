@@ -4,6 +4,7 @@ import { Toaster } from "sonner";
 import { ServiceWorkerRegister } from "@/components/sw-register";
 import { CookieBanner } from "@/components/cookie-banner";
 import { AnalyticsTracker } from "@/components/analytics-tracker";
+import { ErrorReporter } from "@/components/error-reporter";
 import "../styles/globals.css";
 
 const inter = Inter({
@@ -83,6 +84,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {children}
         <ServiceWorkerRegister />
         <AnalyticsTracker />
+        <ErrorReporter />
         <CookieBanner />
         <Toaster
           position="top-right"

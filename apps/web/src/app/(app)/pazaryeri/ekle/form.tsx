@@ -12,6 +12,13 @@ export function NewListingForm() {
     e.preventDefault();
     setLoading(true);
     const fd = new FormData(e.currentTarget);
+    const photoStr = String(fd.get("photos") ?? "");
+    const photos = photoStr
+      .split(/[\n,]/)
+      .map((s) => s.trim())
+      .filter((s) => /^https?:\/\//.test(s))
+      .slice(0, 12);
+
     const body = {
       brand: String(fd.get("brand") ?? ""),
       model: String(fd.get("model") ?? ""),
@@ -20,6 +27,7 @@ export function NewListingForm() {
       city: String(fd.get("city") ?? ""),
       askingPrice: Number(fd.get("askingPrice")),
       description: String(fd.get("description") ?? "") || undefined,
+      photos: photos.length ? photos : undefined,
     };
 
     const r = await fetch("/api/marketplace/listings", {
@@ -74,6 +82,20 @@ export function NewListingForm() {
       <label className="block">
         <span className="mb-1 block text-xs text-neutral-400">Açıklama</span>
         <textarea name="description" rows={4} maxLength={2000} className={input} />
+      </label>
+      <label className="block">
+        <span className="mb-1 block text-xs text-neutral-400">
+          Fotoğraf URL'leri (virgül veya satır ayrı, max 12 adet)
+        </span>
+        <textarea
+          name="photos"
+          rows={3}
+          placeholder="https://.../foto1.jpg\nhttps://.../foto2.jpg"
+          className={input}
+        />
+        <p className="mt-1 text-[10px] text-neutral-500">
+          Şu an sadece URL kabul ediyoruz. Dosya yükleme özelliği lansman sonrası.
+        </p>
       </label>
       <button
         disabled={loading}

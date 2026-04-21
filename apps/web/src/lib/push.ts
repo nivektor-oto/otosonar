@@ -33,6 +33,8 @@ export async function sendToUser(
   let failed = 0;
 
   for (const sub of subs) {
+    let success = false;
+    let errorCode: number | undefined;
     try {
       await webpush.sendNotification(
         {
@@ -41,17 +43,31 @@ export async function sendToUser(
         },
         JSON.stringify(payload),
       );
+      success = true;
       sent++;
     } catch (err: unknown) {
       failed++;
-      const statusCode =
+      errorCode =
         err && typeof err === "object" && "statusCode" in err
           ? (err as { statusCode?: number }).statusCode
           : undefined;
-      if (statusCode === 404 || statusCode === 410) {
+      if (errorCode === 404 || errorCode === 410) {
         await prisma.pushSubscription.delete({ where: { id: sub.id } }).catch(() => undefined);
       }
     }
+    await prisma.pushSendLog
+      .create({
+        data: {
+          userId,
+          endpoint: sub.endpoint,
+          title: payload.title.slice(0, 200),
+          body: payload.body.slice(0, 500),
+          url: payload.url?.slice(0, 300) ?? null,
+          success,
+          errorCode: errorCode ?? null,
+        },
+      })
+      .catch(() => undefined);
   }
   return { sent, failed };
 }

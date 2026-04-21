@@ -115,13 +115,13 @@ function Nav() {
         </Link>
         <div className="flex items-center gap-2">
           <Link
-            href="/onboarding"
+            href="/giris"
             className="btn-ghost text-sm hidden sm:inline-flex"
           >
             Giriş Yap
           </Link>
           <Link
-            href="/onboarding"
+            href="/kayit"
             className="btn-primary text-sm inline-flex items-center gap-2"
           >
             Ücretsiz Başla
@@ -173,7 +173,7 @@ function Hero() {
           saniyeler içinde çıkarır.
         </p>
         <div className="mt-10 flex flex-wrap items-center justify-center gap-3 animate-fade-up [animation-delay:240ms]">
-          <Link href="/onboarding" className="btn-primary">
+          <Link href="/kayit" className="btn-primary">
             3 Analizi Ücretsiz Dene
             <ArrowRight className="w-4 h-4" aria-hidden strokeWidth={2.5} />
           </Link>
@@ -324,6 +324,9 @@ function Footer() {
           </Link>
           <Link href="/sozlesme" className="hover:text-white transition">
             Üyelik
+          </Link>
+          <Link href="/cerez" className="hover:text-white transition">
+            Çerez
           </Link>
           <a
             href="mailto:destek@otosonar.com"

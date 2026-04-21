@@ -20,6 +20,7 @@ function getOrCreateSessionId(): string {
 export function AnalyticsTracker() {
   const pathname = usePathname();
   useEffect(() => {
+    if (!pathname || pathname.startsWith("/gomulu") || pathname.startsWith("/offline")) return;
     const sessionId = getOrCreateSessionId();
     const params = new URLSearchParams(window.location.search);
     fetch("/api/analytics", {

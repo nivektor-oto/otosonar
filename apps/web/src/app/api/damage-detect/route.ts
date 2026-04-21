@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { createHash } from "node:crypto";
 import { detectDamage } from "@/lib/vision";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { getCurrentUser } from "@/lib/user-auth";
 import { logError } from "@/lib/error-log";
+import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -36,7 +38,25 @@ export async function POST(req: Request) {
 
   try {
     const out = await detectDamage(parsed.data.imageBase64, parsed.data.mimeType);
-    return NextResponse.json({ success: true, ...out });
+    const imageHash = createHash("sha256")
+      .update(Buffer.from(parsed.data.imageBase64, "base64"))
+      .digest("hex");
+
+    const saved = await prisma.damageAnalysis.create({
+      data: {
+        userId: user?.id ?? null,
+        overallSeverity: out.result.overallSeverity,
+        repairEstimateMinTL: out.result.repairEstimateMinTL,
+        repairEstimateMaxTL: out.result.repairEstimateMaxTL,
+        damagesJson: out.result.damages as never,
+        notes: out.result.notes ?? null,
+        imageHash,
+        modelVersion: out.model,
+        durationMs: out.durationMs,
+      },
+    }).catch(() => null);
+
+    return NextResponse.json({ success: true, ...out, id: saved?.id ?? null });
   } catch (err) {
     await logError(err, { path: "/api/damage-detect", userId: user?.id });
     return NextResponse.json({ success: false, error: "analysis_failed" }, { status: 500 });

@@ -36,16 +36,20 @@ enum VerificationStatus {
 
 model User {
   id             String    @id @default(cuid())
+  customerNumber Int       @unique @default(autoincrement())
   email          String    @unique
   phone          String?   @unique
   fullName       String
   userType       UserType  @default(BUYER)
   passwordHash   String?   // nullable — OAuth ile giriş olabilir
+  avatarUrl      String?
   emailVerified  DateTime?
   phoneVerified  DateTime?
   totpSecret     String?   // galericide zorunlu
+  totpEnabled    Boolean   @default(false)
   kvkkConsentAt  DateTime?
   marketingOptIn Boolean   @default(false)
+  quizResult     Json?     // { persona, recommendedTier, answers, completedAt }
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
   lastLoginAt    DateTime?
@@ -58,6 +62,7 @@ model User {
 
   @@index([userType])
   @@index([createdAt])
+  @@index([customerNumber])
 }
 
 model BuyerPreferences {
@@ -423,13 +428,14 @@ model MarketplaceListing {
 }
 
 model MarketplaceBid {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   listingId   String
   bidderId    String   // dealer user id
   amount      Int
-  note        String?  @db.Text
-  retracted   Boolean  @default(false)
-  createdAt   DateTime @default(now())
+  note        String?   @db.Text
+  retracted   Boolean   @default(false)
+  acceptedAt  DateTime?
+  createdAt   DateTime  @default(now())
 
   listing MarketplaceListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
 
@@ -472,7 +478,7 @@ model PaymentIntent {
   amountKurus    Int           // 249_00 = 249.00 TL
   currency       String        @default("TRY")
   provider       String        // "iyzico" | "paytr"
-  providerRef    String?
+  providerRef    String?       @unique  // idempotency key
   status         PaymentStatus @default(PENDING)
   failReason     String?
   metadata       Json?
@@ -481,4 +487,106 @@ model PaymentIntent {
 
   @@index([userId, createdAt])
   @@index([status])
+}
+
+// ============================================================
+// OAUTH (Google, Apple, ...)
+// ============================================================
+
+model OAuthAccount {
+  id                String   @id @default(cuid())
+  userId            String
+  provider          String   // "google" | "apple"
+  providerAccountId String   // sub (subject) id from provider
+  email             String?
+  createdAt         DateTime @default(now())
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+// ============================================================
+// AI HISTORY (Damage + Plate)
+// ============================================================
+
+enum DamageSeverity {
+  YOK
+  HAFIF
+  ORTA
+  AGIR
+}
+
+model DamageAnalysis {
+  id                   String         @id @default(cuid())
+  userId               String?        // nullable for anonymous
+  sessionId            String?        // anonymous cookie for grouping
+  overallSeverity      DamageSeverity
+  repairEstimateMinTL  Int
+  repairEstimateMaxTL  Int
+  damagesJson          Json           // [{type, location, severity, description}]
+  notes                String?        @db.Text
+  imageHash            String?        // sha256 of image bytes — avoid duplicate stores
+  modelVersion         String         @default("gemini-2.5-flash")
+  durationMs           Int?
+  createdAt            DateTime       @default(now())
+
+  @@index([userId, createdAt])
+  @@index([createdAt])
+}
+
+model PlateRecognition {
+  id            String   @id @default(cuid())
+  userId        String?
+  sessionId     String?
+  plate         String?
+  confidence    Float
+  isTurkish     Boolean
+  region        String?
+  imageHash     String?
+  modelVersion  String   @default("gemini-2.5-flash")
+  durationMs    Int?
+  createdAt     DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
+
+// ============================================================
+// CREDIT LEDGER (referral bonus, trial credits)
+// ============================================================
+
+enum CreditKind {
+  REFERRAL_BONUS
+  TRIAL_CREDIT
+  SUPPORT_GIFT
+  MANUAL_ADJUSTMENT
+}
+
+model CreditLedger {
+  id          String     @id @default(cuid())
+  userId      String
+  kind        CreditKind
+  amountDays  Int        // + = gifted days, - = consumed
+  note        String?
+  refId       String?    // referral redemption id, payment intent id, etc.
+  createdAt   DateTime   @default(now())
+
+  @@index([userId, createdAt])
+}
+
+// ============================================================
+// PUSH SEND LOG
+// ============================================================
+
+model PushSendLog {
+  id           String   @id @default(cuid())
+  userId       String?
+  endpoint     String?
+  title        String
+  body         String?  @db.Text
+  url          String?
+  success      Boolean
+  errorCode    Int?
+  createdAt    DateTime @default(now())
+
+  @@index([userId, createdAt])
 }

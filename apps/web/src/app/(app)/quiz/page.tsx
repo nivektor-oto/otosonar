@@ -1,14 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 
 type Answer = "a" | "b" | "c" | "d";
+type Persona = "novice" | "casual" | "pro" | "dealer";
+type Tier = "PLUS" | "PRO" | "MAX" | "BAYI_PRO";
 
 interface Question {
   q: string;
   options: Record<Answer, string>;
-  scoreMap: Record<Answer, { type: "novice" | "casual" | "pro" | "dealer"; points: number }>;
+  scoreMap: Record<Answer, { type: Persona; points: number }>;
 }
 
 const QUESTIONS: Question[] = [
@@ -79,31 +81,59 @@ const QUESTIONS: Question[] = [
   },
 ];
 
+const TIER_MAP: Record<Persona, Tier> = {
+  novice: "PLUS",
+  casual: "PRO",
+  pro: "MAX",
+  dealer: "BAYI_PRO",
+};
+
+const DESC: Record<Persona, { title: string; pkg: string; why: string }> = {
+  novice: { title: "Meraklı Alıcı", pkg: "Plus", why: "Ayda 25 analiz yeter, AI sana yol göstersin." },
+  casual: { title: "Bilinçli Alıcı", pkg: "Pro", why: "Sınırsız analiz + rapor indirme." },
+  pro: { title: "Tecrübeli Avcı", pkg: "Max", why: "Plaka OCR + hasar AI + öncelikli destek." },
+  dealer: { title: "Galerici Profili", pkg: "Bayi Pro", why: "Trade-in + fleet + API erişim." },
+};
+
 export default function QuizPage() {
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Answer[]>([]);
+  const [persisted, setPersisted] = useState(false);
 
-  if (step >= QUESTIONS.length) {
-    const totals: Record<"novice" | "casual" | "pro" | "dealer", number> = {
-      novice: 0,
-      casual: 0,
-      pro: 0,
-      dealer: 0,
-    };
+  const finished = step >= QUESTIONS.length;
+
+  useEffect(() => {
+    if (!finished || persisted) return;
+    const totals: Record<Persona, number> = { novice: 0, casual: 0, pro: 0, dealer: 0 };
     answers.forEach((a, i) => {
       const { type, points } = QUESTIONS[i].scoreMap[a];
       totals[type] += points;
     });
-    const persona = (Object.entries(totals).sort((a, b) => b[1] - a[1])[0][0]) as keyof typeof totals;
-    const rec = {
-      novice: { title: "Meraklı Alıcı", pkg: "Plus", why: "Ayda 25 analiz yeter, AI sana yol göstersin." },
-      casual: { title: "Bilinçli Alıcı", pkg: "Pro", why: "Sınırsız analiz + rapor indirme." },
-      pro: { title: "Tecrübeli Avcı", pkg: "Max", why: "Plaka OCR + hasar AI + öncelikli destek." },
-      dealer: { title: "Galerici Profili", pkg: "Bayi Pro", why: "Trade-in + fleet + API erişim." },
-    }[persona];
+    const persona = (Object.entries(totals).sort((a, b) => b[1] - a[1])[0][0]) as Persona;
+    fetch("/api/quiz", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        persona,
+        recommendedTier: TIER_MAP[persona],
+        answers,
+      }),
+    })
+      .catch(() => undefined)
+      .finally(() => setPersisted(true));
+  }, [finished, persisted, answers]);
+
+  if (finished) {
+    const totals: Record<Persona, number> = { novice: 0, casual: 0, pro: 0, dealer: 0 };
+    answers.forEach((a, i) => {
+      const { type, points } = QUESTIONS[i].scoreMap[a];
+      totals[type] += points;
+    });
+    const persona = (Object.entries(totals).sort((a, b) => b[1] - a[1])[0][0]) as Persona;
+    const rec = DESC[persona];
 
     return (
-      <main className="min-h-dvh bg-[#0a0a0f] px-4 py-16 text-neutral-100">
+      <main className="px-4 py-16 text-neutral-100">
         <div className="mx-auto max-w-lg space-y-6 text-center">
           <h1 className="text-3xl font-bold">Sen: {rec.title}</h1>
           <p className="text-sm text-neutral-400">{rec.why}</p>
@@ -115,14 +145,15 @@ export default function QuizPage() {
             href="/kayit"
             className="inline-block rounded-lg bg-emerald-500 px-6 py-3 text-sm font-semibold text-black hover:bg-emerald-400"
           >
-            {rec.pkg}'a başla
+            {rec.pkg}&apos;a başla
           </Link>
           <button
             onClick={() => {
               setAnswers([]);
               setStep(0);
+              setPersisted(false);
             }}
-            className="block mx-auto text-xs text-neutral-500 hover:underline"
+            className="mx-auto block text-xs text-neutral-500 hover:underline"
           >
             Tekrar yap
           </button>
@@ -133,7 +164,7 @@ export default function QuizPage() {
 
   const q = QUESTIONS[step];
   return (
-    <main className="min-h-dvh bg-[#0a0a0f] px-4 py-16 text-neutral-100">
+    <main className="px-4 py-16 text-neutral-100">
       <div className="mx-auto max-w-lg space-y-6">
         <div className="text-xs text-neutral-500">
           {step + 1} / {QUESTIONS.length}

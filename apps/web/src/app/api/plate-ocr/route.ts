@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { createHash } from "node:crypto";
 import { readPlate } from "@/lib/vision";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { getCurrentUser } from "@/lib/user-auth";
 import { logError } from "@/lib/error-log";
+import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -33,7 +35,22 @@ export async function POST(req: Request) {
 
   try {
     const out = await readPlate(parsed.data.imageBase64, parsed.data.mimeType);
-    return NextResponse.json({ success: true, ...out });
+    const imageHash = createHash("sha256")
+      .update(Buffer.from(parsed.data.imageBase64, "base64"))
+      .digest("hex");
+    const saved = await prisma.plateRecognition.create({
+      data: {
+        userId: user?.id ?? null,
+        plate: out.result.plate,
+        confidence: out.result.confidence,
+        isTurkish: out.result.isTurkishFormat,
+        region: out.result.region,
+        imageHash,
+        modelVersion: out.model,
+        durationMs: out.durationMs,
+      },
+    }).catch(() => null);
+    return NextResponse.json({ success: true, ...out, id: saved?.id ?? null });
   } catch (err) {
     await logError(err, { path: "/api/plate-ocr", userId: user?.id });
     return NextResponse.json({ success: false, error: "ocr_failed" }, { status: 500 });

@@ -28,6 +28,9 @@ importers:
       next:
         specifier: ^15.1.6
         version: 15.5.15(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
+      otpauth:
+        specifier: ^9.5.0
+        version: 9.5.0
       react:
         specifier: ^19.0.0
         version: 19.2.5
@@ -320,6 +323,10 @@ packages:
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [win32]
+
+  '@noble/hashes@2.0.1':
+    resolution: {integrity: sha512-XlOlEbQcE9fmuXxrVTXCTlG2nlRXa9Rj3rr5Ue/+tX+nmkgbX720YHh0VR3hBF9xDvwnb8D2shVGOwNx+ulArw==}
+    engines: {node: '>= 20.19.0'}
 
   '@nodelib/fs.scandir@2.1.5':
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
@@ -836,6 +843,9 @@ packages:
   ohash@2.0.11:
     resolution: {integrity: sha512-RdR9FQrFwNBNXAr4GixM8YaRZRJ5PUWbKYbE5eOsrwAjJW0q2REGcf79oYPsLyskQCZG1PLN+S/K1V00joZAoQ==}
 
+  otpauth@9.5.0:
+    resolution: {integrity: sha512-Ldhc6UYl4baR5toGr8nfKC+L/b8/RgHKoIixAebgoNGzUUCET02g04rMEZ2ZsPfeVQhMHcuaOgb28nwMr81zCA==}
+
   path-parse@1.0.7:
     resolution: {integrity: sha512-LDJzPVEEEPR+y48z93A0Ed0yXb8pAByGWo/k5YYdYgpY2/2EsOsksJrq7lOHxryrVOn1ejG6oAp8ahvOIQD8sw==}
 
@@ -1246,6 +1256,8 @@ snapshots:
 
   '@next/swc-win32-x64-msvc@15.5.15':
     optional: true
+
+  '@noble/hashes@2.0.1': {}
 
   '@nodelib/fs.scandir@2.1.5':
     dependencies:
@@ -1732,6 +1744,10 @@ snapshots:
   object-hash@3.0.0: {}
 
   ohash@2.0.11: {}
+
+  otpauth@9.5.0:
+    dependencies:
+      '@noble/hashes': 2.0.1
 
   path-parse@1.0.7: {}
 
