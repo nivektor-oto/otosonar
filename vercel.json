@@ -1,21 +1,10 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "buildCommand": "pnpm --filter web build",
-  "installCommand": "pnpm install",
+  "installCommand": "pnpm install --frozen-lockfile",
   "framework": "nextjs",
   "outputDirectory": "apps/web/.next",
   "regions": ["fra1"],
-  "functions": {
-    "apps/web/src/app/api/analyze/route.ts": {
-      "maxDuration": 60
-    },
-    "apps/web/src/app/api/market-research/route.ts": {
-      "maxDuration": 60
-    },
-    "apps/web/src/app/api/bozdurma/route.ts": {
-      "maxDuration": 60
-    }
-  },
   "headers": [
     {
       "source": "/(.*)",
