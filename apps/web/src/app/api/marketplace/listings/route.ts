@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/user-auth";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+import { evaluateListingQuota, LISTING_FEE_TL } from "@/lib/marketplace-quota";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -56,6 +57,21 @@ export async function POST(req: Request) {
   const parsed = createSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ success: false, error: "validation", details: parsed.error.flatten() }, { status: 400 });
 
+  const quota = await evaluateListingQuota(user.id);
+  if (!quota.allowed) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: "payment_required",
+        priceTL: quota.priceTL,
+        reason: quota.reason,
+        limit: quota.limit,
+        used: quota.used,
+      },
+      { status: 402 },
+    );
+  }
+
   const listing = await prisma.marketplaceListing.create({
     data: {
       sellerId: user.id,
@@ -71,5 +87,5 @@ export async function POST(req: Request) {
     },
   });
 
-  return NextResponse.json({ success: true, listingId: listing.id });
+  return NextResponse.json({ success: true, listingId: listing.id, feeTL: 0, quotaReason: quota.reason });
 }
