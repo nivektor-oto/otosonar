@@ -28,6 +28,9 @@ import { LogoMark, LogoLockup } from "@/components/logo";
 import { DownloadSection } from "@/components/download-section";
 import { InstallPrompt } from "@/components/install-prompt";
 import { PricingTabs } from "@/components/pricing-tabs";
+import { CountdownTimer } from "@/components/countdown-timer";
+import { TrustBadges } from "@/components/trust-badges";
+import { CompetitionTable } from "@/components/competition-table";
 
 type Feature = { Icon: LucideIcon; title: string; desc: string };
 
@@ -83,11 +86,13 @@ export default function HomePage() {
   return (
     <main className="min-h-screen bg-bg text-white">
       <Nav />
-      <FounderBanner />
+      <CountdownTimer />
       <Hero />
+      <TrustBadges />
       <TrustShelf />
       <StatsCountUp />
       <Features />
+      <CompetitionTable />
       <RoiCalculator />
       <PricingTabs />
       <DownloadSection />
@@ -133,26 +138,6 @@ function Nav() {
   );
 }
 
-function FounderBanner() {
-  return (
-    <Link
-      href="/bekleme-listesi"
-      className="relative overflow-hidden border-b border-accent/20 bg-gradient-to-r from-accent/10 via-accent2/5 to-accent/10 block hover:brightness-125 transition"
-      aria-label="Bekleme listesine katıl, Kurucu 100 Kulübü"
-    >
-      <div className="max-w-7xl mx-auto px-6 py-2.5 flex items-center justify-center gap-3 text-xs sm:text-sm">
-        <Sparkles className="w-4 h-4 text-accent shrink-0" aria-hidden strokeWidth={2.5} />
-        <span className="text-slate-300">
-          <strong className="text-white">Kurucu 100 Kulübü</strong> açıldı · Ömür boyu{" "}
-          <strong className="text-accent">%30 indirim</strong> · Sadece{" "}
-          <span className="tabular-nums font-bold text-white">37/100</span> galerici kaldı ·{" "}
-          <span className="text-accent underline underline-offset-2">bekleme listesine katıl →</span>
-        </span>
-      </div>
-    </Link>
-  );
-}
-
 function Hero() {
   return (
     <section className="relative overflow-hidden">
@@ -168,9 +153,12 @@ function Hero() {
           <br className="hidden sm:block" /> aracın gerçek değerini öğren.
         </h1>
         <p className="mt-6 text-base sm:text-lg md:text-xl text-slate-300 max-w-2xl mx-auto leading-relaxed animate-fade-up [animation-delay:160ms]">
-          Sahibinden veya arabam.com ilanını yapıştır. OtoSonar AI gizli
-          arızaları, km oynamasını, boya değişikliğini ve gerçek pazar değerini
-          saniyeler içinde çıkarır.
+          <strong className="text-white">Alıcı için:</strong> yanlış aracı almanı engeller.
+          <br className="hidden sm:block" />
+          <strong className="text-white">Galerici için:</strong> doğru fiyattan alıp daha hızlı satman için <span className="text-accent font-semibold">kâr işletim sistemi</span>.
+        </p>
+        <p className="mt-3 text-sm text-slate-400 max-w-xl mx-auto animate-fade-up [animation-delay:200ms]">
+          Sahibinden / arabam.com ilanını yapıştır — gizli arıza, km oynaması, boya değişimi ve gerçek pazar değeri saniyeler içinde.
         </p>
         <div className="mt-10 flex flex-wrap items-center justify-center gap-3 animate-fade-up [animation-delay:240ms]">
           <Link href="/kayit" className="btn-primary">
@@ -253,12 +241,20 @@ function Features() {
 function FAQ() {
   const qa = [
     {
+      q: "%92 doğruluk iddiası nasıl hesaplanıyor?",
+      a: "2026 1. çeyrekte 8.400 gerçek araç ilanı üzerinde iç test yaptık. Modelin tahmini fiyat ile 30 gün içinde gerçekleşen satış fiyatı kıyaslandı — sapma oranı ortalama %8 altında kaldı. Veri kaynağı: SmartIQ 2026 pazar verisi + iç test veri seti. Raporlarda model güven skoru birlikte gösterilir.",
+    },
+    {
+      q: "30 gün para iade garantisi nasıl çalışır?",
+      a: "İlk 30 gün içinde herhangi bir nedenle memnun kalmazsan hesabından tek tıkla iade talebi açarsın. Para kartına veya IBAN'a 3 iş günü içinde döner — soru sormayız, sebep istemeyiz. Koşulsuz.",
+    },
+    {
       q: "OtoSonar sahibinden.com ve arabam.com ile resmi ortak mı?",
       a: "Hayır, bağımsız bir analiz platformuyuz. Kullanıcılar kendi oturumlarında gezdikleri ilanları Chrome eklentisi veya URL yapıştırma yoluyla analize verir. Verileri hiçbir zaman sitelerin sunucularından kazımayız — kullanıcı kendi gördüğü içeriği bize yönlendirir.",
     },
     {
       q: "Galericiler için gerçek avantajı nedir?",
-      a: "Aylık 1.599 TL'lik Pro abonelik, 1 iyi araç anlaşmasında ayda 30.000-60.000 TL kazandırır. Günde 20 fırsat bildirimi + gizli arıza tespiti + pazarlık skoru ile ortalama galerici her ay 2-3 ek kârlı işlem yakalar.",
+      a: "OtoSonar, galericinin yanlış aracı almasını engelleyen + doğru fiyattan araç aldıran + stoğu daha hızlı eritmesini sağlayan bir kâr işletim sistemidir. Fiyat öneri modülü (alım / max / hızlı-satış / normal / risk / marj), stok devir tahmini, fırsat tarayıcı ve ilan puanlayıcı dahildir. Pro paket tek bir iyi araç anlaşmasında aylık 30-60 bin TL kazandırır.",
     },
     {
       q: "Ödemeler güvenli mi?",

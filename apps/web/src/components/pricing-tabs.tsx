@@ -161,7 +161,10 @@ export function PricingTabs() {
         </div>
 
         {audience === "b2b" && (
-          <div className="flex justify-center mb-6">
+          <div className="flex flex-col items-center gap-3 mb-6">
+            <p className="text-center text-sm text-slate-300 max-w-2xl">
+              Galerici için <strong className="text-white">kâr işletim sistemi</strong> — doğru araçtan alıp, stoğu daha hızlı eritmeni sağlar.
+            </p>
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-semibold">
               <Sparkles className="w-3 h-3" aria-hidden strokeWidth={2.5} />
               Kurucu 100 Kulübü açık — ömür boyu %30 indirim, çizik fiyatlar uygulanır

@@ -5,6 +5,7 @@ import { ServiceWorkerRegister } from "@/components/sw-register";
 import { CookieBanner } from "@/components/cookie-banner";
 import { AnalyticsTracker } from "@/components/analytics-tracker";
 import { ErrorReporter } from "@/components/error-reporter";
+import { ThirdPartyAnalytics } from "@/components/third-party-analytics";
 import "../styles/globals.css";
 
 const inter = Inter({
@@ -15,9 +16,9 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://otosonar.com"),
-  title: "OtoSonar — AI destekli araç analiz platformu",
+  title: "OtoSonar AI | Sahibinden İlan Analizi 8 Saniyede – KM + Hasar + Gerçek Değer 2026",
   description:
-    "Sahibinden ve arabam.com ilanlarını saniyeler içinde analiz et. Emsal değer, gizli arıza, pazarlık skoru ve günlük 5 fırsat — galericiler ve araç alıcıları için.",
+    "Sahibinden / arabam.com ilanını yapıştır, 8 saniyede gerçek değer, km oynaması, boya-hasar tespiti ve pazarlık skoru çıksın. Galericiler için kâr işletim sistemi — %92 doğruluk, 30 gün para iade.",
   applicationName: "OtoSonar",
   manifest: "/manifest.json",
   icons: {
@@ -39,28 +40,32 @@ export const metadata: Metadata = {
     telephone: false,
   },
   keywords: [
-    "araç analiz",
-    "oto zeka",
+    "sahibinden ilan analizi",
+    "arabam.com analiz",
+    "araç emsal değer",
+    "ikinci el araç analiz",
     "galerici yazılımı",
-    "emsal değer",
-    "ikinci el araç",
-    "sahibinden analiz",
-    "arabam analiz",
+    "galerici kâr motoru",
+    "araç km kontrolü",
+    "oto boya değişen tespiti",
+    "pazarlık skoru",
+    "2 el araç ai",
+    "otosonar",
   ],
   authors: [{ name: "NiVector" }],
   openGraph: {
-    title: "OtoSonar — AI destekli araç analizi",
+    title: "OtoSonar AI | Sahibinden İlan Analizi 8 Saniyede — 2026",
     description:
-      "İlanı 10 saniyede analiz et. Emsal değer, gizli arıza, pazarlık skoru, günlük fırsat.",
+      "8 saniyede gerçek değer, km oynaması, boya-hasar, pazarlık skoru. Galericiler için kâr işletim sistemi. %92 doğruluk.",
     locale: "tr_TR",
     type: "website",
     siteName: "OtoSonar",
-    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "OtoSonar" }],
+    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "OtoSonar — AI araç analizi" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "OtoSonar — AI araç analizi",
-    description: "İlanı 10 saniyede analiz et.",
+    title: "OtoSonar AI | 8 saniyede araç zekâsı",
+    description: "Sahibinden / arabam.com ilanını yapıştır, 8 saniyede gerçek değer çıksın. Galericiler için kâr motoru.",
     images: ["/og-image.png"],
   },
 };
@@ -93,6 +98,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {children}
         <ServiceWorkerRegister />
         <AnalyticsTracker />
+        <ThirdPartyAnalytics />
         <ErrorReporter />
         <CookieBanner />
         <Toaster
