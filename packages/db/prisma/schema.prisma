@@ -1,0 +1,235 @@
+// OtoSonar - Prisma Schema
+// Faz 1 MVP: User, Listing, Analysis, Subscription temelleri.
+// Faz 2'de Marketplace (Bid, Transaction, Commission) eklenecek.
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================
+// USER & AUTH
+// ============================================================
+
+enum UserType {
+  BUYER     // B2C - araç alıcısı
+  DEALER    // B2B - galerici
+  BROKER    // Komisyoncu
+  ADMIN
+}
+
+enum DealerVolume {
+  SMALL     // <5 araç/ay
+  MEDIUM    // 5-20 araç/ay
+  LARGE     // 20+ araç/ay
+}
+
+enum VerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+model User {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  phone          String?   @unique
+  fullName       String
+  userType       UserType  @default(BUYER)
+  passwordHash   String?   // nullable — OAuth ile giriş olabilir
+  emailVerified  DateTime?
+  phoneVerified  DateTime?
+  totpSecret     String?   // galericide zorunlu
+  kvkkConsentAt  DateTime?
+  marketingOptIn Boolean   @default(false)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  lastLoginAt    DateTime?
+
+  dealer        Dealer?
+  broker        Broker?
+  subscriptions Subscription[]
+  analyses      Analysis[]
+  buyerPrefs    BuyerPreferences?
+
+  @@index([userType])
+  @@index([createdAt])
+}
+
+model BuyerPreferences {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  budgetMin   Int?
+  budgetMax   Int?
+  brands      String[] // PostgreSQL array
+  cities      String[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Dealer {
+  id                 String             @id @default(cuid())
+  userId             String             @unique
+  companyName        String
+  taxNo              String?            @unique  // vergi numarası
+  mersisNo           String?            @unique
+  cityId             String
+  address            String?
+  monthlyVolume      DealerVolume?
+  verificationStatus VerificationStatus @default(PENDING)
+  verifiedAt         DateTime?
+  verifiedByAdminId  String?
+  ibanEncrypted      String?            // app-level AES-256 GCM
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([cityId, verificationStatus])
+}
+
+model Broker {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  displayName String
+  bio         String?
+  city        String
+  publicSlug  String   @unique  // profil URL'i için
+  commissionRate Decimal @default(0.35)  // satış komisyonundan payı (0.35 = %35)
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ============================================================
+// SUBSCRIPTION
+// ============================================================
+
+enum Tier {
+  PLUS
+  PRO
+  MAX
+}
+
+enum BillingPeriod {
+  MONTHLY
+  YEARLY
+}
+
+enum SubscriptionStatus {
+  TRIAL
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  EXPIRED
+}
+
+model Subscription {
+  id                   String             @id @default(cuid())
+  userId               String
+  tier                 Tier
+  billingPeriod        BillingPeriod      @default(MONTHLY)
+  status               SubscriptionStatus @default(TRIAL)
+  trialEndsAt          DateTime?
+  currentPeriodStart   DateTime?
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean            @default(false)
+  paytrSubscriptionRef String?
+  iyzicoSubscriptionRef String?
+  appleOriginalTxId    String?  // iOS IAP için
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+  @@index([status, currentPeriodEnd])
+}
+
+// ============================================================
+// LISTING & ANALYSIS
+// ============================================================
+
+enum ListingSource {
+  SAHIBINDEN
+  ARABAM
+  MANUAL
+  MARKETPLACE
+}
+
+model Listing {
+  id              String         @id @default(cuid())
+  source          ListingSource
+  externalUrl     String?
+  externalId      String?        // kaynak platform ilan id
+  rawHtmlR2Key    String?        // ham sayfa arşivi (denetim için)
+  parsedData      Json           // { brand, model, variant, year, km, price, description, photos, ... }
+  title           String?
+  brand           String?
+  model           String?
+  variant         String?
+  year            Int?
+  km              Int?
+  fuelType        String?
+  transmission    String?
+  city            String?
+  askingPrice     Int?
+  descriptionText String?        @db.Text
+  submittedByUserId String?
+  createdAt       DateTime       @default(now())
+
+  analyses Analysis[]
+
+  @@index([brand, model, year])
+  @@index([city, askingPrice])
+  @@index([createdAt])
+  @@unique([source, externalId])
+}
+
+model Analysis {
+  id                String   @id @default(cuid())
+  listingId         String
+  userId            String
+  emsalValue        Int?     // tahmini pazar değeri (TL)
+  emsalConfidence   Decimal? // 0-1 arası
+  redFlags          Json     // [{type, severity, detail, repairEstimate}]
+  repairEstimateMin Int?     // toplam tahmini tamir (TL)
+  repairEstimateMax Int?
+  negotiationScore  Int?     // 0-100 pazarlık skoru
+  reportMarkdown    String?  @db.Text  // kullanıcıya gösterilen zengin rapor
+  aiModelVersion    String   @default("haiku-4.5")
+  processingTimeMs  Int?
+  createdAt         DateTime @default(now())
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([listingId])
+}
+
+// ============================================================
+// AUDIT
+// ============================================================
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  action     String   // "user.login", "subscription.create", "bid.place", ...
+  targetType String?
+  targetId   String?
+  ip         String?
+  userAgent  String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  @@index([actorId, createdAt])
+  @@index([action, createdAt])
+}
