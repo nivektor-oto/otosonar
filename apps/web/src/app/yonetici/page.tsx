@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { promises as fs } from "node:fs";
-import path from "node:path";
+import { listAll } from "@/lib/waitlist";
 import {
   Users,
   UserPlus,
@@ -22,41 +21,16 @@ import { FounderLogoutButton, ExportCsvButton } from "@/components/founder-actio
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Yönetici Paneli — OtoSonar" };
 
-type Record = {
-  email: string;
-  fullName?: string;
-  userType: "buyer" | "dealer" | "broker";
-  city?: string;
-  referralSource?: string;
-  queueNumber: number;
-  createdAt: string;
-};
-
-async function readWaitlist(): Promise<Record[]> {
-  const file = path.join(process.cwd(), "data", "waitlist.jsonl");
-  try {
-    const raw = await fs.readFile(file, "utf8");
-    return raw
-      .split("\n")
-      .filter((l) => l.trim())
-      .map((l) => JSON.parse(l) as Record);
-  } catch {
-    return [];
-  }
-}
-
 export default async function YoneticiPage() {
   const session = await getFounderSession();
   if (!session) redirect("/yonetici/giris");
 
-  const records = await readWaitlist();
+  const records = await listAll(500);
   const total = records.length;
   const dealers = records.filter((r) => r.userType === "dealer").length;
   const buyers = records.filter((r) => r.userType === "buyer").length;
   const brokers = records.filter((r) => r.userType === "broker").length;
-  const recent = [...records]
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-    .slice(0, 20);
+  const recent = records.slice(0, 20);
 
   return (
     <main className="min-h-screen bg-bg text-white">
@@ -172,7 +146,7 @@ export default async function YoneticiPage() {
                           {r.city ?? "—"}
                         </td>
                         <td className="px-2 py-2 text-slate-500 text-xs hidden md:table-cell tabular-nums">
-                          {formatDate(r.createdAt)}
+                          {formatDate(r.createdAt.toString())}
                         </td>
                       </tr>
                     ))}

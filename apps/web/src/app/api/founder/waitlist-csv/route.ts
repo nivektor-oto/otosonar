@@ -1,20 +1,9 @@
 import { NextResponse } from "next/server";
-import { promises as fs } from "node:fs";
-import path from "node:path";
 import { getFounderSession } from "@/lib/founder-auth";
+import { listAll } from "@/lib/waitlist";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-interface Rec {
-  email: string;
-  fullName?: string;
-  userType: string;
-  city?: string;
-  referralSource?: string;
-  queueNumber: number;
-  createdAt: string;
-}
 
 function csvEscape(v: unknown): string {
   const s = v === undefined || v === null ? "" : String(v);
@@ -28,25 +17,23 @@ export async function GET() {
     return NextResponse.json({ success: false, error: "unauthorized" }, { status: 401 });
   }
 
-  const file = path.join(process.cwd(), "data", "waitlist.jsonl");
-  let rows: Rec[] = [];
-  try {
-    const raw = await fs.readFile(file, "utf8");
-    rows = raw
-      .split("\n")
-      .filter((l) => l.trim())
-      .map((l) => JSON.parse(l) as Rec);
-  } catch {
-    rows = [];
-  }
+  const rows = await listAll(10000);
 
-  const headers = ["queueNumber", "createdAt", "email", "fullName", "userType", "city", "referralSource"];
+  const headers = [
+    "queueNumber",
+    "createdAt",
+    "email",
+    "fullName",
+    "userType",
+    "city",
+    "referralSource",
+  ];
   const lines = [headers.join(",")];
   for (const r of rows) {
     lines.push(
       [
         csvEscape(r.queueNumber),
-        csvEscape(r.createdAt),
+        csvEscape(r.createdAt.toISOString()),
         csvEscape(r.email),
         csvEscape(r.fullName),
         csvEscape(r.userType),

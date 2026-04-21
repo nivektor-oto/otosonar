@@ -4,7 +4,6 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../node_modules/.prisma/client"
 }
 
 datasource db {
@@ -213,6 +212,31 @@ model Analysis {
 
   @@index([userId, createdAt])
   @@index([listingId])
+}
+
+// ============================================================
+// WAITLIST (launch öncesi)
+// ============================================================
+
+enum WaitlistUserType {
+  buyer
+  dealer
+  broker
+}
+
+model WaitlistEntry {
+  id             String            @id @default(cuid())
+  email          String            @unique
+  fullName       String?
+  userType       WaitlistUserType
+  city           String?
+  referralSource String?
+  queueNumber    Int               @unique @default(autoincrement())
+  ipHash         String?
+  createdAt      DateTime          @default(now())
+
+  @@index([userType])
+  @@index([createdAt])
 }
 
 // ============================================================
