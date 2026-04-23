@@ -19,6 +19,7 @@ import {
 } from "@/lib/iyzico";
 import { grantReferralBonusIfApplicable } from "@/lib/referral";
 import { logError } from "@/lib/error-log";
+import { featureDisabledResponse, isFeatureEnabled } from "@/lib/feature-flags";
 
 type Tier = "PLUS" | "PRO" | "MAX";
 const B2C_TIERS: readonly Tier[] = ["PLUS", "PRO", "MAX"];
@@ -52,6 +53,9 @@ interface WebhookPayloadB {
 type WebhookPayload = WebhookPayloadA & WebhookPayloadB;
 
 export async function POST(req: Request) {
+  if (!isFeatureEnabled("IYZICO_LIVE_INTEGRATION_ENABLED")) {
+    return featureDisabledResponse("IYZICO_LIVE_INTEGRATION_ENABLED");
+  }
   const raw = await req.text();
   const sig =
     req.headers.get("x-iyz-signature") ??

@@ -22,6 +22,10 @@ export const FEATURE_FLAG_DEFAULTS = {
   DEALER_ADVANCED_FEATURES: false,
   AI_DIAGNOSIS_ENABLED: false,
   AB_LANDING_VARIANT_B_ENABLED: false,
+  IYZICO_LIVE_INTEGRATION_ENABLED: false,
+  ADMIN_PANEL_ENABLED: false,
+  KVKK_ACCOUNT_DELETE_ENABLED: false,
+  KVKK_ACCOUNT_EXPORT_ENABLED: false,
 } as const satisfies Record<string, boolean>;
 
 export type FeatureFlag = keyof typeof FEATURE_FLAG_DEFAULTS;

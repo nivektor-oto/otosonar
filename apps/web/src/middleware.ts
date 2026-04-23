@@ -19,6 +19,11 @@ function normalizeVariant(raw: string | undefined): AbVariant | null {
 }
 
 export function middleware(req: NextRequest) {
+  const { pathname } = req.nextUrl;
+  if (pathname.startsWith("/admin") && !isFeatureEnabled("ADMIN_PANEL_ENABLED")) {
+    return new NextResponse(null, { status: 404 });
+  }
+
   const abEnabled = isFeatureEnabled("AB_LANDING_VARIANT_B_ENABLED");
   const existing = normalizeVariant(req.cookies.get(AB_COOKIE)?.value);
   let variant: AbVariant | null = existing;

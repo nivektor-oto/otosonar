@@ -5,6 +5,7 @@ import { getClientIp, checkRateLimit } from "@/lib/rate-limit";
 import { prisma } from "@/lib/prisma";
 import { logError } from "@/lib/error-log";
 import { headers } from "next/headers";
+import { featureDisabledResponse, isFeatureEnabled } from "@/lib/feature-flags";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -14,6 +15,10 @@ function sha256(s: string): string {
 }
 
 export async function GET() {
+  if (!isFeatureEnabled("KVKK_ACCOUNT_EXPORT_ENABLED")) {
+    return featureDisabledResponse("KVKK_ACCOUNT_EXPORT_ENABLED");
+  }
+
   const ip = await getClientIp();
   const rl = await checkRateLimit(`kvkk-export:ip:${ip}`, 3, 3600);
   if (!rl.allowed) {

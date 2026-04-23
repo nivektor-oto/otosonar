@@ -4,6 +4,7 @@ import { createCheckoutSession, getTierPriceKurus, isReady } from "@/lib/iyzico"
 import { getCurrentUser } from "@/lib/user-auth";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { logError } from "@/lib/error-log";
+import { featureDisabledResponse, isFeatureEnabled } from "@/lib/feature-flags";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -16,6 +17,10 @@ const schema = z
   .strict();
 
 export async function POST(req: Request) {
+  if (!isFeatureEnabled("IYZICO_LIVE_INTEGRATION_ENABLED")) {
+    return featureDisabledResponse("IYZICO_LIVE_INTEGRATION_ENABLED");
+  }
+
   const user = await getCurrentUser();
   if (!user) {
     return NextResponse.json({ success: false, error: "unauthorized" }, { status: 401 });

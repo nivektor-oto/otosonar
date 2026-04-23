@@ -11,6 +11,7 @@ import {
 import { getClientIp, checkRateLimit } from "@/lib/rate-limit";
 import { prisma } from "@/lib/prisma";
 import { logError } from "@/lib/error-log";
+import { featureDisabledResponse, isFeatureEnabled } from "@/lib/feature-flags";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -28,6 +29,10 @@ const deleteSchema = z.object({
 const REQUIRED_PHRASE = "HESABIMI SİL";
 
 export async function POST(req: Request) {
+  if (!isFeatureEnabled("KVKK_ACCOUNT_DELETE_ENABLED")) {
+    return featureDisabledResponse("KVKK_ACCOUNT_DELETE_ENABLED");
+  }
+
   const ip = await getClientIp();
   const rl = await checkRateLimit(`kvkk-delete:ip:${ip}`, 5, 3600);
   if (!rl.allowed) {
