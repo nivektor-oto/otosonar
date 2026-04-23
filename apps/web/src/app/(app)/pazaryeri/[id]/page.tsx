@@ -44,13 +44,15 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
     listing.status === "ACTIVE";
   const photos = (listing.photosJson as string[] | null) ?? [];
 
-  const statusColor = {
+  const statusColor = ({
     ACTIVE: "text-emerald-400",
     SOLD: "text-amber-400",
     DRAFT: "text-neutral-500",
     WITHDRAWN: "text-neutral-500",
     EXPIRED: "text-neutral-500",
-  }[listing.status];
+    REJECTED: "text-red-400",
+    TAKEDOWN: "text-red-400",
+  } as Record<string, string>)[listing.status] ?? "text-neutral-500";
 
   return (
     <main className="px-4 py-12 text-neutral-100">

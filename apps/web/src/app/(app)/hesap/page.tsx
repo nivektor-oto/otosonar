@@ -153,6 +153,7 @@ export default async function AccountPage() {
             <QuickLink href="/gecmis">Geçmişim</QuickLink>
             <QuickLink href="/quiz">Persona quiz</QuickLink>
             <QuickLink href="/hesap/guvenlik">2FA güvenlik</QuickLink>
+            <QuickLink href="/hesap/kvkk">Verilerim & KVKK</QuickLink>
             {user.userType === "DEALER" && <QuickLink href="/bozdurma/masa">Trade-in masası</QuickLink>}
             {user.userType === "DEALER" && <QuickLink href="/hesap/galerici/whatsapp">WhatsApp Bot</QuickLink>}
           </div>

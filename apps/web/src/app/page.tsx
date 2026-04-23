@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { headers } from "next/headers";
 import {
   Target,
   Search,
@@ -149,35 +150,66 @@ function Nav() {
   );
 }
 
-function Hero() {
+type AbVariant = "dealer" | "buyer";
+
+const heroCopy = {
+  dealer: {
+    eyebrow: "Galerici kâr işletim sistemi",
+    headline: { accent: "Günde 5 fırsat,", rest: "saatlerce arama yok." },
+    leadHtml:
+      "<strong class=\"text-white\">Galerici için:</strong> hedef modellerini tarar, fiyat/değer en iyi 5 aracı WhatsApp'a düşer. Stoğunda ne varsa kime gider, kaç günde döner — ajandan daha net.",
+    sub: "Bağlı ilanı yapıştır, AI emsal fiyat + gizli arıza + pazarlık skoru versin. Stok devir hızı ölçülür.",
+    primaryCta: "Galerici Paneline Bak",
+    secondaryCta: "Alıcı Özelliklerini Gör",
+  },
+  buyer: {
+    eyebrow: "Yanlış aracı almadan önce oku",
+    headline: { accent: "8 saniyede", rest: "aracın gerçek değerini öğren." },
+    leadHtml:
+      "<strong class=\"text-white\">Alıcı için:</strong> yanlış aracı almanı engeller. Gizli arıza sinyalleri, km oynaması, boyalı panel ve emsal fiyat — ilanı yapıştır, gerisini AI yapar.",
+    sub: "Sahibinden / arabam.com linki yeter. Saatlerce araştırma değil, saniyeler içinde rapor.",
+    primaryCta: "3 Analizi Ücretsiz Dene",
+    secondaryCta: "Paketlere Bak",
+  },
+} as const;
+
+function resolveVariant(raw: string | null | undefined): AbVariant {
+  return raw === "dealer" || raw === "buyer" ? raw : "buyer";
+}
+
+async function Hero() {
+  const h = await headers();
+  const variant = resolveVariant(h.get("x-ab-variant"));
+  const copy = heroCopy[variant];
+  const primaryHref = variant === "dealer" ? "/kayit?role=dealer" : "/kayit";
+
   return (
-    <section className="relative overflow-hidden">
+    <section className="relative overflow-hidden" data-ab-variant={variant}>
       <div className="absolute inset-0 bg-grid opacity-40" aria-hidden />
       <div className="absolute inset-0 bg-glow" aria-hidden />
       <div className="relative max-w-5xl mx-auto px-6 py-20 md:py-28 text-center">
         <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-accent/10 border border-accent/30 text-accent mb-6 animate-fade-up">
           <Sparkles className="w-3 h-3" aria-hidden strokeWidth={2.5} />
-          Türkiye'nin ilk AI destekli araç zekası
+          {copy.eyebrow}
         </span>
         <h1 className="text-4xl sm:text-5xl md:text-6xl font-black leading-[1.05] tracking-tight animate-fade-up [animation-delay:80ms]">
-          <span className="gradient-text">8 saniyede</span>
-          <br className="hidden sm:block" /> aracın gerçek değerini öğren.
+          <span className="gradient-text">{copy.headline.accent}</span>
+          <br className="hidden sm:block" /> {copy.headline.rest}
         </h1>
-        <p className="mt-6 text-base sm:text-lg md:text-xl text-slate-300 max-w-2xl mx-auto leading-relaxed animate-fade-up [animation-delay:160ms]">
-          <strong className="text-white">Alıcı için:</strong> yanlış aracı almanı engeller.
-          <br className="hidden sm:block" />
-          <strong className="text-white">Galerici için:</strong> doğru fiyattan alıp daha hızlı satman için <span className="text-accent font-semibold">kâr işletim sistemi</span>.
-        </p>
+        <p
+          className="mt-6 text-base sm:text-lg md:text-xl text-slate-300 max-w-2xl mx-auto leading-relaxed animate-fade-up [animation-delay:160ms]"
+          dangerouslySetInnerHTML={{ __html: copy.leadHtml }}
+        />
         <p className="mt-3 text-sm text-slate-400 max-w-xl mx-auto animate-fade-up [animation-delay:200ms]">
-          Sahibinden / arabam.com ilanını yapıştır — gizli arıza, km oynaması, boya değişimi ve gerçek pazar değeri saniyeler içinde.
+          {copy.sub}
         </p>
         <div className="mt-10 flex flex-wrap items-center justify-center gap-3 animate-fade-up [animation-delay:240ms]">
-          <Link href="/kayit" className="btn-primary">
-            3 Analizi Ücretsiz Dene
+          <Link href={primaryHref} className="btn-primary">
+            {copy.primaryCta}
             <ArrowRight className="w-4 h-4" aria-hidden strokeWidth={2.5} />
           </Link>
           <Link href="#pricing" className="btn-ghost">
-            Paketlere Bak
+            {copy.secondaryCta}
           </Link>
         </div>
         <p className="mt-5 text-sm text-slate-400">
