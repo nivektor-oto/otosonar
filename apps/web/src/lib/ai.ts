@@ -500,44 +500,60 @@ export async function marketResearch(
     try {
       const start = Date.now();
       const { result, retried } = await callGeminiMarketWithRetry(userMessage, geminiKey);
+      const parsed = marketResearchSchema.parse(result);
+      const durationMs = Date.now() - start;
+      console.info(`[ai] market ok provider=gemini model=gemini-2.5-flash retried=${retried} ms=${durationMs}`);
       return {
-        result: marketResearchSchema.parse(result),
+        result: parsed,
         meta: {
           provider: "gemini",
           model: "gemini-2.5-flash",
-          durationMs: Date.now() - start,
+          durationMs,
           retried,
         },
       };
     } catch (e) {
-      console.warn("[market] primary fail, trying fallback:", e instanceof Error ? e.message.slice(0, 200) : e);
-      if (!anthropicKey) throw e;
+      const msg = e instanceof Error ? e.message.slice(0, 200) : String(e);
+      if (!anthropicKey) {
+        console.warn(`[ai] market primary_fail provider=gemini fallback=unavailable err=${msg}`);
+        throw e;
+      }
+      console.warn(`[ai] market primary_fail provider=gemini fallback=anthropic/claude-haiku-4-5 err=${msg}`);
     }
   }
 
   if (anthropicKey) {
     const start = Date.now();
-    const client = new Anthropic({ apiKey: anthropicKey, timeout: 55_000 });
-    const response = await client.messages.create({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 4096,
-      system: [
-        { type: "text", text: MARKET_SYSTEM_PROMPT, cache_control: { type: "ephemeral" } },
-      ],
-      messages: [{ role: "user", content: userMessage }],
-    });
-    const block = response.content.find((b) => b.type === "text");
-    if (!block || block.type !== "text") throw new Error("Anthropic boş cevap");
-    const parsed = parseJsonResponse(block.text);
-    return {
-      result: marketResearchSchema.parse(parsed),
-      meta: {
-        provider: "anthropic",
-        model: "claude-haiku-4-5",
-        durationMs: Date.now() - start,
-        retried: 0,
-      },
-    };
+    try {
+      const client = new Anthropic({ apiKey: anthropicKey, timeout: 55_000 });
+      const response = await client.messages.create({
+        model: "claude-haiku-4-5-20251001",
+        max_tokens: 4096,
+        system: [
+          { type: "text", text: MARKET_SYSTEM_PROMPT, cache_control: { type: "ephemeral" } },
+        ],
+        messages: [{ role: "user", content: userMessage }],
+      });
+      const block = response.content.find((b) => b.type === "text");
+      if (!block || block.type !== "text") throw new Error("Anthropic boş cevap");
+      const parsed = parseJsonResponse(block.text);
+      const validated = marketResearchSchema.parse(parsed);
+      const durationMs = Date.now() - start;
+      console.info(`[ai] market ok provider=anthropic model=claude-haiku-4-5 ms=${durationMs} via=fallback`);
+      return {
+        result: validated,
+        meta: {
+          provider: "anthropic",
+          model: "claude-haiku-4-5",
+          durationMs,
+          retried: 0,
+        },
+      };
+    } catch (e) {
+      const msg = e instanceof Error ? e.message.slice(0, 200) : String(e);
+      console.error(`[ai] market fallback_fail provider=anthropic err=${msg}`);
+      throw e;
+    }
   }
 
   throw new Error("AI yapılandırılmamış");
@@ -773,24 +789,38 @@ export async function buybackAnalysis(
       const { result, retried } = await callGeminiBuybackWithRetry(userMessage, geminiKey);
       const coerced = coerceBuybackTypes(result);
       const parsed = buybackSchema.parse(coerced);
+      const durationMs = Date.now() - startTime;
+      console.info(`[ai] buyback ok provider=gemini model=gemini-2.5-flash retried=${retried} ms=${durationMs}`);
       return {
         result: enforceBuybackConsistency(parsed, input),
-        meta: { provider: "gemini", model: "gemini-2.5-flash", durationMs: Date.now() - startTime, retried },
+        meta: { provider: "gemini", model: "gemini-2.5-flash", durationMs, retried },
       };
     } catch (e) {
-      console.warn("[buyback] primary failed, trying fallback:", e);
-      if (!anthropicKey) throw e;
+      const msg = e instanceof Error ? e.message.slice(0, 200) : String(e);
+      if (!anthropicKey) {
+        console.warn(`[ai] buyback primary_fail provider=gemini fallback=unavailable err=${msg}`);
+        throw e;
+      }
+      console.warn(`[ai] buyback primary_fail provider=gemini fallback=anthropic/claude-haiku-4-5 err=${msg}`);
     }
   }
 
   if (anthropicKey) {
-    const result = await callAnthropicBuyback(userMessage, anthropicKey);
-    const coerced = coerceBuybackTypes(result);
-    const parsed = buybackSchema.parse(coerced);
-    return {
-      result: enforceBuybackConsistency(parsed, input),
-      meta: { provider: "anthropic", model: "claude-haiku-4-5", durationMs: Date.now() - startTime, retried: 0 },
-    };
+    try {
+      const result = await callAnthropicBuyback(userMessage, anthropicKey);
+      const coerced = coerceBuybackTypes(result);
+      const parsed = buybackSchema.parse(coerced);
+      const durationMs = Date.now() - startTime;
+      console.info(`[ai] buyback ok provider=anthropic model=claude-haiku-4-5 ms=${durationMs} via=fallback`);
+      return {
+        result: enforceBuybackConsistency(parsed, input),
+        meta: { provider: "anthropic", model: "claude-haiku-4-5", durationMs, retried: 0 },
+      };
+    } catch (e) {
+      const msg = e instanceof Error ? e.message.slice(0, 200) : String(e);
+      console.error(`[ai] buyback fallback_fail provider=anthropic err=${msg}`);
+      throw e;
+    }
   }
 
   throw new Error("Ne GEMINI_API_KEY ne ANTHROPIC_API_KEY set edilmemiş.");
