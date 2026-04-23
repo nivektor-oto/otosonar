@@ -200,34 +200,48 @@ export async function analyzeVehicle(
       const start = Date.now();
       const { result, retried } = await callGeminiWithRetry(userMessage, geminiKey);
       const validated = enforceConsistency(analysisSchema.parse(result));
+      const durationMs = Date.now() - start;
+      console.info(`[ai] analyze ok provider=gemini model=gemini-2.5-flash retried=${retried} ms=${durationMs}`);
       return {
         result: validated,
         meta: {
           provider: "gemini",
           model: "gemini-2.5-flash",
-          durationMs: Date.now() - start,
+          durationMs,
           retried,
         },
       };
     } catch (e) {
-      console.warn("[ai] primary fail, trying fallback:", e instanceof Error ? e.message.slice(0, 200) : e);
-      if (!anthropicKey) throw e;
+      const msg = e instanceof Error ? e.message.slice(0, 200) : String(e);
+      if (!anthropicKey) {
+        console.warn(`[ai] analyze primary_fail provider=gemini fallback=unavailable err=${msg}`);
+        throw e;
+      }
+      console.warn(`[ai] analyze primary_fail provider=gemini fallback=anthropic/claude-haiku-4-5 err=${msg}`);
     }
   }
 
   if (anthropicKey) {
     const start = Date.now();
-    const result = await callAnthropic(userMessage, anthropicKey);
-    const validated = enforceConsistency(analysisSchema.parse(result));
-    return {
-      result: validated,
-      meta: {
-        provider: "anthropic",
-        model: "claude-haiku-4-5",
-        durationMs: Date.now() - start,
-        retried: 0,
-      },
-    };
+    try {
+      const result = await callAnthropic(userMessage, anthropicKey);
+      const validated = enforceConsistency(analysisSchema.parse(result));
+      const durationMs = Date.now() - start;
+      console.info(`[ai] analyze ok provider=anthropic model=claude-haiku-4-5 ms=${durationMs} via=fallback`);
+      return {
+        result: validated,
+        meta: {
+          provider: "anthropic",
+          model: "claude-haiku-4-5",
+          durationMs,
+          retried: 0,
+        },
+      };
+    } catch (e) {
+      const msg = e instanceof Error ? e.message.slice(0, 200) : String(e);
+      console.error(`[ai] analyze fallback_fail provider=anthropic err=${msg}`);
+      throw e;
+    }
   }
 
   throw new Error("AI yapılandırılmamış");
