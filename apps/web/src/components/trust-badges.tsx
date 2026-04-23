@@ -3,9 +3,9 @@ import { ShieldCheck, RotateCcw, Award, BadgeCheck } from "lucide-react";
 const badges = [
   {
     Icon: BadgeCheck,
-    title: "%92 doğruluk",
-    desc: "2026 SmartIQ pazar verisi + 8.400 araç iç testi. Hata payı %8.",
-    source: "Kaynak: iç test 2026-Q1",
+    title: "AI destekli tahmin",
+    desc: "AI pazar bilgisi ve büyüyen galerici ağı verisiyle her gün kalibre olur.",
+    source: "Her raporda güven skoru",
   },
   {
     Icon: RotateCcw,

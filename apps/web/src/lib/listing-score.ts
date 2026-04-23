@@ -1,5 +1,10 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
+import {
+  aggregatesAsPromptText,
+  computeMarketAggregates,
+  type MarketAgg,
+} from "@/lib/market-aggregates";
 
 export const listingScoreSchema = z.object({
   overallScore: z.number().int().min(0).max(100),
@@ -68,8 +73,37 @@ DİL: Türkçe, profesyonel galerici tonu, abartı yok.`;
 
 export async function scoreListing(
   input: ScoreInput,
-): Promise<{ result: ListingScoreResult; provider: "gemini" | "anthropic"; durationMs: number }> {
-  const msg = fmt(input);
+): Promise<{
+  result: ListingScoreResult;
+  provider: "gemini" | "anthropic";
+  durationMs: number;
+  emsalCount: number | null;
+}> {
+  // Gerçek marketplace emsallerini topla, AI'a inject et.
+  let agg: MarketAgg | null = null;
+  try {
+    agg = await computeMarketAggregates({
+      brand: input.brand,
+      model: input.model,
+      yearMin: input.year - 2,
+      yearMax: input.year + 2,
+      city: input.city,
+    });
+    if (agg.count < 3) {
+      console.warn(
+        `[ai] low-data warning: listing-score brand=${input.brand} model=${input.model} year=${input.year} emsalCount=${agg.count}`,
+      );
+    }
+  } catch (err) {
+    console.warn(
+      "[ai] listing-score aggregate fetch failed:",
+      err instanceof Error ? err.message : err,
+    );
+  }
+
+  const base = fmt(input);
+  const msg = agg ? `${aggregatesAsPromptText(agg)}\n\n${base}` : base;
+
   const geminiKey = process.env.GEMINI_API_KEY;
   const anthropicKey = process.env.ANTHROPIC_API_KEY;
 
@@ -77,7 +111,12 @@ export async function scoreListing(
     try {
       const start = Date.now();
       const out = await callGemini(msg, geminiKey);
-      return { result: listingScoreSchema.parse(out), provider: "gemini", durationMs: Date.now() - start };
+      return {
+        result: listingScoreSchema.parse(out),
+        provider: "gemini",
+        durationMs: Date.now() - start,
+        emsalCount: agg?.count ?? null,
+      };
     } catch (e) {
       if (!anthropicKey) throw e;
     }
@@ -85,7 +124,12 @@ export async function scoreListing(
   if (anthropicKey) {
     const start = Date.now();
     const out = await callAnthropic(msg, anthropicKey);
-    return { result: listingScoreSchema.parse(out), provider: "anthropic", durationMs: Date.now() - start };
+    return {
+      result: listingScoreSchema.parse(out),
+      provider: "anthropic",
+      durationMs: Date.now() - start,
+      emsalCount: agg?.count ?? null,
+    };
   }
   throw new Error("AI yapılandırılmamış");
 }

@@ -3,7 +3,7 @@ import { Check, X, Minus } from "lucide-react";
 type Cell = "yes" | "no" | "partial" | string;
 
 const rows: { label: string; otosonar: Cell; sahibinden: Cell; arabam: Cell; expertise: Cell }[] = [
-  { label: "AI fiyat analizi", otosonar: "%92 doğruluk", sahibinden: "no", arabam: "no", expertise: "no" },
+  { label: "AI fiyat analizi", otosonar: "AI destekli", sahibinden: "no", arabam: "no", expertise: "no" },
   { label: "Gizli arıza tespiti (metinden)", otosonar: "yes", sahibinden: "no", arabam: "no", expertise: "partial" },
   { label: "Fotoğraftan boya / hasar AI", otosonar: "yes", sahibinden: "no", arabam: "no", expertise: "Fiziksel" },
   { label: "Galerici kâr motoru (stok / marj)", otosonar: "yes", sahibinden: "no", arabam: "no", expertise: "no" },

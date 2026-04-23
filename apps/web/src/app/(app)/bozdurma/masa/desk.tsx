@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { Loader2, Sparkles, Printer, FileText } from "lucide-react";
+import { AiDisclaimer } from "@/components/ai-disclaimer";
 
 const TL = new Intl.NumberFormat("tr-TR", { style: "currency", currency: "TRY", maximumFractionDigits: 0 });
 type Condition = "MUKEMMEL" | "IYI" | "ORTA" | "KOTU";
@@ -34,6 +35,23 @@ interface Offer {
   rationale: string;
 }
 
+interface EmsalListing {
+  id: string;
+  brand: string;
+  model: string;
+  year: number;
+  km: number;
+  city: string;
+  askingPrice: number;
+  createdAt: string;
+}
+
+interface DeskMeta {
+  durationMs?: number;
+  provider?: string;
+  emsalCount?: number | null;
+}
+
 export function TradeInDesk({ dealerName, vehicles }: { dealerName: string; vehicles: Vehicle[] }) {
   const [mode, setMode] = useState<"stock" | "manual">(vehicles.length ? "stock" : "manual");
   const [selectedId, setSelectedId] = useState<string>(vehicles[0]?.id ?? "");
@@ -43,6 +61,8 @@ export function TradeInDesk({ dealerName, vehicles }: { dealerName: string; vehi
   const [customerAskingPrice, setCustomerAskingPrice] = useState("");
   const [loading, setLoading] = useState(false);
   const [offer, setOffer] = useState<Offer | null>(null);
+  const [emsalListings, setEmsalListings] = useState<EmsalListing[]>([]);
+  const [meta, setMeta] = useState<DeskMeta | null>(null);
   const [vehicleSnapshot, setVehicleSnapshot] = useState<{ brand: string; model: string; year: number; km: number; plate?: string } | null>(null);
 
   function buildVehicle() {
@@ -104,7 +124,9 @@ export function TradeInDesk({ dealerName, vehicles }: { dealerName: string; vehi
         toast.error("Teklif hesaplanamadı");
         return;
       }
-      setOffer(data.result);
+      setOffer(data.buyback ?? data.result);
+      setEmsalListings(Array.isArray(data.emsalListings) ? data.emsalListings : []);
+      setMeta(data.meta ?? null);
       setVehicleSnapshot({ brand: v.brand, model: v.model, year: v.year, km: v.km, plate: (v as { plate?: string }).plate });
       toast.success("Teklif hazır");
     } catch {
@@ -255,7 +277,45 @@ export function TradeInDesk({ dealerName, vehicles }: { dealerName: string; vehi
       </div>
 
       {offer && vehicleSnapshot && (
-        <CustomerPrintout dealerName={dealerName} vehicle={vehicleSnapshot} offer={offer} />
+        <>
+          <div className="print:hidden">
+            <AiDisclaimer
+              emsalCount={meta?.emsalCount ?? emsalListings.length}
+              durationMs={meta?.durationMs}
+              provider={meta?.provider}
+            />
+          </div>
+          <CustomerPrintout dealerName={dealerName} vehicle={vehicleSnapshot} offer={offer} />
+          {emsalListings.length > 0 && (
+            <div className="rounded-2xl border border-border bg-panel/40 p-5 print:hidden">
+              <div className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold mb-3">
+                Gerçek benzer ilanlar ({emsalListings.length})
+              </div>
+              <ul className="space-y-2">
+                {emsalListings.map((l) => (
+                  <li key={l.id}>
+                    <a
+                      href={`/pazaryeri/${l.id}`}
+                      className="flex items-center justify-between gap-3 rounded-lg border border-border bg-panel/60 hover:bg-panel px-3 py-2 transition"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="text-sm font-semibold text-white truncate">
+                          {l.brand} {l.model} · {l.year}
+                        </div>
+                        <div className="text-[11px] text-slate-400 truncate">
+                          {l.km.toLocaleString("tr-TR")} km · {l.city}
+                        </div>
+                      </div>
+                      <div className="text-sm font-bold tabular-nums text-accent shrink-0">
+                        {TL.format(l.askingPrice)}
+                      </div>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

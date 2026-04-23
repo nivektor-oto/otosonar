@@ -39,7 +39,7 @@ const features: Feature[] = [
   {
     Icon: Target,
     title: "Emsal Değer AI",
-    desc: "Türkiye 2026 pazar verisi üzerinden makine öğrenmesi ile %8 altı hata payıyla gerçek pazar değeri.",
+    desc: "Türkiye 2026 pazar verisi üzerinden makine öğrenmesi ile AI + galerici ağı verisi tabanlı gerçek pazar değeri tahmini.",
   },
   {
     Icon: Search,
@@ -221,6 +221,19 @@ function Features() {
             </div>
           ))}
         </div>
+
+        <div className="mt-10 max-w-3xl mx-auto rounded-2xl border border-border bg-panel/30 px-5 py-4 flex items-start gap-3">
+          <ShieldCheck
+            className="w-5 h-5 text-accent shrink-0 mt-0.5"
+            aria-hidden
+            strokeWidth={2}
+          />
+          <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+            <span className="font-semibold text-white">AI sonuçları tahmindir.</span>{" "}
+            Gerçek pazar verisiyle her gün kalibre olur. Kritik alım/satım öncesi
+            bağımsız ekspertiz tavsiye ederiz.
+          </p>
+        </div>
       </div>
     </section>
   );
@@ -230,8 +243,8 @@ function Features() {
 function FAQ() {
   const qa = [
     {
-      q: "%92 doğruluk iddiası nasıl hesaplanıyor?",
-      a: "2026 1. çeyrekte 8.400 gerçek araç ilanı üzerinde iç test yaptık. Modelin tahmini fiyat ile 30 gün içinde gerçekleşen satış fiyatı kıyaslandı — sapma oranı ortalama %8 altında kaldı. Veri kaynağı: SmartIQ 2026 pazar verisi + iç test veri seti. Raporlarda model güven skoru birlikte gösterilir.",
+      q: "Tahminler ne kadar güvenilir?",
+      a: "OtoSonar fiyat, arıza ve pazarlık tahminlerini AI pazar bilgisi ve büyüyen galerici ağı verisiyle üretir. Veriler her gün gerçek ilanlarla kalibre olur ve her raporda modelin güven skoru birlikte gösterilir. Kritik alım/satım öncesi bağımsız ekspertiz tavsiye ederiz.",
     },
     {
       q: "30 gün para iade garantisi nasıl çalışır?",

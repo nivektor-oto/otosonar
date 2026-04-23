@@ -133,7 +133,7 @@ function Cover() {
       <div style={{ marginTop: 32, display: "flex", gap: 12, flexWrap: "wrap" }}>
         <span className="badge">12 MAYIS 2026 · LANSMAN</span>
         <span className="badge">3 GÜN ÜCRETSIZ DENE</span>
-        <span className="badge">%92 DOĞRULUK</span>
+        <span className="badge">AI DESTEKLİ TAHMİN</span>
       </div>
       <div style={{ marginTop: "auto", fontSize: 12, color: "#94a3b8" }}>
         NiVector · Müşteri Sunumu · Sürüm 5
@@ -400,7 +400,7 @@ function Guvenlik() {
     <section className="slide">
       <div className="kicker">07 · Güven</div>
       <h2>
-        <span className="accent">%92 doğruluk</span>,<br />
+        <span className="accent">AI destekli tahmin</span>,<br />
         30 gün koşulsuz iade.
       </h2>
       <p className="lead">
@@ -408,12 +408,12 @@ function Guvenlik() {
       </p>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginTop: 36, flex: 1 }}>
         <div className="card">
-          <h3>%92 Doğruluk</h3>
+          <h3>AI Destekli Tahmin</h3>
           <p style={{ marginTop: 6 }}>
-            2026 Q1 · 8.400 gerçek ilan test seti. 30 gün içinde satış fiyatı ile tahmin sapması ortalama %8 altı.
+            AI pazar bilgisi ve büyüyen galerici ağı verisiyle her gün kalibre olur. Her raporda modelin güven skoru birlikte gösterilir.
           </p>
           <div style={{ marginTop: 8, fontSize: 10, color: "#94a3b8", fontFamily: "monospace" }}>
-            Kaynak: SmartIQ + iç test
+            Kaynak: AI pazar verisi + galerici ağı
           </div>
         </div>
         <div className="card">

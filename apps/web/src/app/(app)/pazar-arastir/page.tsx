@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { LogoMark } from "@/components/logo";
+import { AiDisclaimer } from "@/components/ai-disclaimer";
 
 interface MarketResult {
   priceRange: { min: number; avg: number; max: number };
@@ -41,6 +42,8 @@ interface MarketResult {
 interface Meta {
   durationMs: number;
   model?: string;
+  provider?: string;
+  emsalCount?: number | null;
 }
 
 export default function PazarArastirPage() {
@@ -428,6 +431,11 @@ function ResultPanel({
   };
   return (
     <div className="space-y-4 animate-fade-in">
+      <AiDisclaimer
+        emsalCount={meta?.emsalCount ?? null}
+        durationMs={meta?.durationMs}
+        provider={meta?.provider}
+      />
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <RangeCard
           icon={<TrendingUp className="w-4 h-4" aria-hidden />}

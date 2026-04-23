@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import { LogoMark } from "@/components/logo";
 import { parseListingUrl } from "@/lib/listing-url-parser";
 import { AnalysisFeedback } from "@/components/analysis-feedback";
+import { AiDisclaimer } from "@/components/ai-disclaimer";
 import { VoiceRecorder, type VoiceExtracted } from "@/components/voice-recorder";
 
 interface RedFlag {
@@ -44,6 +45,7 @@ interface Meta {
   provider?: string;
   model?: string;
   retried?: number;
+  emsalCount?: number | null;
 }
 
 export default function AnalysisPage() {
@@ -555,6 +557,11 @@ function ResultPanel({
 }) {
   return (
     <div className="space-y-4 animate-fade-in">
+      <AiDisclaimer
+        emsalCount={meta?.emsalCount ?? null}
+        durationMs={meta?.durationMs}
+        provider={meta?.provider}
+      />
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <MetricCard
           icon={<TrendingUp className="w-4 h-4" aria-hidden />}

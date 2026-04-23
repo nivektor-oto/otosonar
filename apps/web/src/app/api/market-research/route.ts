@@ -50,11 +50,18 @@ export async function POST(req: NextRequest) {
   }
 
   try {
+    // emsalCount lib içinde computeMarketAggregates tarafından hesaplanıyor.
     const { result, meta } = await marketResearch(parsed.data);
     return NextResponse.json({
       success: true,
       result,
-      meta: { ...meta, provider: "otosonar", model: "otosonar-ai-v1", timestamp: new Date().toISOString() },
+      meta: {
+        ...meta,
+        provider: "otosonar",
+        model: "otosonar-ai-v1",
+        timestamp: new Date().toISOString(),
+        emsalCount: meta.emsalCount ?? 0,
+      },
     });
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Bilinmeyen hata";

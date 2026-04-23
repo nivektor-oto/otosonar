@@ -7,6 +7,68 @@ export const chatMessageSchema = z.object({
 
 export type ChatMessage = z.infer<typeof chatMessageSchema>;
 
+export type ChatUserContext = {
+  isAuthenticated: boolean;
+  fullName?: string;
+  userType?: "BUYER" | "DEALER" | "BROKER";
+  customerNumber?: number;
+  hasDealer?: boolean;
+  activeSubTier?: string | null;
+  unreadMessageCount?: number;
+  recentAnalysisCount?: number;
+  savedListingCount?: number;
+  persona?: string | null;
+};
+
+function buildContextBlock(ctx: ChatUserContext): string {
+  if (!ctx.isAuthenticated) {
+    return [
+      "",
+      "KULLANICI BAĞLAMI:",
+      "- Kullanıcı şu an üye değil / giriş yapmamış.",
+      "- Uygun bir yerde kibarca /kayit adresinden kayıt olmasını öner; ücretsiz 3 analiz hakkı olduğunu hatırlat.",
+    ].join("\n");
+  }
+
+  const parts: string[] = [];
+  const name = ctx.fullName?.trim() || "Kullanıcı";
+  const type = ctx.userType ?? "BUYER";
+  const customerStr =
+    typeof ctx.customerNumber === "number" ? `OS-${ctx.customerNumber}` : "OS-?";
+  const analysisN = ctx.recentAnalysisCount ?? 0;
+  const savedN = ctx.savedListingCount ?? 0;
+  const unreadN = ctx.unreadMessageCount ?? 0;
+
+  parts.push(
+    `Şu anki kullanıcı: ${name} (${type}), müşteri no ${customerStr}, ${analysisN} analiz yapmış, ${savedN} favori, okunmamış ${unreadN} mesaj.`,
+  );
+  if (ctx.activeSubTier) {
+    parts.push(`- Aktif paket: ${ctx.activeSubTier}.`);
+  } else {
+    parts.push("- Aktif ücretli paketi yok (ücretsiz kullanıcı).");
+  }
+  if (ctx.persona) {
+    parts.push(`- Quiz persona: ${ctx.persona} — pitch'i buna göre uyarla.`);
+  }
+  parts.push(
+    "Ona ismiyle hitap et, geçmişine göre cevap ver. Sayıları cevap içinde gereksiz tekrar etme; sadece ilgiliyse değin.",
+  );
+
+  if (ctx.hasDealer || ctx.userType === "DEALER") {
+    parts.push(
+      "Bu kullanıcı galerici — galerici modüllerine yönlendir (stok yönetimi /hesap/galerici/araclar, bozdurma masası /bozdurma/masa, CRM API /hesap/galerici/api).",
+    );
+  }
+
+  if (unreadN > 0) {
+    parts.push(
+      `Okunmamış ${unreadN} mesajı var; uygun bağlamda /hesap/mesajlar adresine göz atmasını hatırlat.`,
+    );
+  }
+
+  return ["", "KULLANICI BAĞLAMI:", ...parts.map((p) => `- ${p}`)].join("\n");
+}
+
 const SYSTEM_PROMPT = `Sen OtoSonar'ın resmi yardımcı asistanısın. OtoSonar Türkiye'nin ikinci el araç alıcıları ve galericiler için geliştirilen AI destekli platformudur.
 
 ROLÜN:
@@ -77,6 +139,7 @@ Yanıtlamadan önce hangi sayfayı önereceğini düşün. Varsa ilgili yolu cev
 export async function generateReply(
   history: ChatMessage[],
   userMessage: string,
+  userContext?: ChatUserContext,
 ): Promise<{ reply: string; provider: string; durationMs: number }> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw new Error("chatbot misconfigured");
@@ -93,8 +156,12 @@ export async function generateReply(
     { role: "user", parts: [{ text: userMessage }] },
   ];
 
+  const systemText = userContext
+    ? `${SYSTEM_PROMPT}\n${buildContextBlock(userContext)}`
+    : SYSTEM_PROMPT;
+
   const body = {
-    systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+    systemInstruction: { parts: [{ text: systemText }] },
     contents,
     generationConfig: {
       temperature: 0.4,

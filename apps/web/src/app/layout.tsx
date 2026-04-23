@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://otosonar.com"),
   title: "OtoSonar AI | Sahibinden İlan Analizi 8 Saniyede – KM + Hasar + Gerçek Değer 2026",
   description:
-    "Sahibinden / arabam.com ilanını yapıştır, 8 saniyede gerçek değer, km oynaması, boya-hasar tespiti ve pazarlık skoru çıksın. Galericiler için kâr işletim sistemi — %92 doğruluk, 30 gün para iade.",
+    "Sahibinden / arabam.com ilanını yapıştır, 8 saniyede gerçek değer, km oynaması, boya-hasar tespiti ve pazarlık skoru çıksın. Galericiler için kâr işletim sistemi — AI destekli tahmin, 30 gün para iade.",
   applicationName: "OtoSonar",
   manifest: "/manifest.json",
   icons: {
@@ -57,7 +57,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "OtoSonar AI | Sahibinden İlan Analizi 8 Saniyede — 2026",
     description:
-      "8 saniyede gerçek değer, km oynaması, boya-hasar, pazarlık skoru. Galericiler için kâr işletim sistemi. %92 doğruluk.",
+      "8 saniyede gerçek değer, km oynaması, boya-hasar, pazarlık skoru. Galericiler için kâr işletim sistemi. AI destekli tahmin.",
     locale: "tr_TR",
     type: "website",
     siteName: "OtoSonar",

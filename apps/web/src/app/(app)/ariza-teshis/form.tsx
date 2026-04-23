@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { AlertTriangle, Camera, Clock, Loader2, Sparkles, Wrench, ArrowRight, X } from "lucide-react";
+import { AiDisclaimer } from "@/components/ai-disclaimer";
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const MAX_IMAGES = 3;
@@ -43,7 +44,7 @@ const urgencyMeta: Record<Urgency, { label: string; tone: string; desc: string }
 export function DiagnoseForm() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<DiagnosisResult | null>(null);
-  const [meta, setMeta] = useState<{ provider?: string; durationMs?: number } | null>(null);
+  const [meta, setMeta] = useState<{ provider?: string; durationMs?: number; emsalCount?: number | null } | null>(null);
   const [form, setForm] = useState({
     brand: "",
     model: "",
@@ -295,10 +296,15 @@ export function DiagnoseForm() {
   );
 }
 
-function ResultPanel({ result, meta }: { result: DiagnosisResult; meta: { provider?: string; durationMs?: number } | null }) {
+function ResultPanel({ result, meta }: { result: DiagnosisResult; meta: { provider?: string; durationMs?: number; emsalCount?: number | null } | null }) {
   const u = urgencyMeta[result.urgency];
   return (
     <div className="space-y-4 animate-fade-in">
+      <AiDisclaimer
+        emsalCount={meta?.emsalCount ?? 0}
+        durationMs={meta?.durationMs}
+        provider={meta?.provider}
+      />
       <div className={`rounded-2xl border-2 p-5 ${u.tone}`}>
         <div className="flex items-start gap-3">
           <AlertTriangle className="w-6 h-6 shrink-0 mt-0.5" aria-hidden strokeWidth={2} />

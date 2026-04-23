@@ -3,8 +3,22 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Sparkles, Copy, Loader2 } from "lucide-react";
+import { Sparkles, Copy, Loader2, Camera, Upload, X } from "lucide-react";
+import { upload } from "@vercel/blob/client";
 import { PaintMapEditor, type PaintMap } from "@/components/paint-map";
+
+const MAX_PHOTOS = 6;
+const MAX_PHOTO_BYTES = 8 * 1024 * 1024;
+const ALLOWED_PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp"];
+
+interface UploadedPhoto {
+  id: string;
+  url: string;
+  previewUrl: string;
+  uploading: boolean;
+  progress: number;
+  error?: string;
+}
 
 type BodyType = "sedan" | "hatchback" | "suv" | "station" | "coupe" | "cabrio" | "pickup" | "minivan" | "unknown";
 
@@ -37,6 +51,98 @@ export function NewListingForm() {
   const [auctionDays, setAuctionDays] = useState(3);
   const [minBid, setMinBid] = useState("");
   const [isUrgent, setIsUrgent] = useState(false);
+  const [uploadedPhotos, setUploadedPhotos] = useState<UploadedPhoto[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    return () => {
+      // Revoke any outstanding object URLs on unmount
+      uploadedPhotos.forEach((p) => {
+        if (p.previewUrl && p.previewUrl.startsWith("blob:")) {
+          try { URL.revokeObjectURL(p.previewUrl); } catch { /* ignore */ }
+        }
+      });
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  async function handleFilesSelected(files: FileList | null) {
+    if (!files || files.length === 0) return;
+    const remainingSlots = MAX_PHOTOS - uploadedPhotos.length;
+    if (remainingSlots <= 0) {
+      toast.error(`En fazla ${MAX_PHOTOS} fotoğraf yükleyebilirsin.`);
+      return;
+    }
+    const selected = Array.from(files).slice(0, remainingSlots);
+    if (files.length > remainingSlots) {
+      toast.warning(`Sadece ilk ${remainingSlots} fotoğraf eklendi (limit ${MAX_PHOTOS}).`);
+    }
+
+    for (const file of selected) {
+      // Client-side validation
+      if (!ALLOWED_PHOTO_TYPES.includes(file.type)) {
+        toast.error(`${file.name}: JPG, PNG veya WebP olmalı.`);
+        continue;
+      }
+      if (file.size > MAX_PHOTO_BYTES) {
+        toast.error(`${file.name}: 8 MB sınırını aşıyor.`);
+        continue;
+      }
+
+      const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      const previewUrl = URL.createObjectURL(file);
+      setUploadedPhotos((prev) => [
+        ...prev,
+        { id, url: "", previewUrl, uploading: true, progress: 0 },
+      ]);
+
+      try {
+        // Derive a safe-ish filename; blob client will dedupe server-side.
+        const ext = file.name.includes(".")
+          ? file.name.slice(file.name.lastIndexOf(".") + 1).toLowerCase()
+          : "jpg";
+        const filename = `listings/${id}.${ext}`;
+        const blob = await upload(filename, file, {
+          access: "public",
+          handleUploadUrl: "/api/upload/listing-photo",
+          onUploadProgress: ({ percentage }) => {
+            setUploadedPhotos((prev) =>
+              prev.map((p) =>
+                p.id === id ? { ...p, progress: Math.round(percentage) } : p,
+              ),
+            );
+          },
+        });
+        setUploadedPhotos((prev) =>
+          prev.map((p) =>
+            p.id === id
+              ? { ...p, url: blob.url, uploading: false, progress: 100 }
+              : p,
+          ),
+        );
+      } catch (err) {
+        const msg = (err as Error).message ?? "Yükleme başarısız";
+        toast.error(`${file.name}: ${msg}`);
+        setUploadedPhotos((prev) =>
+          prev.map((p) =>
+            p.id === id ? { ...p, uploading: false, error: msg } : p,
+          ),
+        );
+      }
+    }
+
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
+  function removeUploadedPhoto(id: string) {
+    setUploadedPhotos((prev) => {
+      const target = prev.find((p) => p.id === id);
+      if (target?.previewUrl?.startsWith("blob:")) {
+        try { URL.revokeObjectURL(target.previewUrl); } catch { /* ignore */ }
+      }
+      return prev.filter((p) => p.id !== id);
+    });
+  }
 
   async function onAiScore() {
     const form = formRef.current;
@@ -100,11 +206,22 @@ export function NewListingForm() {
     setLoading(true);
     const fd = new FormData(e.currentTarget);
     const photoStr = String(fd.get("photos") ?? "");
-    const photos = photoStr
+    const urlPhotos = photoStr
       .split(/[\n,]/)
       .map((s) => s.trim())
-      .filter((s) => /^https?:\/\//.test(s))
-      .slice(0, 12);
+      .filter((s) => /^https?:\/\//.test(s));
+    const uploadedUrls = uploadedPhotos
+      .filter((p) => p.url && !p.uploading && !p.error)
+      .map((p) => p.url);
+    // Uploaded photos first (higher priority), then pasted URLs, deduped.
+    const photos = Array.from(new Set([...uploadedUrls, ...urlPhotos])).slice(0, 12);
+
+    const stillUploading = uploadedPhotos.some((p) => p.uploading);
+    if (stillUploading) {
+      toast.error("Bazı fotoğraflar hâlâ yükleniyor. Lütfen bekle.");
+      setLoading(false);
+      return;
+    }
 
     const body = {
       brand: String(fd.get("brand") ?? ""),
@@ -269,20 +386,103 @@ export function NewListingForm() {
           </div>
         )}
       </div>
-      <label className="block">
-        <span className="mb-1 block text-xs text-neutral-400">
-          Fotoğraf URL'leri (virgül veya satır ayrı, max 12 adet)
-        </span>
-        <textarea
-          name="photos"
-          rows={3}
-          placeholder="https://.../foto1.jpg\nhttps://.../foto2.jpg"
-          className={input}
+      <div className="space-y-3 rounded-xl border border-border bg-panel/30 p-4">
+        <div className="flex items-center justify-between gap-2">
+          <div>
+            <div className="text-sm font-semibold text-white flex items-center gap-2">
+              <Camera className="w-4 h-4 text-accent" aria-hidden strokeWidth={2} />
+              Fotoğraflar
+            </div>
+            <p className="text-[11px] text-neutral-500 mt-0.5">
+              Telefondan çek veya galeriden seç — en fazla {MAX_PHOTOS} adet, 8 MB altı, JPG/PNG/WebP.
+            </p>
+          </div>
+          <span className="text-[11px] tabular-nums text-neutral-400">
+            {uploadedPhotos.length}/{MAX_PHOTOS}
+          </span>
+        </div>
+
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          accept="image/jpeg,image/png,image/webp"
+          capture="environment"
+          onChange={(e) => handleFilesSelected(e.target.files)}
+          className="hidden"
+          id="listing-photo-input"
         />
-        <p className="mt-1 text-[10px] text-neutral-500">
-          Şu an sadece URL kabul ediyoruz. Dosya yükleme özelliği lansman sonrası.
-        </p>
-      </label>
+        <label
+          htmlFor="listing-photo-input"
+          className={`flex flex-col items-center justify-center gap-1 w-full rounded-lg border border-dashed border-neutral-700 bg-[#0a0a0f] px-4 py-6 text-sm text-neutral-300 hover:border-accent hover:text-white cursor-pointer transition ${uploadedPhotos.length >= MAX_PHOTOS ? "opacity-50 pointer-events-none" : ""}`}
+        >
+          <Upload className="w-5 h-5 text-accent" aria-hidden strokeWidth={2} />
+          <span className="font-semibold">Fotoğraf yükle / çek</span>
+          <span className="text-[10px] text-neutral-500">
+            {uploadedPhotos.length >= MAX_PHOTOS
+              ? "Limit doldu"
+              : "Dokun veya sürükle-bırak"}
+          </span>
+        </label>
+
+        {uploadedPhotos.length > 0 && (
+          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+            {uploadedPhotos.map((p) => (
+              <div
+                key={p.id}
+                className="relative aspect-square rounded-lg overflow-hidden border border-neutral-800 bg-[#0a0a0f] group"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={p.url || p.previewUrl}
+                  alt="Fotoğraf önizleme"
+                  className="w-full h-full object-cover"
+                />
+                {p.uploading && (
+                  <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-1">
+                    <Loader2 className="w-4 h-4 text-accent animate-spin" aria-hidden />
+                    <div className="text-[10px] text-white tabular-nums font-semibold">
+                      {p.progress}%
+                    </div>
+                  </div>
+                )}
+                {p.error && (
+                  <div className="absolute inset-0 bg-red-900/70 flex items-center justify-center px-2">
+                    <div className="text-[10px] text-red-100 text-center leading-tight">
+                      {p.error}
+                    </div>
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={() => removeUploadedPhoto(p.id)}
+                  aria-label="Fotoğrafı kaldır"
+                  className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/70 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 focus:opacity-100 transition hover:bg-red-500/80"
+                >
+                  <X className="w-3.5 h-3.5" aria-hidden strokeWidth={2.5} />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <details className="text-xs text-neutral-400">
+          <summary className="cursor-pointer hover:text-white">
+            Fotoğrafın yoksa URL de yapıştırabilirsin
+          </summary>
+          <div className="mt-2">
+            <textarea
+              name="photos"
+              rows={3}
+              placeholder="https://.../foto1.jpg&#10;https://.../foto2.jpg"
+              className={input}
+            />
+            <p className="mt-1 text-[10px] text-neutral-500">
+              Virgül veya satır ayrı, max 12 adet. Yüklenen fotoğraflarla birleştirilir.
+            </p>
+          </div>
+        </details>
+      </div>
       <div className="rounded-xl border border-accent/30 bg-gradient-to-br from-accent/10 to-transparent p-4 space-y-3">
         <div className="flex items-center justify-between gap-3">
           <div>

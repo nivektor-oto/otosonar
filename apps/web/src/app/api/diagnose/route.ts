@@ -98,7 +98,13 @@ export async function POST(req: Request) {
   try {
     const { result, provider: _provider, durationMs } = await diagnose(parsed.data);
     void _provider;
-    return NextResponse.json({ success: true, result, meta: { provider: "otosonar", model: "otosonar-ai-v1", durationMs } });
+    // Arıza teşhisinde gerçek emsal veri havuzumuz yok — dürüst olmak için 0.
+    // Bu disclaimer'ın kırmızı "yalnızca AI tahmini" varyantını tetikler.
+    return NextResponse.json({
+      success: true,
+      result,
+      meta: { provider: "otosonar", model: "otosonar-ai-v1", durationMs, emsalCount: 0 },
+    });
   } catch (err) {
     await logError(err, { path: "/api/diagnose" });
     return NextResponse.json({ success: false, error: "diagnose_failed" }, { status: 500 });

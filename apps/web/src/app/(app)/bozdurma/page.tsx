@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { LogoMark } from "@/components/logo";
+import { AiDisclaimer } from "@/components/ai-disclaimer";
 
 type Condition = "MUKEMMEL" | "IYI" | "ORTA" | "KOTU";
 type FuelType = "Benzin" | "Dizel" | "LPG" | "Hibrit" | "Elektrik";
@@ -70,6 +71,23 @@ interface BuybackResult {
   rationale: string;
 }
 
+interface EmsalListing {
+  id: string;
+  brand: string;
+  model: string;
+  year: number;
+  km: number;
+  city: string;
+  askingPrice: number;
+  createdAt: string;
+}
+
+interface BozdurmaMeta {
+  durationMs?: number;
+  provider?: string;
+  emsalCount?: number | null;
+}
+
 const INITIAL: FormState = {
   brand: "",
   model: "",
@@ -93,6 +111,8 @@ export default function BozdurmaPage() {
   const [form, setForm] = useState<FormState>(INITIAL);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<BuybackResult | null>(null);
+  const [emsalListings, setEmsalListings] = useState<EmsalListing[]>([]);
+  const [meta, setMeta] = useState<BozdurmaMeta | null>(null);
 
   const update = <K extends keyof FormState>(key: K, value: FormState[K]) => {
     setForm((p) => ({ ...p, [key]: value }));
@@ -143,6 +163,8 @@ export default function BozdurmaPage() {
         return;
       }
       setResult(data.buyback);
+      setEmsalListings(Array.isArray(data.emsalListings) ? data.emsalListings : []);
+      setMeta(data.meta ?? null);
       toast.success("Bozdurma analizi hazır");
     } catch {
       toast.error("Bağlantı hatası");
@@ -154,6 +176,8 @@ export default function BozdurmaPage() {
   function resetAll() {
     setForm(INITIAL);
     setResult(null);
+    setEmsalListings([]);
+    setMeta(null);
   }
 
   return (
@@ -428,7 +452,14 @@ export default function BozdurmaPage() {
           <div>
             {!result && !loading && <EmptyHint />}
             {loading && <LoadingHint />}
-            {result && <ResultPanel r={result} askedPrice={parseInt(form.customerAskingPrice, 10) || undefined} />}
+            {result && (
+              <ResultPanel
+                r={result}
+                askedPrice={parseInt(form.customerAskingPrice, 10) || undefined}
+                emsalListings={emsalListings}
+                meta={meta}
+              />
+            )}
           </div>
         </div>
       </section>
@@ -507,7 +538,17 @@ function LoadingHint() {
   );
 }
 
-function ResultPanel({ r, askedPrice }: { r: BuybackResult; askedPrice?: number }) {
+function ResultPanel({
+  r,
+  askedPrice,
+  emsalListings = [],
+  meta,
+}: {
+  r: BuybackResult;
+  askedPrice?: number;
+  emsalListings?: EmsalListing[];
+  meta?: BozdurmaMeta | null;
+}) {
   const recCfg = {
     AL: { color: "#4ade80", bg: "rgba(34,197,94,0.1)", border: "rgba(34,197,94,0.35)", icon: CheckCircle2, label: "AL" },
     PAZARLIK_YAP: {
@@ -529,6 +570,11 @@ function ResultPanel({ r, askedPrice }: { r: BuybackResult; askedPrice?: number 
 
   return (
     <div className="space-y-4">
+      <AiDisclaimer
+        emsalCount={meta?.emsalCount ?? emsalListings.length}
+        durationMs={meta?.durationMs}
+        provider={meta?.provider}
+      />
       <div
         className="card p-6"
         style={{ background: recCfg.bg, borderColor: recCfg.border }}
@@ -707,6 +753,37 @@ function ResultPanel({ r, askedPrice }: { r: BuybackResult; askedPrice?: number 
         </div>
         <p className="text-xs text-slate-400 leading-relaxed whitespace-pre-wrap">{r.rationale}</p>
       </div>
+
+      {emsalListings.length > 0 && (
+        <div className="card p-5">
+          <div className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold mb-3 flex items-center gap-1.5">
+            <Radar className="w-3 h-3" aria-hidden strokeWidth={2.5} />
+            Gerçek benzer ilanlar ({emsalListings.length})
+          </div>
+          <ul className="space-y-2">
+            {emsalListings.map((l) => (
+              <li key={l.id}>
+                <Link
+                  href={`/pazaryeri/${l.id}`}
+                  className="flex items-center justify-between gap-3 rounded-lg border border-border bg-panel/40 hover:bg-panel px-3 py-2 transition"
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="text-sm font-semibold text-white truncate">
+                      {l.brand} {l.model} · {l.year}
+                    </div>
+                    <div className="text-[11px] text-slate-400 truncate">
+                      {l.km.toLocaleString("tr-TR")} km · {l.city}
+                    </div>
+                  </div>
+                  <div className="text-sm font-bold tabular-nums text-accent shrink-0">
+                    {fmt(l.askingPrice)}
+                  </div>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <Link
         href="/yonetici"

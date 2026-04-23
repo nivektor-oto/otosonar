@@ -58,9 +58,22 @@ export async function POST(req: Request) {
   }
 
   try {
+    // emsalCount ve emsalListings lib içinde computeMarketAggregates ile hesaplanıyor.
     const { result, meta } = await buybackAnalysis(parsed.data);
+    const emsalListings = meta.emsalListings ?? [];
     return NextResponse.json(
-      { success: true, buyback: result, meta: { ...meta, provider: "otosonar", model: "otosonar-ai-v1" } },
+      {
+        success: true,
+        buyback: result,
+        emsalListings,
+        meta: {
+          ...meta,
+          provider: "otosonar",
+          model: "otosonar-ai-v1",
+          emsalCount: meta.emsalCount ?? 0,
+          emsalListings,
+        },
+      },
       { status: 200 },
     );
   } catch (err) {

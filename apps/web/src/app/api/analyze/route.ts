@@ -70,7 +70,10 @@ export async function POST(req: NextRequest) {
   }
 
   try {
+    // Emsal sayısı lib/ai.ts içinde hesaplanıyor (computeMarketAggregates).
+    // Burada tekrar sorgu yapmıyoruz — meta.emsalCount'u direkt kullanıyoruz.
     const { result, meta } = await analyzeVehicle(data);
+    const emsalCount = meta.emsalCount ?? 0;
 
     // Feedback stub: only for logged-in users (so we can learn from real outcomes)
     let feedbackId: string | null = null;
@@ -96,7 +99,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       success: true,
       result,
-      meta: { ...meta, provider: "otosonar", model: "otosonar-ai-v1", timestamp: new Date().toISOString() },
+      meta: {
+        ...meta,
+        provider: "otosonar",
+        model: "otosonar-ai-v1",
+        timestamp: new Date().toISOString(),
+        emsalCount,
+      },
       feedbackId,
     });
   } catch (e) {

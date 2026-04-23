@@ -1,8 +1,15 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { chatMessageSchema, generateReply, transcribeAudio } from "@/lib/chatbot";
+import {
+  chatMessageSchema,
+  generateReply,
+  transcribeAudio,
+  type ChatUserContext,
+} from "@/lib/chatbot";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { logError } from "@/lib/error-log";
+import { getCurrentUser } from "@/lib/user-auth";
+import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
 export const maxDuration = 45;
@@ -23,6 +30,72 @@ const AUDIO_MIMES = new Set([
   "audio/m4a",
   "audio/mp4",
 ]);
+
+// Build a best-effort user context for the chat system prompt. If any of
+// the enrichment queries fail we log a warning and return undefined so
+// the caller falls back to the static prompt — chat must never break
+// just because a side-query did.
+async function buildUserContext(): Promise<ChatUserContext | undefined> {
+  try {
+    const user = await getCurrentUser();
+    if (!user) {
+      return { isAuthenticated: false };
+    }
+
+    const [
+      dealer,
+      activeSub,
+      unreadBuyer,
+      unreadSeller,
+      analysisCount,
+      savedCount,
+    ] = await Promise.all([
+      prisma.dealer.findUnique({
+        where: { userId: user.id },
+        select: { id: true },
+      }),
+      prisma.subscription.findFirst({
+        where: { userId: user.id, status: { in: ["ACTIVE", "TRIAL"] } },
+        orderBy: { createdAt: "desc" },
+        select: { tier: true },
+      }),
+      prisma.conversation.aggregate({
+        where: { buyerId: user.id, buyerArchivedAt: null },
+        _sum: { buyerUnread: true },
+      }),
+      prisma.conversation.aggregate({
+        where: { sellerId: user.id, sellerArchivedAt: null },
+        _sum: { sellerUnread: true },
+      }),
+      prisma.analysis.count({ where: { userId: user.id } }),
+      prisma.savedListing.count({ where: { userId: user.id } }),
+    ]);
+
+    const persona =
+      (user.quizResult as { persona?: string } | null)?.persona ?? null;
+
+    return {
+      isAuthenticated: true,
+      fullName: user.fullName,
+      userType: user.userType as ChatUserContext["userType"],
+      customerNumber: user.customerNumber,
+      hasDealer: !!dealer,
+      activeSubTier: activeSub?.tier ?? null,
+      unreadMessageCount:
+        (unreadBuyer._sum.buyerUnread ?? 0) +
+        (unreadSeller._sum.sellerUnread ?? 0),
+      recentAnalysisCount: analysisCount,
+      savedListingCount: savedCount,
+      persona,
+    };
+  } catch (err) {
+    await logError(err, {
+      path: "/api/chat:buildUserContext",
+      level: "WARNING",
+    });
+    return undefined;
+  }
+}
 
 export async function POST(req: Request) {
   const ip = await getClientIp();
@@ -77,7 +150,12 @@ export async function POST(req: Request) {
       history = parsed.data.history ?? [];
     }
 
-    const { reply, durationMs } = await generateReply(history, userMessage);
+    const userContext = await buildUserContext();
+    const { reply, durationMs } = await generateReply(
+      history,
+      userMessage,
+      userContext,
+    );
     return NextResponse.json({
       success: true,
       reply,

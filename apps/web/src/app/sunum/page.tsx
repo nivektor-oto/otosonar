@@ -188,7 +188,7 @@ function SlideCover() {
 
         <div style={{ marginTop: 60, display: "flex", gap: 40 }}>
           <KpiBig value="10 sn" label="Analiz süresi" />
-          <KpiBig value="%92" label="Doğruluk oranı" />
+          <KpiBig value="AI" label="Destekli tahmin" />
           <KpiBig value="30K+₺" label="Aylık kâr artışı" />
         </div>
       </div>
@@ -347,7 +347,7 @@ function SlideSolution() {
           body={
             <>
               Türkiye&apos;nin 2025-2026 ikinci el verisini işleyen modelle gerçek pazar değerini{" "}
-              <strong style={{ color: "#fff" }}>%8 altı hata payı</strong> ile çıkarır. Emsalini manuel aramaya son.
+              <strong style={{ color: "#fff" }}>AI + galerici ağı verisi</strong> ile çıkarır. Emsalini manuel aramaya son.
             </>
           }
         />
@@ -439,7 +439,7 @@ function SolutionCard({
 
 function SlideFeatures() {
   const items = [
-    { Icon: Target, title: "Emsal Değer AI", desc: "Gerçek pazar değeri, %8 altı hata payı." },
+    { Icon: Target, title: "Emsal Değer AI", desc: "Gerçek pazar değeri, AI destekli tahmin." },
     { Icon: Search, title: "Gizli Arıza", desc: "İlan metninden arıza sinyali + tamir bedeli." },
     { Icon: TrendingUp, title: "Pazarlık Skoru", desc: "Satıcının aciliyetini okur, pazarlık şansını gösterir." },
     { Icon: Bell, title: "Fırsat Alarmı", desc: "Kriterlerine uyan ilan yayınlanır yayınlanmaz anlık bildirim." },

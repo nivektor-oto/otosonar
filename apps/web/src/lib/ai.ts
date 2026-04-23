@@ -15,6 +15,13 @@
 
 import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
+import {
+  aggregatesAsJsonBlock,
+  aggregatesAsPromptText,
+  computeMarketAggregates,
+  type MarketAgg,
+  type SampleListing,
+} from "@/lib/market-aggregates";
 
 const SEVERITY = ["DUSUK", "ORTA", "YUKSEK", "KRITIK"] as const;
 
@@ -161,6 +168,8 @@ export interface AnalyzeMeta {
   model: string;
   durationMs: number;
   retried: number;
+  emsalCount?: number | null;
+  emsalListings?: SampleListing[];
 }
 
 // ─── Prompt Injection Koruması ───────────────────────────────
@@ -190,7 +199,35 @@ function sanitizeUserInput(text: string): string {
 export async function analyzeVehicle(
   input: VehicleInput
 ): Promise<{ result: AnalysisResult; meta: AnalyzeMeta }> {
-  const userMessage = formatVehicleForPrompt(input);
+  // Gerçek marketplace emsallerini topla, AI mesajına inject et.
+  let agg: MarketAgg | null = null;
+  if (input.brand) {
+    try {
+      const baseYear = input.year ?? 2020;
+      agg = await computeMarketAggregates({
+        brand: input.brand,
+        model: input.model,
+        yearMin: baseYear - 2,
+        yearMax: baseYear + 2,
+        city: input.city,
+        targetKm: input.km,
+      });
+      if (agg.count < 3) {
+        console.warn(
+          `[ai] low-data warning: analyze brand=${input.brand} model=${input.model ?? "-"} year=${input.year ?? "-"} emsalCount=${agg.count}`,
+        );
+      }
+    } catch (err) {
+      console.warn(
+        "[ai] market aggregate fetch failed:",
+        err instanceof Error ? err.message : err,
+      );
+    }
+  }
+
+  const userMessage = agg
+    ? `${aggregatesAsPromptText(agg)}\n\n${formatVehicleForPrompt(input)}`
+    : formatVehicleForPrompt(input);
 
   const geminiKey = process.env.GEMINI_API_KEY;
   const anthropicKey = process.env.ANTHROPIC_API_KEY;
@@ -209,6 +246,7 @@ export async function analyzeVehicle(
           model: "gemini-2.5-flash",
           durationMs,
           retried,
+          emsalCount: agg?.count ?? null,
         },
       };
     } catch (e) {
@@ -235,6 +273,7 @@ export async function analyzeVehicle(
           model: "claude-haiku-4-5",
           durationMs,
           retried: 0,
+          emsalCount: agg?.count ?? null,
         },
       };
     } catch (e) {
@@ -491,7 +530,31 @@ KURALLAR:
 export async function marketResearch(
   q: MarketQuery
 ): Promise<{ result: MarketResearch; meta: AnalyzeMeta }> {
-  const userMessage = formatMarketQuery(q);
+  // Gerçek pazar emsalleri
+  let agg: MarketAgg | null = null;
+  try {
+    agg = await computeMarketAggregates({
+      brand: q.brand,
+      model: q.model,
+      yearMin: q.yearMin,
+      yearMax: q.yearMax,
+      city: q.city,
+    });
+    if (agg.count < 3) {
+      console.warn(
+        `[ai] low-data warning: market brand=${q.brand} model=${q.model ?? "-"} emsalCount=${agg.count}`,
+      );
+    }
+  } catch (err) {
+    console.warn(
+      "[ai] market aggregate fetch failed:",
+      err instanceof Error ? err.message : err,
+    );
+  }
+
+  const userMessage = agg
+    ? `${aggregatesAsPromptText(agg)}\n\n${formatMarketQuery(q)}`
+    : formatMarketQuery(q);
 
   const geminiKey = process.env.GEMINI_API_KEY;
   const anthropicKey = process.env.ANTHROPIC_API_KEY;
@@ -510,6 +573,7 @@ export async function marketResearch(
           model: "gemini-2.5-flash",
           durationMs,
           retried,
+          emsalCount: agg?.count ?? null,
         },
       };
     } catch (e) {
@@ -547,6 +611,7 @@ export async function marketResearch(
           model: "claude-haiku-4-5",
           durationMs,
           retried: 0,
+          emsalCount: agg?.count ?? null,
         },
       };
     } catch (e) {
@@ -778,7 +843,34 @@ export async function buybackAnalysis(
   opts: { preferredProvider?: AIProvider } = {}
 ): Promise<{ result: BuybackResult; meta: AnalyzeMeta }> {
   const startTime = Date.now();
-  const userMessage = formatBuybackForPrompt(input);
+
+  // Gerçek marketplace emsalleri
+  let agg: MarketAgg | null = null;
+  try {
+    agg = await computeMarketAggregates({
+      brand: input.brand,
+      model: input.model,
+      yearMin: input.year - 2,
+      yearMax: input.year + 2,
+      city: input.city,
+      targetKm: input.km,
+    });
+    if (agg.count < 3) {
+      console.warn(
+        `[ai] low-data warning: buyback brand=${input.brand} model=${input.model} year=${input.year} emsalCount=${agg.count}`,
+      );
+    }
+  } catch (err) {
+    console.warn(
+      "[ai] buyback aggregate fetch failed:",
+      err instanceof Error ? err.message : err,
+    );
+  }
+
+  const base = formatBuybackForPrompt(input);
+  const userMessage = agg
+    ? `${aggregatesAsPromptText(agg)}\n\n${aggregatesAsJsonBlock(agg)}\n\n${base}`
+    : base;
   const preferred = opts.preferredProvider ?? "gemini";
 
   const geminiKey = process.env.GEMINI_API_KEY;
@@ -793,7 +885,14 @@ export async function buybackAnalysis(
       console.info(`[ai] buyback ok provider=gemini model=gemini-2.5-flash retried=${retried} ms=${durationMs}`);
       return {
         result: enforceBuybackConsistency(parsed, input),
-        meta: { provider: "gemini", model: "gemini-2.5-flash", durationMs, retried },
+        meta: {
+          provider: "gemini",
+          model: "gemini-2.5-flash",
+          durationMs,
+          retried,
+          emsalCount: agg?.count ?? null,
+          emsalListings: agg?.sampleListings,
+        },
       };
     } catch (e) {
       const msg = e instanceof Error ? e.message.slice(0, 200) : String(e);
@@ -814,7 +913,14 @@ export async function buybackAnalysis(
       console.info(`[ai] buyback ok provider=anthropic model=claude-haiku-4-5 ms=${durationMs} via=fallback`);
       return {
         result: enforceBuybackConsistency(parsed, input),
-        meta: { provider: "anthropic", model: "claude-haiku-4-5", durationMs, retried: 0 },
+        meta: {
+          provider: "anthropic",
+          model: "claude-haiku-4-5",
+          durationMs,
+          retried: 0,
+          emsalCount: agg?.count ?? null,
+          emsalListings: agg?.sampleListings,
+        },
       };
     } catch (e) {
       const msg = e instanceof Error ? e.message.slice(0, 200) : String(e);
