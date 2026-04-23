@@ -5,6 +5,7 @@ import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { logError } from "@/lib/error-log";
 import { getCurrentUser } from "@/lib/user-auth";
 import { prisma } from "@/lib/prisma";
+import { detectKmRisk } from "@/lib/km-heuristic";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -59,6 +60,21 @@ export async function POST(req: Request) {
       }).catch(() => undefined);
     }
 
+    // KM risk heuristic
+    let kmRisk: { score: number; flags: string[] } | null = null;
+    try {
+      const r = await detectKmRisk({
+        brand: parsed.data.brand,
+        model: parsed.data.model,
+        year: parsed.data.year,
+        km: parsed.data.km,
+        listingPrice: parsed.data.askingPrice,
+      });
+      kmRisk = { score: r.score, flags: r.flags };
+    } catch (kmErr) {
+      console.warn("[listing-score] km-risk failed:", kmErr instanceof Error ? kmErr.message : kmErr);
+    }
+
     return NextResponse.json({
       success: true,
       result,
@@ -67,6 +83,7 @@ export async function POST(req: Request) {
         model: "otosonar-ai-v1",
         durationMs,
         emsalCount: emsalCount ?? 0,
+        kmRisk,
       },
     });
   } catch (err) {

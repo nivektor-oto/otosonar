@@ -46,6 +46,7 @@ interface Meta {
   model?: string;
   retried?: number;
   emsalCount?: number | null;
+  kmRisk?: { score: number; flags: string[] } | null;
 }
 
 export default function AnalysisPage() {
@@ -562,6 +563,23 @@ function ResultPanel({
         durationMs={meta?.durationMs}
         provider={meta?.provider}
       />
+      {meta?.kmRisk && meta.kmRisk.score >= 70 && (
+        <div className="rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3">
+          <div className="flex items-center gap-2 mb-1">
+            <AlertTriangle className="w-4 h-4 text-red-400" aria-hidden strokeWidth={2.5} />
+            <div className="text-sm font-bold text-red-200 uppercase tracking-wider">
+              KM oynaması riski yüksek ({meta.kmRisk.score}/100)
+            </div>
+          </div>
+          {meta.kmRisk.flags.length > 0 && (
+            <ul className="mt-1 text-xs text-red-200/90 space-y-1 list-disc list-inside">
+              {meta.kmRisk.flags.map((f, i) => (
+                <li key={i}>{f}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <MetricCard
           icon={<TrendingUp className="w-4 h-4" aria-hidden />}

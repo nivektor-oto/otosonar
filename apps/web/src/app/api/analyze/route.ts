@@ -3,6 +3,7 @@ import { z } from "zod";
 import { analyzeVehicle } from "@/lib/ai";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/user-auth";
+import { detectKmRisk } from "@/lib/km-heuristic";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -75,6 +76,23 @@ export async function POST(req: NextRequest) {
     const { result, meta } = await analyzeVehicle(data);
     const emsalCount = meta.emsalCount ?? 0;
 
+    // KM risk heuristic — brand+model+year+km hepsi varsa
+    let kmRisk: { score: number; flags: string[] } | null = null;
+    if (data.brand && data.model && data.year && typeof data.km === "number" && data.km > 0) {
+      try {
+        const r = await detectKmRisk({
+          brand: data.brand,
+          model: data.model,
+          year: data.year,
+          km: data.km,
+          listingPrice: data.askingPrice ?? null,
+        });
+        kmRisk = { score: r.score, flags: r.flags };
+      } catch (kmErr) {
+        console.warn("[analyze] km-risk failed:", kmErr instanceof Error ? kmErr.message : kmErr);
+      }
+    }
+
     // Feedback stub: only for logged-in users (so we can learn from real outcomes)
     let feedbackId: string | null = null;
     try {
@@ -105,6 +123,7 @@ export async function POST(req: NextRequest) {
         model: "otosonar-ai-v1",
         timestamp: new Date().toISOString(),
         emsalCount,
+        kmRisk,
       },
       feedbackId,
     });

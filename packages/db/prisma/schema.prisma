@@ -566,18 +566,60 @@ model MarketplaceListing {
   moderatedByUserId String?                                  // moderatörün User.id'si
   moderatedAt     DateTime?
   rejectionReason String?                  @db.Text           // REJECTED/TAKEDOWN sebebi
+  vin             String?                  // şasi numarası (opsiyonel) — duplicate detection için
+  contactPhoneHash String?                 // sha256(phone) — duplicate + rate limit için (ham telefon saklanmaz)
+  kmRiskScore     Int?                     // 0-100 server-side KM manipülasyon heuristic
+  kmRiskFlags     Json?                    // [string] flag açıklamaları
   createdAt       DateTime                 @default(now())
   updatedAt       DateTime                 @updatedAt
 
   bids          MarketplaceBid[]
   conversations Conversation[]
   savedBy       SavedListing[]
+  reports       MarketplaceListingReport[]
 
   @@index([status, createdAt])
   @@index([brand, model, year])
   @@index([isAuction, auctionEndsAt])
   @@index([isUrgent, createdAt])
   @@index([reportCount, status])
+  @@index([vin])
+  @@index([contactPhoneHash, createdAt])
+  @@index([kmRiskScore])
+}
+
+enum ListingReportReason {
+  DUPLICATE
+  FRAUD
+  KM
+  SCAM
+  PHOTO_MISMATCH
+  OTHER
+}
+
+enum ListingReportStatus {
+  OPEN
+  REVIEWED
+  DISMISSED
+  ACTIONED
+}
+
+model MarketplaceListingReport {
+  id             String              @id @default(cuid())
+  listingId      String
+  listing        MarketplaceListing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  reporterUserId String
+  reason         ListingReportReason
+  notes          String?             @db.VarChar(1000)
+  status         ListingReportStatus @default(OPEN)
+  reviewedByUserId String?
+  reviewedAt     DateTime?
+  createdAt      DateTime            @default(now())
+
+  @@unique([listingId, reporterUserId])
+  @@index([listingId, createdAt])
+  @@index([reporterUserId, createdAt])
+  @@index([status, createdAt])
 }
 
 model SavedListing {

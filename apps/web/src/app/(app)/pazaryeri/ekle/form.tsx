@@ -201,10 +201,11 @@ export function NewListingForm() {
       .catch(() => undefined);
   }, []);
 
-  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
+  async function submitListing(allowDuplicate = false) {
+    const form = formRef.current;
+    if (!form) return;
     setLoading(true);
-    const fd = new FormData(e.currentTarget);
+    const fd = new FormData(form);
     const photoStr = String(fd.get("photos") ?? "");
     const urlPhotos = photoStr
       .split(/[\n,]/)
@@ -238,6 +239,7 @@ export function NewListingForm() {
       auctionDays: isAuction ? auctionDays : undefined,
       minBid: isAuction && minBid ? parseInt(minBid.replace(/\D/g, ""), 10) : undefined,
       isUrgent,
+      allowDuplicate: allowDuplicate ? true : undefined,
     };
 
     const r = await fetch("/api/marketplace/listings", {
@@ -257,12 +259,49 @@ export function NewListingForm() {
       router.push(`/odeme?type=listing_fee&amount=${data.priceTL}`);
       return;
     }
+    if (r.status === 429 && data.error === "phone_rate_limited") {
+      toast.error(data.message ?? "Telefon ilan sınırı aşıldı.");
+      return;
+    }
+    if (r.status === 409 && data.error === "duplicate") {
+      const first = Array.isArray(data.matches) ? data.matches[0] : null;
+      const ageDays = first
+        ? Math.max(1, Math.round((Date.now() - new Date(first.createdAt).getTime()) / 86_400_000))
+        : null;
+      if (data.severity === "block") {
+        toast.error("Bu ilan halihazırda yayımlanmış görünüyor", {
+          description: ageDays
+            ? `${ageDays} gün önce açılan benzer ilanını düzenlemek ister misin?`
+            : "Benzer bir ilanın daha var — yeni ilan yerine güncellemeyi dene.",
+          action: first
+            ? { label: "Mevcut ilanı aç", onClick: () => router.push(`/pazaryeri/${first.listingId}`) }
+            : undefined,
+        });
+        return;
+      }
+      toast.warning("Benzer bir ilanın var", {
+        description: ageDays
+          ? `${ageDays} gün önce benzer bir ilan açmışsın. Yine de yayınlamak istiyor musun?`
+          : "Benzer bir ilan zaten var. Yine de yayınlamak istiyor musun?",
+        action: { label: "Yine de yayınla", onClick: () => void submitListing(true) },
+      });
+      return;
+    }
     if (!r.ok || !data.success) {
       toast.error("İlan kaydedilemedi.");
       return;
     }
-    toast.success("İlan yayınlandı.");
+    if (data.kmRisk && typeof data.kmRisk.score === "number" && data.kmRisk.score >= 70) {
+      toast.warning(`İlan yayınlandı — sistem KM oynama riskini ${data.kmRisk.score}/100 olarak işaretledi.`);
+    } else {
+      toast.success("İlan yayınlandı.");
+    }
     router.push(`/pazaryeri/${data.listingId}`);
+  }
+
+  function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    void submitListing(false);
   }
 
   const input =

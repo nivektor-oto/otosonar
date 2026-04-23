@@ -6,6 +6,7 @@ import { BidForm } from "./bid-form";
 import { AcceptBidButton } from "./accept-button";
 import { MessageSellerButton } from "./message-seller-button";
 import { SaveListingButton } from "./save-button";
+import { ReportListingButton } from "./report-button";
 
 export const dynamic = "force-dynamic";
 
@@ -70,6 +71,21 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
             <span className={`text-xs font-bold ${statusColor}`}>{listing.status}</span>
           </div>
 
+          {listing.kmRiskScore !== null && listing.kmRiskScore !== undefined && listing.kmRiskScore >= 70 && (
+            <div className="mt-3 rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2">
+              <div className="text-[11px] font-bold text-red-200 uppercase tracking-wider">
+                KM oynaması riski yüksek ({listing.kmRiskScore}/100)
+              </div>
+              {Array.isArray(listing.kmRiskFlags) && listing.kmRiskFlags.length > 0 && (
+                <ul className="mt-1 text-xs text-red-100/90 space-y-0.5 list-disc list-inside">
+                  {(listing.kmRiskFlags as string[]).slice(0, 3).map((f, i) => (
+                    <li key={i}>{f}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+
           {photos.length > 0 && (
             <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
               {photos.slice(0, 6).map((p, i) => (
@@ -108,6 +124,7 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
                 initiallySaved={!!savedRow}
                 savedId={savedRow?.id ?? null}
               />
+              <ReportListingButton listingId={listing.id} />
             </div>
           ) : (
             <Link
