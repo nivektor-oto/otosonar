@@ -5,6 +5,7 @@ import { getCurrentUser } from "@/lib/user-auth";
 import { generateApiKey } from "@/lib/dealer-api-key";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { logError } from "@/lib/error-log";
+import { isFeatureEnabled, featureDisabledResponse } from "@/lib/feature-flags";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -40,6 +41,10 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  if (!isFeatureEnabled("CRM_API_ENABLED")) {
+    return featureDisabledResponse("CRM_API_ENABLED");
+  }
+
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ success: false, error: "unauthorized" }, { status: 401 });
   const dealer = await getDealerForUser(user.id);

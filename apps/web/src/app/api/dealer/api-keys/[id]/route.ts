@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/user-auth";
 import { logError } from "@/lib/error-log";
+import { isFeatureEnabled, featureDisabledResponse } from "@/lib/feature-flags";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -10,6 +11,10 @@ export async function DELETE(
   _req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  if (!isFeatureEnabled("CRM_API_ENABLED")) {
+    return featureDisabledResponse("CRM_API_ENABLED");
+  }
+
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ success: false, error: "unauthorized" }, { status: 401 });
 

@@ -20,6 +20,7 @@ import { prisma } from "@/lib/prisma";
 import { logError } from "@/lib/error-log";
 import { parseWhatsappText } from "@/lib/wa-listing-parser";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+import { isFeatureEnabled, featureDisabledResponse } from "@/lib/feature-flags";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -47,6 +48,10 @@ export async function GET(req: Request) {
 // ─── POST: inbound messages ─────────────────────────────────────
 
 export async function POST(req: Request) {
+  if (!isFeatureEnabled("WHATSAPP_WEBHOOK_ENABLED")) {
+    return featureDisabledResponse("WHATSAPP_WEBHOOK_ENABLED");
+  }
+
   if (!process.env.WA_APP_SECRET) {
     return NextResponse.json(
       { success: false, error: "not_configured" },

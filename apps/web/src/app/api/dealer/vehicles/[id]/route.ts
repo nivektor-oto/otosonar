@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/user-auth";
 import { logError } from "@/lib/error-log";
+import { isFeatureEnabled, featureDisabledResponse } from "@/lib/feature-flags";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -24,6 +25,10 @@ export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  if (!isFeatureEnabled("DEALER_ADVANCED_FEATURES")) {
+    return featureDisabledResponse("DEALER_ADVANCED_FEATURES");
+  }
+
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ success: false, error: "unauthorized" }, { status: 401 });
   const dealer = await prisma.dealer.findUnique({ where: { userId: user.id } });
@@ -63,6 +68,10 @@ export async function DELETE(
   _req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  if (!isFeatureEnabled("DEALER_ADVANCED_FEATURES")) {
+    return featureDisabledResponse("DEALER_ADVANCED_FEATURES");
+  }
+
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ success: false, error: "unauthorized" }, { status: 401 });
   const dealer = await prisma.dealer.findUnique({ where: { userId: user.id } });

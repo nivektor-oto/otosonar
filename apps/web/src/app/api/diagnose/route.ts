@@ -3,6 +3,7 @@ import { z } from "zod";
 import { diagnose } from "@/lib/diagnose";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { logError } from "@/lib/error-log";
+import { isFeatureEnabled, featureDisabledResponse } from "@/lib/feature-flags";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -25,6 +26,10 @@ const ALLOWED_MIMES = new Set(["image/jpeg", "image/png", "image/webp"]);
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 
 export async function POST(req: Request) {
+  if (!isFeatureEnabled("AI_DIAGNOSIS_ENABLED")) {
+    return featureDisabledResponse("AI_DIAGNOSIS_ENABLED");
+  }
+
   const ip = await getClientIp();
   const rl = await checkRateLimit(`diagnose:ip:${ip}`, 15, 600);
   if (!rl.allowed) {

@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/user-auth";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { sendToUser } from "@/lib/push";
+import { isFeatureEnabled, featureDisabledResponse } from "@/lib/feature-flags";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -15,6 +16,10 @@ const schema = z
   .strict();
 
 export async function POST(req: Request, ctx: { params: Promise<{ id: string }> }) {
+  if (!isFeatureEnabled("MESSAGING_ENABLED")) {
+    return featureDisabledResponse("MESSAGING_ENABLED");
+  }
+
   const user = await getCurrentUser();
   if (!user) {
     return NextResponse.json({ success: false, error: "not_authenticated" }, { status: 401 });
