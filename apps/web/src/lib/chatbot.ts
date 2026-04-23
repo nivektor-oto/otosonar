@@ -1,3 +1,4 @@
+import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 
 export const chatMessageSchema = z.object({
@@ -141,10 +142,39 @@ export async function generateReply(
   userMessage: string,
   userContext?: ChatUserContext,
 ): Promise<{ reply: string; provider: string; durationMs: number }> {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) throw new Error("chatbot misconfigured");
+  const geminiKey = process.env.GEMINI_API_KEY;
+  const anthropicKey = process.env.ANTHROPIC_API_KEY;
+  if (!geminiKey && !anthropicKey) throw new Error("chatbot misconfigured");
 
   const start = Date.now();
+  const systemText = userContext
+    ? `${SYSTEM_PROMPT}\n${buildContextBlock(userContext)}`
+    : SYSTEM_PROMPT;
+
+  if (geminiKey) {
+    try {
+      const reply = await callGeminiChat(geminiKey, history, userMessage, systemText);
+      return { reply, provider: "otosonar", durationMs: Date.now() - start };
+    } catch (e) {
+      console.warn("[chat] primary fail, trying fallback:", e instanceof Error ? e.message.slice(0, 150) : e);
+      if (!anthropicKey) throw e;
+    }
+  }
+
+  if (anthropicKey) {
+    const reply = await callAnthropicChat(anthropicKey, history, userMessage, systemText);
+    return { reply, provider: "otosonar", durationMs: Date.now() - start };
+  }
+
+  throw new Error("chat providers exhausted");
+}
+
+async function callGeminiChat(
+  apiKey: string,
+  history: ChatMessage[],
+  userMessage: string,
+  systemText: string,
+): Promise<string> {
   const url =
     "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
 
@@ -155,10 +185,6 @@ export async function generateReply(
     })),
     { role: "user", parts: [{ text: userMessage }] },
   ];
-
-  const systemText = userContext
-    ? `${SYSTEM_PROMPT}\n${buildContextBlock(userContext)}`
-    : SYSTEM_PROMPT;
 
   const body = {
     systemInstruction: { parts: [{ text: systemText }] },
@@ -191,12 +217,32 @@ export async function generateReply(
   const data = await res.json();
   const text: string | undefined = data?.candidates?.[0]?.content?.parts?.[0]?.text;
   if (!text) throw new Error("empty chat reply");
+  return text.trim();
+}
 
-  return {
-    reply: text.trim(),
-    provider: "otosonar",
-    durationMs: Date.now() - start,
-  };
+async function callAnthropicChat(
+  apiKey: string,
+  history: ChatMessage[],
+  userMessage: string,
+  systemText: string,
+): Promise<string> {
+  const client = new Anthropic({ apiKey, timeout: 30_000 });
+  const messages = [
+    ...history.slice(-10).map((m) => ({
+      role: m.role === "assistant" ? ("assistant" as const) : ("user" as const),
+      content: m.content,
+    })),
+    { role: "user" as const, content: userMessage },
+  ];
+  const response = await client.messages.create({
+    model: "claude-haiku-4-5-20251001",
+    max_tokens: 600,
+    system: [{ type: "text", text: systemText, cache_control: { type: "ephemeral" } }],
+    messages,
+  });
+  const block = response.content.find((b) => b.type === "text");
+  if (!block || block.type !== "text") throw new Error("empty chat reply (fallback)");
+  return block.text.trim();
 }
 
 export async function transcribeAudio(audioBase64: string, mimeType: string): Promise<string> {
