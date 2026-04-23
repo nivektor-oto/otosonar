@@ -2,20 +2,28 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ==========================================================================
+   OtoSonar — Light tema (Arabam / Sahibinden seviyesinde sade)
+   --------------------------------------------------------------------------
+   Zemin : #FAFBFC   Metin : #1A1F2E
+   Vurgu : #F59E0B (amber, CTA)   Brand: #10B981 (emerald)
+   Border: #E2E8F0 (slate-200)
+   ========================================================================== */
+
 :root {
-  color-scheme: dark;
+  color-scheme: light;
   --radius-sm: 8px;
   --radius-md: 12px;
-  --radius-lg: 20px;
+  --radius-lg: 16px;
   --radius-full: 999px;
-  --ring: 0 0 0 3px rgba(99, 102, 241, 0.4);
-  --shadow-elev: 0 10px 30px -10px rgba(99, 102, 241, 0.3);
+  --ring: 0 0 0 3px rgba(245, 158, 11, 0.35);
+  --shadow-elev: 0 6px 24px -8px rgba(15, 23, 42, 0.12);
 }
 
 html,
 body {
-  background: #0a0a0f;
-  color: #e5e7eb;
+  background: #FAFBFC;
+  color: #1A1F2E;
   font-family: var(--font-inter), system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   -webkit-font-smoothing: antialiased;
@@ -26,22 +34,86 @@ body {
   box-sizing: border-box;
 }
 
-/* ─── Background patterns ─── */
+/* ==========================================================================
+   Legacy dark literal override'ları
+   Eski sayfalar hâlâ `bg-[#0a0a0f]`, `border-neutral-900`, `text-neutral-100`
+   gibi hard-coded Tailwind arbitrary/neutral sınıflar kullanıyor. Tek tek
+   elle dönmek yerine bu overlay'lerle light karşılıklarına bağlıyoruz.
+   ========================================================================== */
+.bg-\[\#0a0a0f\],
+.bg-\[\#0a0a0f\]\/80,
+.bg-\[\#0a0a0f\]\/85,
+.bg-\[\#0a0a0f\]\/95,
+.bg-\[\#0f0f16\],
+.bg-\[\#12121a\],
+.bg-\[\#12121a\]\/95,
+.bg-\[\#141423\],
+.bg-\[\#101019\],
+.bg-\[\#181828\],
+.bg-\[\#0e0e17\] {
+  background-color: #FFFFFF !important;
+}
+
+/* neutral-900/950 block — OtoSonar dark tema kalıntısı, light'a çek */
+.bg-neutral-950,
+.bg-neutral-900,
+.bg-neutral-800 {
+  background-color: #FFFFFF !important;
+}
+.bg-neutral-900\/85,
+.bg-neutral-950\/85 {
+  background-color: rgba(255, 255, 255, 0.92) !important;
+  backdrop-filter: blur(8px);
+}
+
+.border-neutral-900,
+.border-neutral-800,
+.border-neutral-700 {
+  border-color: #E2E8F0 !important;
+}
+.divide-neutral-900 > * + *,
+.divide-neutral-800 > * + * {
+  border-color: #E2E8F0 !important;
+}
+
+/* Karanlık temanın açık metin tonlarını koyu metne bağla */
+.text-neutral-100,
+.text-neutral-200,
+.text-neutral-300 {
+  color: #1A1F2E !important;
+}
+.text-neutral-400,
+.text-neutral-500 {
+  color: #64748B !important;
+}
+
+/* Karanlık temadaki `bg-black` opsiyonları */
+.bg-black {
+  background-color: #FFFFFF !important;
+  color: #1A1F2E;
+}
+
+/* ==========================================================================
+   Arka plan desenleri (hero backdrop)
+   ========================================================================== */
 .bg-grid {
   background-image:
-    linear-gradient(rgba(99, 102, 241, 0.06) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(99, 102, 241, 0.06) 1px, transparent 1px);
+    linear-gradient(rgba(245, 158, 11, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(245, 158, 11, 0.08) 1px, transparent 1px);
   background-size: 48px 48px;
   mask-image: radial-gradient(ellipse at center, black 35%, transparent 75%);
 }
 
 .bg-glow {
-  background: radial-gradient(circle at 50% 20%, rgba(99, 102, 241, 0.12), transparent 55%);
+  background: radial-gradient(circle at 50% 20%, rgba(245, 158, 11, 0.12), transparent 55%);
 }
 
-/* ─── Typography helpers ─── */
+/* ==========================================================================
+   Tipografi yardımcıları
+   ========================================================================== */
 .gradient-text {
-  background: linear-gradient(90deg, #a5b4fc 0%, #22d3ee 100%);
+  /* Emerald + amber — brand dokunuşu */
+  background: linear-gradient(90deg, #10B981 0%, #F59E0B 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -51,11 +123,13 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-/* ─── Buttons ─── */
+/* ==========================================================================
+   Butonlar
+   ========================================================================== */
 .btn-primary {
-  background: linear-gradient(135deg, #6366f1, #06b6d4);
-  color: white;
-  font-weight: 600;
+  background: #F59E0B;
+  color: #111827;
+  font-weight: 700;
   letter-spacing: -0.01em;
   padding: 12px 22px;
   border-radius: var(--radius-full);
@@ -63,22 +137,23 @@ body {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  transition: transform 0.15s ease, box-shadow 0.2s ease, filter 0.2s ease;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, filter 0.2s ease, background 0.2s;
   border: none;
   cursor: pointer;
   white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(245, 158, 11, 0.25);
 }
 .btn-primary:hover {
   transform: translateY(-1px);
-  box-shadow: 0 8px 32px rgba(99, 102, 241, 0.45);
-  filter: brightness(1.08);
+  background: #F3A020;
+  box-shadow: 0 8px 20px rgba(245, 158, 11, 0.35);
 }
 .btn-primary:active {
   transform: translateY(0) scale(0.98);
 }
 .btn-primary:focus-visible {
   outline: none;
-  box-shadow: var(--ring), 0 8px 32px rgba(99, 102, 241, 0.45);
+  box-shadow: var(--ring), 0 8px 20px rgba(245, 158, 11, 0.35);
 }
 .btn-primary:disabled {
   opacity: 0.5;
@@ -89,12 +164,12 @@ body {
 }
 
 .btn-ghost {
-  border: 1px solid #2a2a3f;
-  color: #e5e7eb;
+  border: 1px solid #E2E8F0;
+  color: #1A1F2E;
   padding: 11px 20px;
   border-radius: var(--radius-full);
   font-weight: 600;
-  background: transparent;
+  background: #FFFFFF;
   transition: background 0.15s, border-color 0.15s;
   display: inline-flex;
   align-items: center;
@@ -103,25 +178,27 @@ body {
   text-decoration: none;
 }
 .btn-ghost:hover {
-  background: #181828;
-  border-color: #3a3a52;
+  background: #F1F5F9;
+  border-color: #CBD5E1;
 }
 .btn-ghost:focus-visible {
   outline: none;
   box-shadow: var(--ring);
 }
 
-/* Semantic focus ring for any button */
+/* Semantic focus ring */
 button:focus-visible,
 a:focus-visible {
-  outline: 2px solid #6366f1;
+  outline: 2px solid #F59E0B;
   outline-offset: 2px;
 }
 
-/* ─── Cards ─── */
+/* ==========================================================================
+   Kartlar
+   ========================================================================== */
 .card {
-  background: #12121a;
-  border: 1px solid #1f1f2e;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
   border-radius: var(--radius-lg);
   padding: 24px;
   transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s, background 0.2s;
@@ -130,22 +207,24 @@ a:focus-visible {
   cursor: pointer;
 }
 .card-interactive:hover {
-  border-color: rgba(99, 102, 241, 0.4);
+  border-color: rgba(245, 158, 11, 0.5);
   transform: translateY(-2px);
   box-shadow: var(--shadow-elev);
-  background: #141423;
+  background: #FFFFFF;
 }
 .card-interactive:focus-within {
-  border-color: rgba(99, 102, 241, 0.6);
+  border-color: rgba(245, 158, 11, 0.65);
   box-shadow: var(--ring);
 }
 
-/* ─── Inputs ─── */
+/* ==========================================================================
+   Input
+   ========================================================================== */
 .input {
   width: 100%;
-  background: #0e0e17;
-  border: 1px solid #1f1f2e;
-  color: white;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  color: #1A1F2E;
   border-radius: var(--radius-md);
   padding: 12px 14px;
   font-size: 15px;
@@ -154,15 +233,15 @@ a:focus-visible {
   font-family: inherit;
 }
 .input::placeholder {
-  color: #64748b;
+  color: #94A3B8;
 }
 .input:hover {
-  border-color: #2a2a3f;
+  border-color: #CBD5E1;
 }
 .input:focus {
-  border-color: #6366f1;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
-  background: #101019;
+  border-color: #F59E0B;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
+  background: #FFFFFF;
 }
 .input[aria-invalid="true"] {
   border-color: #ef4444;
@@ -174,7 +253,9 @@ textarea.input {
   font-family: inherit;
 }
 
-/* ─── Icon container ─── */
+/* ==========================================================================
+   Icon container
+   ========================================================================== */
 .icon-badge {
   display: inline-flex;
   align-items: center;
@@ -182,18 +263,20 @@ textarea.input {
   width: 44px;
   height: 44px;
   border-radius: 12px;
-  background: rgba(99, 102, 241, 0.1);
-  border: 1px solid rgba(99, 102, 241, 0.2);
-  color: #a5b4fc;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  color: #B45309;
   transition: all 0.2s;
 }
 .card-interactive:hover .icon-badge {
-  background: rgba(99, 102, 241, 0.15);
-  border-color: rgba(99, 102, 241, 0.45);
+  background: rgba(245, 158, 11, 0.18);
+  border-color: rgba(245, 158, 11, 0.5);
   transform: scale(1.05);
 }
 
-/* ─── Animations ─── */
+/* ==========================================================================
+   Animasyonlar
+   ========================================================================== */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -231,7 +314,7 @@ textarea.input {
   }
 }
 .skeleton {
-  background: linear-gradient(90deg, #12121a 0%, #1a1a2a 50%, #12121a 100%);
+  background: linear-gradient(90deg, #F1F5F9 0%, #E2E8F0 50%, #F1F5F9 100%);
   background-size: 200% 100%;
   animation: shimmer 1.6s linear infinite;
   border-radius: 8px;

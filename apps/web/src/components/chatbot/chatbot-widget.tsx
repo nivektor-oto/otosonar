@@ -253,13 +253,13 @@ export function ChatbotWidget() {
           onClick={() => setOpen(true)}
           data-nopdf
           aria-label="OtoSonar yardımcı asistanı aç"
-          className="fixed bottom-4 right-4 z-40 h-14 w-14 rounded-full bg-gradient-to-br from-accent to-accent2 shadow-lg shadow-accent/30 hover:shadow-xl hover:shadow-accent/40 transition flex items-center justify-center group"
+          className="fixed bottom-4 right-4 z-40 h-14 w-14 rounded-full bg-amber-500 shadow-lg shadow-amber-500/30 hover:bg-amber-400 hover:shadow-xl hover:shadow-amber-500/40 transition flex items-center justify-center group"
         >
           <MessageCircle className="w-6 h-6 text-white" strokeWidth={2.2} aria-hidden />
-          <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-accent2 ring-2 ring-[#0a0a0f]">
-            <span className="absolute inset-0 animate-ping rounded-full bg-accent2 opacity-60" />
+          <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-emerald-500 ring-2 ring-white">
+            <span className="absolute inset-0 animate-ping rounded-full bg-emerald-500 opacity-60" />
           </span>
-          <span className="absolute right-16 top-1/2 -translate-y-1/2 whitespace-nowrap rounded-lg border border-border bg-[#12121a]/95 px-3 py-1.5 text-xs text-slate-200 opacity-0 group-hover:opacity-100 transition pointer-events-none shadow-lg">
+          <span className="absolute right-16 top-1/2 -translate-y-1/2 whitespace-nowrap rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-700 opacity-0 group-hover:opacity-100 transition pointer-events-none shadow-lg">
             Yardıma ihtiyacın var mı?
           </span>
         </button>
@@ -268,25 +268,25 @@ export function ChatbotWidget() {
       {open && (
         <div
           data-nopdf
-          className="fixed inset-x-3 bottom-3 z-40 sm:inset-auto sm:bottom-4 sm:right-4 sm:w-[380px] sm:h-[560px] flex flex-col rounded-2xl border border-border bg-[#0f0f16] shadow-2xl shadow-black/60 overflow-hidden max-h-[82vh]"
+          className="fixed inset-x-3 bottom-3 z-40 sm:inset-auto sm:bottom-4 sm:right-4 sm:w-[380px] sm:h-[560px] flex flex-col rounded-2xl border border-slate-200 bg-white shadow-2xl shadow-slate-900/15 overflow-hidden max-h-[82vh]"
           role="dialog"
           aria-label="OtoSonar yardımcı asistanı"
         >
-          <header className="flex items-center justify-between gap-2 px-4 py-3 border-b border-border bg-gradient-to-r from-accent/10 to-accent2/5">
+          <header className="flex items-center justify-between gap-2 px-4 py-3 border-b border-slate-200 bg-amber-50">
             <div className="flex items-center gap-2 min-w-0">
-              <span className="relative flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-accent to-accent2">
+              <span className="relative flex h-8 w-8 items-center justify-center rounded-full bg-amber-500">
                 <Sparkles className="w-4 h-4 text-white" strokeWidth={2.5} aria-hidden />
               </span>
               <div className="min-w-0">
-                <div className="text-sm font-semibold text-white">OtoSonar Asistan</div>
-                <div className="text-[11px] text-slate-400">Yardım + yol tarifi</div>
+                <div className="text-sm font-semibold text-slate-900">OtoSonar Asistan</div>
+                <div className="text-[11px] text-slate-500">Yardım + yol tarifi</div>
               </div>
             </div>
             <div className="flex items-center gap-1">
               <button
                 type="button"
                 onClick={clearHistory}
-                className="text-[11px] text-slate-400 hover:text-white px-2 py-1 rounded"
+                className="text-[11px] text-slate-500 hover:text-slate-900 px-2 py-1 rounded"
                 aria-label="Sohbeti temizle"
               >
                 Temizle
@@ -294,7 +294,7 @@ export function ChatbotWidget() {
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="text-slate-400 hover:text-white p-1.5 rounded"
+                className="text-slate-500 hover:text-slate-900 p-1.5 rounded"
                 aria-label="Kapat"
               >
                 <X className="w-4 h-4" strokeWidth={2.5} aria-hidden />
@@ -304,7 +304,7 @@ export function ChatbotWidget() {
 
           <div
             ref={scrollRef}
-            className="flex-1 overflow-y-auto p-4 space-y-3 bg-[#0a0a0f]"
+            className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50"
           >
             {messages.map((m, i) => (
               <Bubble key={i} msg={m} />
@@ -319,7 +319,7 @@ export function ChatbotWidget() {
                       type="button"
                       onClick={() => sendText(s)}
                       disabled={sending}
-                      className="text-xs px-3 py-1.5 rounded-full border border-border bg-panel/40 text-slate-300 hover:border-accent/40 hover:text-white transition disabled:opacity-50"
+                      className="text-xs px-3 py-1.5 rounded-full border border-slate-200 bg-white text-slate-700 hover:border-amber-400 hover:text-slate-900 transition disabled:opacity-50"
                     >
                       {s}
                     </button>
@@ -329,13 +329,13 @@ export function ChatbotWidget() {
             )}
           </div>
 
-          <footer className="border-t border-border p-3 bg-[#0f0f16]">
+          <footer className="border-t border-slate-200 p-3 bg-white">
             {recording ? (
               <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={stopRecording}
-                  className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-red-500/20 border border-red-500/40 text-red-300 text-sm font-semibold px-4 py-2.5 hover:bg-red-500/30"
+                  className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-red-50 border border-red-300 text-red-700 text-sm font-semibold px-4 py-2.5 hover:bg-red-100"
                   aria-label="Kaydı durdur"
                 >
                   <Square className="w-4 h-4 fill-red-400" aria-hidden strokeWidth={2.5} />
@@ -366,13 +366,13 @@ export function ChatbotWidget() {
                   placeholder="Sor bana — örn: paketler nedir?"
                   rows={1}
                   disabled={sending}
-                  className="flex-1 rounded-xl bg-[#0a0a0f] border border-border text-sm text-white placeholder:text-slate-500 px-3 py-2.5 resize-none max-h-24 focus:outline-none focus:border-accent/50"
+                  className="flex-1 rounded-xl bg-white border border-slate-200 text-sm text-slate-900 placeholder:text-slate-400 px-3 py-2.5 resize-none max-h-24 focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-200"
                 />
                 <button
                   type="button"
                   onClick={startRecording}
                   disabled={sending}
-                  className="shrink-0 h-10 w-10 rounded-xl bg-panel border border-border text-slate-300 hover:border-accent/50 hover:text-white flex items-center justify-center disabled:opacity-50"
+                  className="shrink-0 h-10 w-10 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 hover:border-amber-400 hover:text-slate-900 flex items-center justify-center disabled:opacity-50"
                   aria-label="Sesli sor"
                 >
                   <Mic className="w-4 h-4" aria-hidden strokeWidth={2.5} />
@@ -380,7 +380,7 @@ export function ChatbotWidget() {
                 <button
                   type="submit"
                   disabled={sending || !input.trim()}
-                  className="shrink-0 h-10 w-10 rounded-xl bg-gradient-to-br from-accent to-accent2 text-white flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="shrink-0 h-10 w-10 rounded-xl bg-amber-500 text-white flex items-center justify-center hover:bg-amber-400 disabled:opacity-40 disabled:cursor-not-allowed"
                   aria-label="Gönder"
                 >
                   {sending ? (
@@ -391,7 +391,7 @@ export function ChatbotWidget() {
                 </button>
               </form>
             )}
-            <p className="mt-2 text-[10px] text-slate-600 text-center">
+            <p className="mt-2 text-[10px] text-slate-500 text-center">
               Otomatik yanıtlar yardımcıdır. Kritik işlemler için destek@otosonar.com
             </p>
           </footer>
@@ -406,11 +406,11 @@ function Bubble({ msg }: { msg: Msg }) {
   if (msg.pending) {
     return (
       <div className="flex justify-start">
-        <div className="rounded-2xl rounded-bl-sm bg-panel/60 border border-border px-3 py-2 text-sm text-slate-400 inline-flex items-center gap-2">
+        <div className="rounded-2xl rounded-bl-sm bg-white border border-slate-200 px-3 py-2 text-sm text-slate-500 inline-flex items-center gap-2">
           <span className="inline-flex gap-1">
-            <span className="h-1.5 w-1.5 rounded-full bg-slate-500 animate-bounce" />
-            <span className="h-1.5 w-1.5 rounded-full bg-slate-500 animate-bounce [animation-delay:120ms]" />
-            <span className="h-1.5 w-1.5 rounded-full bg-slate-500 animate-bounce [animation-delay:240ms]" />
+            <span className="h-1.5 w-1.5 rounded-full bg-slate-400 animate-bounce" />
+            <span className="h-1.5 w-1.5 rounded-full bg-slate-400 animate-bounce [animation-delay:120ms]" />
+            <span className="h-1.5 w-1.5 rounded-full bg-slate-400 animate-bounce [animation-delay:240ms]" />
           </span>
         </div>
       </div>
@@ -422,8 +422,8 @@ function Bubble({ msg }: { msg: Msg }) {
       <div
         className={`max-w-[82%] rounded-2xl px-3.5 py-2 text-sm leading-relaxed whitespace-pre-wrap break-words ${
           isUser
-            ? "rounded-br-sm bg-gradient-to-br from-accent/25 to-accent2/15 border border-accent/30 text-white"
-            : "rounded-bl-sm bg-panel/60 border border-border text-slate-200"
+            ? "rounded-br-sm bg-amber-500 text-white"
+            : "rounded-bl-sm bg-white border border-slate-200 text-slate-800"
         }`}
       >
         {renderContent(msg.content)}
@@ -440,7 +440,7 @@ function renderContent(text: string) {
         <Link
           key={i}
           href={p}
-          className="text-accent underline underline-offset-2 hover:text-accent2"
+          className="text-amber-700 underline underline-offset-2 hover:text-amber-800"
         >
           {p}
         </Link>

@@ -1,104 +1,32 @@
 import Link from "next/link";
 import { headers } from "next/headers";
 import {
-  Target,
-  Search,
-  TrendingUp,
-  Camera,
-  Zap,
-  ShieldAlert,
-  Store,
-  LineChart,
-  Bell,
-  type LucideIcon,
-  Plus,
-  Check,
   ArrowRight,
-  MapPin,
-  Sparkles,
+  Clipboard,
+  Gauge,
   ShieldCheck,
-  Lock,
-  Award,
-  CreditCard,
-  Smartphone,
-  Apple,
+  Sparkles,
+  Store,
+  Wallet,
+  MapPin,
 } from "lucide-react";
-import RoiCalculator from "@/components/roi-calculator";
 import { LogoMark, LogoLockup } from "@/components/logo";
-import { InstallPrompt } from "@/components/install-prompt";
 import { PricingTabs } from "@/components/pricing-tabs";
-import { CountdownTimer } from "@/components/countdown-timer";
-import { TrustBadges } from "@/components/trust-badges";
-import { CompetitionTable } from "@/components/competition-table";
-import { HowItWorks } from "@/components/how-it-works";
-import { FreeVsPremium } from "@/components/free-vs-premium";
-import { MarketplacePreview } from "@/components/marketplace-preview";
+import { InstallPrompt } from "@/components/install-prompt";
 
-type Feature = { Icon: LucideIcon; title: string; desc: string };
-
-const features: Feature[] = [
-  {
-    Icon: Target,
-    title: "Emsal Değer AI",
-    desc: "Türkiye 2026 pazar verisi üzerinden makine öğrenmesi ile AI + galerici ağı verisi tabanlı gerçek pazar değeri tahmini.",
-  },
-  {
-    Icon: Search,
-    title: "Gizli Arıza Tespiti",
-    desc: "İlan metnindeki \"motor takırdıyor\", \"klima gaz eksik\" gibi sinyalleri yakalar, tamir bedelini çıkarır.",
-  },
-  {
-    Icon: TrendingUp,
-    title: "Pazarlık Skoru",
-    desc: "İlandaki aciliyet ifadelerini okur (\"acil\", \"taşınıyorum\"), kaç TL pazarlık şansın var hesaplanır.",
-  },
-  {
-    Icon: Camera,
-    title: "Fotoğraftan Hasar AI",
-    desc: "Yüksek çözünürlüklü fotoğraflarda boyalı panel, çamurluk değişimi, tampon darbesi tespiti.",
-  },
-  {
-    Icon: Zap,
-    title: "Günde 5 Fırsat",
-    desc: "Galericilere özel: sistem hedef modellerini tarar, fiyat/değer oranı en iyi 5 aracı WhatsApp'a gönderir.",
-  },
-  {
-    Icon: ShieldAlert,
-    title: "Sahte İlan Alarmı",
-    desc: "Aynı plakanın farklı şehirlerde listelenmesi, km manipülasyonu ve şüpheli satıcı tespiti.",
-  },
-  {
-    Icon: Store,
-    title: "Galerici Marketplace",
-    desc: "Doğrulanmış galericilerin kapalı pazarı — şeffaf teklif, açık bid history, güvenli satış rozeti.",
-  },
-  {
-    Icon: LineChart,
-    title: "Fiyat Trendleri",
-    desc: "Bu model son 6 ayda nasıl değişti? Şimdi almak mı, 2 hafta beklemek mi akıllıca?",
-  },
-  {
-    Icon: Bell,
-    title: "Anlık Push Bildirim",
-    desc: "Kriterlerine uyan ilan yüklenir yüklenmez bildirim — rakibinden 5 dakika öndesin.",
-  },
-];
-
+/**
+ * OtoSonar Landing — Arabam / Sahibinden seviyesinde sade.
+ * Section sayısı: 4 (Hero + 3 rozet + Nasıl çalışır + Pricing).
+ * Tüm testimonial, feature grid, FAQ, ROI, karşılaştırma, trust badges vb. kaldırıldı.
+ */
 export default async function HomePage() {
   return (
-    <main className="min-h-screen bg-bg text-white">
+    <main className="min-h-screen bg-bg text-ink">
       <Nav />
-      <CountdownTimer />
       <Hero />
-      <MarketplacePreview />
+      <TrustStrip />
       <HowItWorks />
-      <Features />
-      <FreeVsPremium />
-      <CompetitionTable />
-      <TrustBadges />
-      <RoiCalculator />
       <PricingTabs />
-      <FAQ />
       <Footer />
       <InstallPrompt />
     </main>
@@ -109,38 +37,40 @@ function Nav() {
   return (
     <nav
       aria-label="Ana menü"
-      className="sticky top-0 z-30 backdrop-blur-lg bg-bg/80 border-b border-border"
+      className="sticky top-0 z-30 bg-white border-b border-slate-200"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-3">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-3">
         <Link
           href="/"
           aria-label="OtoSonar ana sayfa"
           className="flex items-center gap-2 shrink-0"
         >
           <LogoMark size={26} className="shrink-0" />
-          <span className="text-lg sm:text-xl font-black gradient-text whitespace-nowrap">
+          <span className="text-lg sm:text-xl font-black text-slate-900 whitespace-nowrap">
             OtoSonar
           </span>
         </Link>
+
+        <div className="hidden md:flex items-center gap-1 text-sm text-slate-700">
+          <NavLink href="/analiz">Analiz</NavLink>
+          <NavLink href="/pazaryeri">Pazaryeri</NavLink>
+          <NavLink href="/raporlar">Raporlar</NavLink>
+          <NavLink href="/hesap">Hesap</NavLink>
+        </div>
+
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           <Link
             href="/giris"
-            className="hidden sm:inline-flex btn-ghost text-sm"
-          >
-            Giriş Yap
-          </Link>
-          <Link
-            href="/giris"
-            className="sm:hidden text-sm font-semibold text-slate-300 hover:text-white px-2 py-2 whitespace-nowrap"
+            className="hidden sm:inline-flex text-sm font-semibold text-slate-700 hover:text-slate-900 px-3 py-2"
           >
             Giriş
           </Link>
           <Link
             href="/kayit"
-            aria-label="Ücretsiz başla"
+            aria-label="Ücretsiz dene"
             className="btn-primary text-sm whitespace-nowrap"
           >
-            <span className="hidden sm:inline">Ücretsiz Başla</span>
+            <span className="hidden sm:inline">Ücretsiz Dene</span>
             <span className="sm:hidden">Başla</span>
             <ArrowRight className="w-4 h-4" aria-hidden strokeWidth={2.5} />
           </Link>
@@ -150,28 +80,18 @@ function Nav() {
   );
 }
 
-type AbVariant = "dealer" | "buyer";
+function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
+  return (
+    <Link
+      href={href}
+      className="rounded-md px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 hover:text-slate-900"
+    >
+      {children}
+    </Link>
+  );
+}
 
-const heroCopy = {
-  dealer: {
-    eyebrow: "Galerici kâr işletim sistemi",
-    headline: { accent: "Günde 5 fırsat,", rest: "saatlerce arama yok." },
-    leadHtml:
-      "<strong class=\"text-white\">Galerici için:</strong> hedef modellerini tarar, fiyat/değer en iyi 5 aracı WhatsApp'a düşer. Stoğunda ne varsa kime gider, kaç günde döner — ajandan daha net.",
-    sub: "Bağlı ilanı yapıştır, AI emsal fiyat + gizli arıza + pazarlık skoru versin. Stok devir hızı ölçülür.",
-    primaryCta: "Galerici Paneline Bak",
-    secondaryCta: "Alıcı Özelliklerini Gör",
-  },
-  buyer: {
-    eyebrow: "Yanlış aracı almadan önce oku",
-    headline: { accent: "8 saniyede", rest: "aracın gerçek değerini öğren." },
-    leadHtml:
-      "<strong class=\"text-white\">Alıcı için:</strong> yanlış aracı almanı engeller. Gizli arıza sinyalleri, km oynaması, boyalı panel ve emsal fiyat — ilanı yapıştır, gerisini AI yapar.",
-    sub: "Sahibinden / arabam.com linki yeter. Saatlerce araştırma değil, saniyeler içinde rapor.",
-    primaryCta: "3 Analizi Ücretsiz Dene",
-    secondaryCta: "Paketlere Bak",
-  },
-} as const;
+type AbVariant = "dealer" | "buyer";
 
 function resolveVariant(raw: string | null | undefined): AbVariant {
   return raw === "dealer" || raw === "buyer" ? raw : "buyer";
@@ -180,158 +100,100 @@ function resolveVariant(raw: string | null | undefined): AbVariant {
 async function Hero() {
   const h = await headers();
   const variant = resolveVariant(h.get("x-ab-variant"));
-  const copy = heroCopy[variant];
-  const primaryHref = variant === "dealer" ? "/kayit?role=dealer" : "/kayit";
+  const isDealer = variant === "dealer";
+
+  const title = isDealer
+    ? "Galericiye günde 5 fırsat, saatlerce arama yok."
+    : "Sen yapıştır, biz hallederiz.";
+  const subtitle = isDealer
+    ? "Hedef modellerini tara, fiyat/değer oranı en iyi aracı sana düşsün."
+    : "İlan linkini yapıştır, 8 saniyede emsal fiyat + gizli arıza + pazarlık skoru.";
 
   return (
-    <section className="relative overflow-hidden" data-ab-variant={variant}>
-      <div className="absolute inset-0 bg-grid opacity-40" aria-hidden />
-      <div className="absolute inset-0 bg-glow" aria-hidden />
-      <div className="relative max-w-5xl mx-auto px-6 py-20 md:py-28 text-center">
-        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-accent/10 border border-accent/30 text-accent mb-6 animate-fade-up">
-          <Sparkles className="w-3 h-3" aria-hidden strokeWidth={2.5} />
-          {copy.eyebrow}
-        </span>
-        <h1 className="text-4xl sm:text-5xl md:text-6xl font-black leading-[1.05] tracking-tight animate-fade-up [animation-delay:80ms]">
-          <span className="gradient-text">{copy.headline.accent}</span>
-          <br className="hidden sm:block" /> {copy.headline.rest}
+    <section className="relative overflow-hidden bg-gradient-to-b from-amber-50/60 to-white">
+      <div className="absolute inset-0 bg-grid opacity-50" aria-hidden />
+      <div className="relative max-w-3xl mx-auto px-6 pt-16 pb-14 md:pt-24 md:pb-20 text-center">
+        <h1 className="text-3xl sm:text-5xl font-black leading-[1.1] tracking-tight text-slate-900">
+          {title}
         </h1>
-        <p
-          className="mt-6 text-base sm:text-lg md:text-xl text-slate-300 max-w-2xl mx-auto leading-relaxed animate-fade-up [animation-delay:160ms]"
-          dangerouslySetInnerHTML={{ __html: copy.leadHtml }}
-        />
-        <p className="mt-3 text-sm text-slate-400 max-w-xl mx-auto animate-fade-up [animation-delay:200ms]">
-          {copy.sub}
+        <p className="mt-4 text-base sm:text-lg text-slate-600 max-w-xl mx-auto leading-relaxed">
+          {subtitle}
         </p>
-        <div className="mt-10 flex flex-wrap items-center justify-center gap-3 animate-fade-up [animation-delay:240ms]">
-          <Link href={primaryHref} className="btn-primary">
-            {copy.primaryCta}
-            <ArrowRight className="w-4 h-4" aria-hidden strokeWidth={2.5} />
-          </Link>
-          <Link href="#pricing" className="btn-ghost">
-            {copy.secondaryCta}
-          </Link>
-        </div>
-        <p className="mt-5 text-sm text-slate-400">
-          Kredi kartı gerekmez · 30 saniyede kurulum · İstediğin zaman iptal
-        </p>
-      </div>
-    </section>
-  );
-}
 
-function Features() {
-  return (
-    <section id="features" className="py-24">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="text-center mb-14">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-semibold bg-accent/10 border border-accent/20 text-accent mb-4 uppercase tracking-wider">
-            Özellikler
-          </div>
-          <h2 className="text-3xl md:text-5xl font-bold tracking-tight">
-            Tek platform, <span className="gradient-text">tüm araç zekası</span>
-          </h2>
-          <p className="mt-4 text-base md:text-lg text-slate-300 max-w-2xl mx-auto leading-relaxed">
-            Galericiler ve araç alıcıları için saatler süren araştırmayı
-            saniyelere indiriyoruz.
-          </p>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {features.map((f, i) => (
-            <div
-              key={f.title}
-              className="card card-interactive animate-fade-up"
-              style={{ animationDelay: `${i * 50}ms` }}
-            >
-              <div className="icon-badge mb-5">
-                <f.Icon className="w-5 h-5" aria-hidden strokeWidth={1.75} />
-              </div>
-              <h3 className="font-semibold text-lg mb-2 tracking-tight">
-                {f.title}
-              </h3>
-              <p className="text-sm text-slate-400 leading-relaxed">{f.desc}</p>
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-10 max-w-3xl mx-auto rounded-2xl border border-border bg-panel/30 px-5 py-4 flex items-start gap-3">
-          <ShieldCheck
-            className="w-5 h-5 text-accent shrink-0 mt-0.5"
-            aria-hidden
-            strokeWidth={2}
+        {/* HUGE Sahibinden-style search */}
+        <form
+          action="/analiz"
+          method="get"
+          className="mt-8 flex flex-col sm:flex-row gap-2 bg-white rounded-2xl border border-slate-200 shadow-sm p-2 max-w-2xl mx-auto"
+        >
+          <input
+            name="q"
+            type="text"
+            placeholder="İlan linkini yapıştır veya marka-model yaz"
+            aria-label="İlan linki veya araç"
+            className="flex-1 bg-transparent px-4 py-3 text-base text-slate-900 placeholder:text-slate-400 focus:outline-none"
+            autoComplete="off"
           />
-          <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-            <span className="font-semibold text-white">AI sonuçları tahmindir.</span>{" "}
-            Gerçek pazar verisiyle her gün kalibre olur. Kritik alım/satım öncesi
-            bağımsız ekspertiz tavsiye ederiz.
-          </p>
-        </div>
+          <button type="submit" className="btn-primary">
+            Analiz Et
+            <ArrowRight className="w-4 h-4" aria-hidden strokeWidth={2.5} />
+          </button>
+        </form>
+
+        <p className="mt-4 text-xs text-slate-500">
+          Kredi kartı yok · İlk 3 analiz ücretsiz · İstediğin zaman iptal
+        </p>
       </div>
     </section>
   );
 }
 
-
-function FAQ() {
-  const qa = [
-    {
-      q: "Tahminler ne kadar güvenilir?",
-      a: "OtoSonar fiyat, arıza ve pazarlık tahminlerini AI pazar bilgisi ve büyüyen galerici ağı verisiyle üretir. Veriler her gün gerçek ilanlarla kalibre olur ve her raporda modelin güven skoru birlikte gösterilir. Kritik alım/satım öncesi bağımsız ekspertiz tavsiye ederiz.",
-    },
-    {
-      q: "30 gün para iade garantisi nasıl çalışır?",
-      a: "İlk 30 gün içinde herhangi bir nedenle memnun kalmazsan hesabından tek tıkla iade talebi açarsın. Para kartına veya IBAN'a 3 iş günü içinde döner — soru sormayız, sebep istemeyiz. Koşulsuz.",
-    },
-    {
-      q: "OtoSonar sahibinden.com ve arabam.com ile resmi ortak mı?",
-      a: "Hayır, bağımsız bir analiz platformuyuz. Kullanıcılar kendi oturumlarında gezdikleri ilanları Chrome eklentisi veya URL yapıştırma yoluyla analize verir. Verileri hiçbir zaman sitelerin sunucularından kazımayız — kullanıcı kendi gördüğü içeriği bize yönlendirir.",
-    },
-    {
-      q: "Galericiler için gerçek avantajı nedir?",
-      a: "OtoSonar, galericinin yanlış aracı almasını engelleyen + doğru fiyattan araç aldıran + stoğu daha hızlı eritmesini sağlayan bir kâr işletim sistemidir. Fiyat öneri modülü (alım / max / hızlı-satış / normal / risk / marj), stok devir tahmini, fırsat tarayıcı ve ilan puanlayıcı dahildir. Pro paket tek bir iyi araç anlaşmasında aylık 30-60 bin TL kazandırır.",
-    },
-    {
-      q: "Ödemeler güvenli mi?",
-      a: "Tüm ödemeler PayTR ve İyzico üzerinden alınır. Kart bilgilerin asla bizim sunucumuza değmez — PCI DSS SAQ-A kapsamındayız. 3D Secure zorunludur.",
-    },
-    {
-      q: "KVKK uyumlu musunuz?",
-      a: "Evet, VERBIS kayıtlı veri sorumlusuyuz. Vergi levhası ve IBAN gibi hassas veriler ayrı KMS şifreli bucket'ta, application-layer AES-256 şifrelemesiyle saklanır.",
-    },
-    {
-      q: "Chrome Extension güvenli mi? Sahibinden hesabıma erişir mi?",
-      a: "Eklenti yalnızca senin tarayıcında, senin oturumunda çalışır. Giriş bilgilerini, şifreni veya oturumunu hiçbir zaman görmez veya bize göndermez. Sadece bakmakta olduğun ilan verisini analize yönlendirir.",
-    },
-    {
-      q: "İptal etmek kolay mı?",
-      a: "Tek tıkla hesap panelinden iptal. İade koşulları: ilk 14 gün içinde koşulsuz iade, sonrasında kalan dönem kullanılabilir.",
-    },
-    {
-      q: "Marketplace komisyonu neden 4.000 TL?",
-      a: "Platformun gerçek katma değeri burada: güvenli satış rozeti, 7 gün gizli ayıp iade hakkı, ekspertiz entegrasyonu, noter yönlendirme. Max tier aboneleri %50 indirimle 2.000 TL öder.",
-    },
+function TrustStrip() {
+  const items = [
+    { Icon: Gauge, label: "8 saniyede analiz" },
+    { Icon: Store, label: "Galerici ağı verisi" },
+    { Icon: ShieldCheck, label: "30 gün para iade" },
   ];
   return (
-    <section className="py-24 border-t border-border">
-      <div className="max-w-3xl mx-auto px-6">
-        <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-center mb-10">
-          Sık sorulan sorular
-        </h2>
-        <div className="space-y-3">
-          {qa.map((it) => (
-            <details key={it.q} className="card group">
-              <summary className="cursor-pointer font-semibold list-none flex items-center justify-between gap-4">
-                <span>{it.q}</span>
-                <Plus
-                  className="w-5 h-5 text-accent shrink-0 transition-transform group-open:rotate-45"
-                  aria-hidden
-                  strokeWidth={2.5}
-                />
-              </summary>
-              <p className="mt-3 text-slate-400 text-sm leading-relaxed">
-                {it.a}
-              </p>
-            </details>
+    <section className="border-y border-slate-200 bg-white">
+      <div className="max-w-5xl mx-auto px-6 py-6 flex flex-wrap items-center justify-center gap-x-10 gap-y-3">
+        {items.map(({ Icon, label }) => (
+          <div key={label} className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+            <Icon className="w-4 h-4 text-amber-500" strokeWidth={2.25} aria-hidden />
+            {label}
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function HowItWorks() {
+  const steps = [
+    { Icon: Clipboard, title: "Yapıştır", desc: "İlan linkini kutuya koy." },
+    { Icon: Sparkles, title: "Analiz et", desc: "AI 8 saniyede rapor çıkarır." },
+    { Icon: Wallet, title: "Karar ver", desc: "Emsal fiyat + pazarlık skoru." },
+  ];
+  return (
+    <section className="py-16 bg-bg">
+      <div className="max-w-5xl mx-auto px-6">
+        <div className="text-center mb-10">
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900">
+            Nasıl çalışır?
+          </h2>
+          <p className="mt-2 text-sm text-slate-600">Üç adım, o kadar.</p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {steps.map((s, i) => (
+            <div key={s.title} className="card text-center">
+              <div className="mx-auto mb-4 flex items-center justify-center w-11 h-11 rounded-full bg-amber-100 text-amber-600 font-bold">
+                {i + 1}
+              </div>
+              <h3 className="font-semibold text-base text-slate-900 mb-1">
+                {s.title}
+              </h3>
+              <p className="text-sm text-slate-600">{s.desc}</p>
+            </div>
           ))}
         </div>
       </div>
@@ -341,34 +203,31 @@ function FAQ() {
 
 function Footer() {
   return (
-    <footer className="border-t border-border py-10 text-sm text-slate-400">
-      <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
+    <footer className="border-t border-slate-200 bg-white py-8 text-sm text-slate-500">
+      <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
         <LogoLockup size={20} />
         <div>© 2026 OtoSonar · NiVector Teknoloji Ltd. Şti.</div>
-        <div className="flex gap-6 flex-wrap justify-center">
-          <Link href="/blog" className="hover:text-white transition">
+        <div className="flex gap-5 flex-wrap justify-center">
+          <Link href="/blog" className="hover:text-slate-900 transition">
             Blog
           </Link>
-          <Link href="/gizlilik" className="hover:text-white transition">
+          <Link href="/gizlilik" className="hover:text-slate-900 transition">
             Gizlilik
           </Link>
-          <Link href="/kvkk" className="hover:text-white transition">
+          <Link href="/kvkk" className="hover:text-slate-900 transition">
             KVKK
           </Link>
-          <Link href="/sozlesme" className="hover:text-white transition">
+          <Link href="/sozlesme" className="hover:text-slate-900 transition">
             Üyelik
-          </Link>
-          <Link href="/cerez" className="hover:text-white transition">
-            Çerez
           </Link>
           <a
             href="mailto:destek@otosonar.com"
-            className="hover:text-white transition"
+            className="hover:text-slate-900 transition"
           >
             Destek
           </a>
         </div>
-        <div className="flex items-center gap-1.5 text-xs">
+        <div className="flex items-center gap-1.5 text-xs text-slate-500">
           <MapPin className="w-3 h-3" aria-hidden />
           <span>Konya · Türkiye</span>
         </div>

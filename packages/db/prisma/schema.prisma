@@ -286,6 +286,7 @@ model Analysis {
   id                String   @id @default(cuid())
   listingId         String
   userId            String
+  inputHash         String?  // sha256(brand|model|year|km|city_rounded) — consistency cache key (global)
   emsalValue        Int?     // tahmini pazar değeri (TL)
   emsalConfidence   Decimal? // 0-1 arası
   redFlags          Json     // [{type, severity, detail, repairEstimate}]
@@ -302,6 +303,23 @@ model Analysis {
 
   @@index([userId, createdAt])
   @@index([listingId])
+  @@index([inputHash, createdAt])
+}
+
+// Cache-layer for /api/analyze — aynı araç aynı veriyle 24 saat içinde çağrılırsa
+// AI'a tekrar gitmeden bit-identical cevap dön. Tutarlılık garantisi.
+model AnalysisCache {
+  id            String   @id @default(cuid())
+  inputHash     String   @unique  // sha256(brand|model|year|km_rounded|city_rounded|fuelType|transmission)
+  resultJson    Json     // AnalysisResult snapshot (bit-for-bit replay)
+  metaJson      Json     // AnalyzeMeta snapshot (provider, model, emsalCount, ...)
+  hits          Int      @default(0) // cache hit counter
+  invalidated   Boolean  @default(false) // user negative feedback → bir sonraki çağrıda miss
+  lastHitAt     DateTime @default(now())
+  createdAt     DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([invalidated, createdAt])
 }
 
 // ============================================================

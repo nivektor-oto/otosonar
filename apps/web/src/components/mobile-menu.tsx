@@ -7,15 +7,12 @@ interface Props {
   isLoggedIn: boolean;
 }
 
+// Sadeleşmiş 4 link — nav ile aynı sıra.
 const LINKS: Array<{ href: string; label: string }> = [
   { href: "/analiz", label: "Analiz" },
-  { href: "/bozdurma", label: "Bozdurma (Galerici)" },
-  { href: "/pazar-arastir", label: "Pazar Araştır" },
   { href: "/pazaryeri", label: "Pazaryeri" },
-  { href: "/hasar-tespit", label: "Hasar Tespit (AI)" },
-  { href: "/plaka-oku", label: "Plaka Oku (OCR)" },
-  { href: "/quiz", label: "Persona Quiz" },
-  { href: "/davet", label: "Davet Et" },
+  { href: "/raporlar", label: "Raporlar" },
+  { href: "/hesap", label: "Hesap" },
 ];
 
 export function MobileMenu({ isLoggedIn }: Props) {
@@ -25,28 +22,28 @@ export function MobileMenu({ isLoggedIn }: Props) {
       <button
         aria-label="Menü"
         onClick={() => setOpen(true)}
-        className="rounded-md border border-neutral-800 px-3 py-2 text-xs text-neutral-200"
+        className="rounded-md border border-slate-200 px-3 py-2 text-xs text-slate-700 hover:bg-slate-50"
       >
         ☰
       </button>
       {open && (
-        <div className="fixed inset-0 z-50 bg-[#0a0a0f]/95 backdrop-blur">
-          <div className="flex items-center justify-between border-b border-neutral-900 px-4 py-3">
-            <span className="font-bold text-white">Menü</span>
+        <div className="fixed inset-0 z-50 bg-white">
+          <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
+            <span className="font-bold text-slate-900">Menü</span>
             <button
               onClick={() => setOpen(false)}
-              className="rounded-md border border-neutral-800 px-3 py-1 text-xs text-neutral-300"
+              className="rounded-md border border-slate-200 px-3 py-1 text-xs text-slate-700"
             >
               ✕
             </button>
           </div>
-          <div className="flex flex-col divide-y divide-neutral-900">
+          <div className="flex flex-col divide-y divide-slate-200">
             {LINKS.map((l) => (
               <Link
                 key={l.href}
                 href={l.href}
                 onClick={() => setOpen(false)}
-                className="px-4 py-3 text-sm text-neutral-200 hover:bg-neutral-900"
+                className="px-4 py-3 text-sm text-slate-700 hover:bg-slate-50"
               >
                 {l.label}
               </Link>
@@ -56,7 +53,7 @@ export function MobileMenu({ isLoggedIn }: Props) {
               <Link
                 href="/hesap"
                 onClick={() => setOpen(false)}
-                className="px-4 py-3 text-sm font-semibold text-emerald-400 hover:bg-neutral-900"
+                className="px-4 py-3 text-sm font-semibold text-emerald-700 hover:bg-slate-50"
               >
                 Hesabım
               </Link>
@@ -65,16 +62,16 @@ export function MobileMenu({ isLoggedIn }: Props) {
                 <Link
                   href="/giris"
                   onClick={() => setOpen(false)}
-                  className="px-4 py-3 text-sm text-neutral-200 hover:bg-neutral-900"
+                  className="px-4 py-3 text-sm text-slate-700 hover:bg-slate-50"
                 >
                   Giriş yap
                 </Link>
                 <Link
                   href="/kayit"
                   onClick={() => setOpen(false)}
-                  className="px-4 py-3 text-sm font-semibold text-emerald-400 hover:bg-neutral-900"
+                  className="px-4 py-3 text-sm font-bold text-amber-700 hover:bg-slate-50"
                 >
-                  Kayıt ol
+                  Ücretsiz Dene
                 </Link>
               </>
             )}

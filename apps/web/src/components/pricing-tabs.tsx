@@ -150,8 +150,8 @@ export function PricingTabs() {
           <h2 className="text-3xl md:text-5xl font-bold tracking-tight">
             Sade fiyat, <span className="gradient-text">net değer</span>
           </h2>
-          <p className="mt-4 text-slate-300">
-            <strong className="text-white">3 gün ücretsiz dene</strong> · Yıllık ödemede <strong className="text-accent">2 ay hediye</strong> · İstediğin zaman iptal
+          <p className="mt-4 text-slate-600">
+            <strong className="text-slate-900">3 gün ücretsiz dene</strong> · Yıllık ödemede <strong className="text-accent">2 ay hediye</strong> · İstediğin zaman iptal
           </p>
         </div>
 
@@ -181,8 +181,8 @@ export function PricingTabs() {
 
         {audience === "b2b" && (
           <div className="flex flex-col items-center gap-3 mb-6">
-            <p className="text-center text-sm text-slate-300 max-w-2xl">
-              Galerici için <strong className="text-white">kâr işletim sistemi</strong> — doğru araçtan alıp, stoğu daha hızlı eritmeni sağlar.
+            <p className="text-center text-sm text-slate-600 max-w-2xl">
+              Galerici için <strong className="text-slate-900">kâr işletim sistemi</strong> — doğru araçtan alıp, stoğu daha hızlı eritmeni sağlar.
             </p>
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-semibold">
               <Sparkles className="w-3 h-3" aria-hidden strokeWidth={2.5} />
@@ -199,17 +199,17 @@ export function PricingTabs() {
                 key={t.name}
                 className={`card card-interactive relative flex flex-col ${
                   featured
-                    ? "md:scale-[1.03] md:z-10 border-accent shadow-[0_0_0_1px_rgba(99,102,241,0.4),0_20px_50px_rgba(99,102,241,0.2)] order-first md:order-none"
+                    ? "md:scale-[1.03] md:z-10 border-amber-400 shadow-[0_0_0_1px_rgba(245,158,11,0.45),0_20px_50px_rgba(245,158,11,0.2)] order-first md:order-none"
                     : ""
                 }`}
               >
                 {t.badge && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 text-[10px] font-bold px-3 py-1 rounded-full bg-gradient-to-r from-accent to-accent2 text-white tracking-widest whitespace-nowrap">
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 text-[10px] font-bold px-3 py-1 rounded-full bg-gradient-to-r from-accent to-accent2 text-slate-900 tracking-widest whitespace-nowrap">
                     {t.badge}
                   </div>
                 )}
                 <div className="text-xl font-bold tracking-tight mb-1">{t.name}</div>
-                <div className="text-xs text-slate-400 mb-5 min-h-[32px]">{t.bestFor}</div>
+                <div className="text-xs text-slate-500 mb-5 min-h-[32px]">{t.bestFor}</div>
 
                 <div className="mb-5">
                   {audience === "b2b" && t.founderPrice ? (
@@ -218,12 +218,12 @@ export function PricingTabs() {
                         <span className="text-4xl font-black tabular-nums gradient-text">
                           {billing === "yearly" ? monthlyEffective(t.founderPrice, "yearly") : t.founderPrice}
                         </span>
-                        <span className="text-slate-400 text-sm">TL/ay</span>
+                        <span className="text-slate-500 text-sm">TL/ay</span>
                       </div>
                       <div className="text-xs text-slate-500 mt-1.5">
                         {billing === "yearly" ? (
                           <>
-                            Yıllık: <strong className="text-white">{yearlyPrice(t.founderPrice)} TL</strong>{" "}
+                            Yıllık: <strong className="text-slate-900">{yearlyPrice(t.founderPrice)} TL</strong>{" "}
                             <span className="text-accent font-semibold">· 2 ay hediye</span>
                           </>
                         ) : (
@@ -238,11 +238,11 @@ export function PricingTabs() {
                     <>
                       <div className="flex items-baseline gap-1">
                         <span className="text-4xl font-black tabular-nums">{monthlyEffective(t.price, billing)}</span>
-                        <span className="text-slate-400 text-sm">TL/ay</span>
+                        <span className="text-slate-500 text-sm">TL/ay</span>
                       </div>
                       {billing === "yearly" && (
                         <div className="text-xs text-slate-500 mt-1.5">
-                          Yıllık: <strong className="text-white">{yearlyPrice(t.price)} TL</strong>{" "}
+                          Yıllık: <strong className="text-slate-900">{yearlyPrice(t.price)} TL</strong>{" "}
                           <span className="text-accent font-semibold">· 2 ay hediye</span>
                         </div>
                       )}
@@ -254,7 +254,7 @@ export function PricingTabs() {
                   {t.items.map((i) => (
                     <li
                       key={i}
-                      className="flex items-start gap-2 text-sm text-slate-200"
+                      className="flex items-start gap-2 text-sm text-slate-700"
                     >
                       <Check
                         className="w-4 h-4 text-accent mt-0.5 shrink-0"
@@ -286,7 +286,7 @@ export function PricingTabs() {
             <h3 className="text-xl font-bold mb-2">
               Filo, bayi zinciri veya 20+ çalışan?
             </h3>
-            <p className="text-slate-400 text-sm mb-4 max-w-xl mx-auto">
+            <p className="text-slate-500 text-sm mb-4 max-w-xl mx-auto">
               Kurumsal paket 5.999 TL/ay&apos;dan başlar — sınırsız kullanıcı, özel API kotası, SSO, özel hesap yöneticisi, SLA %99.9, beyaz etiketli rapor.
             </p>
             <a
@@ -299,7 +299,7 @@ export function PricingTabs() {
         )}
 
         {audience === "b2c" && (
-          <p className="mt-10 text-center text-sm text-slate-400">
+          <p className="mt-10 text-center text-sm text-slate-500">
             Galerici misin?{" "}
             <button
               onClick={() => setAudience("b2b")}
@@ -326,7 +326,7 @@ function BillingToggle({ value, onChange }: { value: Billing; onChange: (b: Bill
         aria-selected={value === "monthly"}
         onClick={() => onChange("monthly")}
         className={`px-4 py-1.5 rounded-full font-semibold transition ${
-          value === "monthly" ? "bg-panel text-white" : "text-slate-400 hover:text-white"
+          value === "monthly" ? "bg-amber-500 text-white shadow" : "text-slate-600 hover:text-slate-900"
         }`}
       >
         Aylık
@@ -336,7 +336,7 @@ function BillingToggle({ value, onChange }: { value: Billing; onChange: (b: Bill
         aria-selected={value === "yearly"}
         onClick={() => onChange("yearly")}
         className={`px-4 py-1.5 rounded-full font-semibold transition inline-flex items-center gap-2 ${
-          value === "yearly" ? "bg-panel text-white" : "text-slate-400 hover:text-white"
+          value === "yearly" ? "bg-amber-500 text-white shadow" : "text-slate-600 hover:text-slate-900"
         }`}
       >
         Yıllık
@@ -368,8 +368,8 @@ function TabButton({
       onClick={onClick}
       className={`inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full text-sm font-semibold transition-all ${
         active
-          ? "bg-gradient-to-r from-accent/20 to-accent2/20 text-white border border-accent/40 shadow-inner"
-          : "text-slate-400 hover:text-white"
+          ? "bg-amber-100 text-slate-900 border border-amber-300 shadow-inner"
+          : "text-slate-600 hover:text-slate-900"
       }`}
     >
       {icon}

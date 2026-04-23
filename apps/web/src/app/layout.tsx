@@ -73,10 +73,10 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#0a0a0f" },
-    { media: "(prefers-color-scheme: dark)", color: "#0a0a0f" },
+    { media: "(prefers-color-scheme: light)", color: "#FAFBFC" },
+    { media: "(prefers-color-scheme: dark)", color: "#FAFBFC" },
   ],
-  colorScheme: "dark",
+  colorScheme: "light",
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
@@ -105,13 +105,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ChatbotWidget />
         <Toaster
           position="top-right"
-          theme="dark"
+          theme="light"
           richColors
           toastOptions={{
             style: {
-              background: "#12121a",
-              border: "1px solid #1f1f2e",
-              color: "#e5e7eb",
+              background: "#FFFFFF",
+              border: "1px solid #E2E8F0",
+              color: "#1A1F2E",
             },
           }}
         />

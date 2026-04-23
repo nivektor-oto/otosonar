@@ -161,7 +161,7 @@ async function callGemini(userMsg: string, key: string): Promise<unknown> {
       body: JSON.stringify({
         systemInstruction: { role: "user", parts: [{ text: SYSTEM }] },
         contents: [{ role: "user", parts: [{ text: userMsg }] }],
-        generationConfig: { temperature: 0.4, maxOutputTokens: 2500, responseMimeType: "application/json" },
+        generationConfig: { temperature: 0.15, topP: 0.95, maxOutputTokens: 2500, responseMimeType: "application/json" },
       }),
     },
   );
@@ -177,8 +177,9 @@ async function callAnthropic(userMsg: string, key: string): Promise<unknown> {
   const res = await client.messages.create({
     model: "claude-haiku-4-5",
     max_tokens: 2500,
-    temperature: 0.4,
-    system: SYSTEM,
+    temperature: 0.15,
+    top_p: 0.95,
+    system: [{ type: "text", text: SYSTEM, cache_control: { type: "ephemeral" } }],
     messages: [{ role: "user", content: userMsg }],
   });
   const block = res.content.find((b) => b.type === "text") as { type: "text"; text: string } | undefined;
