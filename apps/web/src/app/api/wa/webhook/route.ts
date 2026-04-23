@@ -7,13 +7,11 @@
  *          we parse it with the primary AI provider and create a DRAFT MarketplaceListing.
  *
  * Security:
- *  - x-hub-signature-256 HMAC-SHA256 over the raw request body, compared
- *    with timingSafeEqual. If env vars are missing we log a warning and
- *    accept the request (scaffolding mode) so the endpoint can be wired up
- *    before credentials are provisioned.
- *
- * Scope: Meta WhatsApp Business API provisioning happens outside the code.
- *        This endpoint is 100% ready for activation once the env vars are set.
+ *  - Fail-closed: if `WA_APP_SECRET` is not configured the endpoint short-circuits
+ *    with 503 before parsing the body or touching the DB. Anonymous writes are not
+ *    allowed at any point in the lifecycle.
+ *  - x-hub-signature-256 HMAC-SHA256 over the raw request body, compared with
+ *    timingSafeEqual. Missing/invalid signatures return 401.
  */
 
 import { createHmac, timingSafeEqual } from "node:crypto";
@@ -21,6 +19,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { logError } from "@/lib/error-log";
 import { parseWhatsappText } from "@/lib/wa-listing-parser";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -48,6 +47,22 @@ export async function GET(req: Request) {
 // ─── POST: inbound messages ─────────────────────────────────────
 
 export async function POST(req: Request) {
+  if (!process.env.WA_APP_SECRET) {
+    return NextResponse.json(
+      { success: false, error: "not_configured" },
+      { status: 503 }
+    );
+  }
+
+  const ip = await getClientIp();
+  const rl = await checkRateLimit(`wa.webhook:ip:${ip}`, 120, 60);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { success: false, error: "rate_limited" },
+      { status: 429 }
+    );
+  }
+
   const raw = await req.text();
   const signature = req.headers.get("x-hub-signature-256");
 
@@ -91,13 +106,7 @@ export async function POST(req: Request) {
 
 function verifySignature(rawBody: string, sigHeader: string | null): boolean {
   const secret = process.env.WA_APP_SECRET;
-  if (!secret) {
-    // Scaffolding mode — env vars not yet provisioned. Accept but warn.
-    console.warn(
-      "[wa-webhook] WA_APP_SECRET not set — skipping signature check (scaffolding)"
-    );
-    return true;
-  }
+  if (!secret) return false;
   if (!sigHeader || !sigHeader.startsWith("sha256=")) return false;
   const provided = sigHeader.slice("sha256=".length);
   const expected = createHmac("sha256", secret).update(rawBody).digest("hex");
