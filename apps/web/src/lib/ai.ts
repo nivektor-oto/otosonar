@@ -389,7 +389,6 @@ async function callAnthropic(
     model: "claude-haiku-4-5-20251001",
     max_tokens: 4096,
     temperature: 0.15,
-    top_p: 0.95,
     system: [
       {
         type: "text",
@@ -607,7 +606,6 @@ export async function marketResearch(
         model: "claude-haiku-4-5-20251001",
         max_tokens: 4096,
         temperature: 0.15,
-        top_p: 0.95,
         system: [
           { type: "text", text: MARKET_SYSTEM_PROMPT, cache_control: { type: "ephemeral" } },
         ],
@@ -1048,7 +1046,6 @@ async function callAnthropicBuyback(userMessage: string, apiKey: string): Promis
     model: "claude-haiku-4-5",
     max_tokens: 4096,
     temperature: 0.15,
-    top_p: 0.95,
     system: [{ type: "text", text: BUYBACK_SYSTEM_PROMPT, cache_control: { type: "ephemeral" } }],
     messages: [{ role: "user", content: userMessage }],
   });

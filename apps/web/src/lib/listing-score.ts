@@ -178,7 +178,6 @@ async function callAnthropic(userMsg: string, key: string): Promise<unknown> {
     model: "claude-haiku-4-5",
     max_tokens: 2500,
     temperature: 0.15,
-    top_p: 0.95,
     system: [{ type: "text", text: SYSTEM, cache_control: { type: "ephemeral" } }],
     messages: [{ role: "user", content: userMsg }],
   });
