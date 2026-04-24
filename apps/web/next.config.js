@@ -4,7 +4,9 @@ const path = require("path");
 const nextConfig = {
   reactStrictMode: true,
   typedRoutes: false,
-  // Monorepo root — pnpm symlink'lerini izle
+  // iyzipay, lib/Iyzipay.js'te __dirname + "/resources" ile dinamik require ediyor.
+  // Webpack bundle'larsa __dirname değişir, resources bulunamaz. Bundle disi tut.
+  serverExternalPackages: ["iyzipay"],
   outputFileTracingRoot: path.join(__dirname, "../../"),
   outputFileTracingIncludes: {
     "/api/checkout": [
