@@ -874,7 +874,7 @@ function SlideCta() {
           </div>
         </div>
         <div style={{ marginTop: 40, fontSize: 12, color: "#64748b" }}>
-          İletişim: kurucu@otosonar.com &nbsp;·&nbsp; NiVector Teknoloji
+          İletişim: kurucu@otosonar.com &nbsp;·&nbsp; NiVector markası
         </div>
       </div>
       <Footer page={13} section="CTA" />

@@ -22,6 +22,10 @@ const STATIC_PATHS: { path: string; priority: number; changeFrequency: MetadataR
   { path: "/gizlilik", priority: 0.3, changeFrequency: "yearly" },
   { path: "/sozlesme", priority: 0.3, changeFrequency: "yearly" },
   { path: "/cerez", priority: 0.3, changeFrequency: "yearly" },
+  { path: "/mesafeli-satis", priority: 0.3, changeFrequency: "yearly" },
+  { path: "/iade-iptal", priority: 0.3, changeFrequency: "yearly" },
+  { path: "/iletisim", priority: 0.4, changeFrequency: "yearly" },
+  { path: "/fiyatlar", priority: 0.6, changeFrequency: "monthly" },
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {

@@ -10,9 +10,11 @@ export default function TermsPage() {
         <section className="space-y-2">
           <h2 className="text-lg font-semibold text-white">1. Taraflar</h2>
           <p>
-            Bu sözleşme bir yanda OtoSonar (NiVector) ("Platform"), diğer yanda sisteme kayıt olan kullanıcı
-            ("Üye") arasındadır.
+            Bu sözleşme bir yanda <b>Barış Furkan Koyuncu</b> — Şahıs İşletmesi, VKN: 5811141301 (vergi
+            levhası başvuru aşamasında), Konya/Türkiye — tarafından NiVector markası altında işletilen
+            OtoSonar ("Platform"), diğer yanda sisteme kayıt olan kullanıcı ("Üye") arasındadır.
           </p>
+          <p>İletişim: <a href="mailto:destek@otosonar.com" className="text-emerald-400 hover:underline">destek@otosonar.com</a></p>
         </section>
 
         <section className="space-y-2">

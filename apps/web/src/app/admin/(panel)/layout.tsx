@@ -12,6 +12,7 @@ import {
   ScrollText,
   ShieldCheck,
   LogOut,
+  Radar,
 } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -59,6 +60,11 @@ export default async function AdminLayout({
               href="/admin/subscriptions"
               icon={<CreditCard className="h-4 w-4" />}
               label="Abonelikler"
+            />
+            <NavItem
+              href="/admin/scraper"
+              icon={<Radar className="h-4 w-4" />}
+              label="Veri Havuzu"
             />
             <NavItem
               href="/admin/errors"

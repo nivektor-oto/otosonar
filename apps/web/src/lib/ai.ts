@@ -212,6 +212,10 @@ export async function analyzeVehicle(
   if (input.brand) {
     try {
       const baseYear = input.year ?? 2020;
+      const kmTolerance =
+        typeof input.km === "number"
+          ? Math.max(15_000, Math.round(input.km * 0.18))
+          : undefined;
       agg = await computeMarketAggregates({
         brand: input.brand,
         model: input.model,
@@ -219,6 +223,7 @@ export async function analyzeVehicle(
         yearMax: baseYear + 2,
         city: input.city,
         targetKm: input.km,
+        kmTolerance,
       });
       if (agg.count < 3) {
         console.warn(
@@ -870,6 +875,10 @@ export async function buybackAnalysis(
       yearMax: input.year + 2,
       city: input.city,
       targetKm: input.km,
+      kmTolerance:
+        typeof input.km === "number"
+          ? Math.max(15_000, Math.round(input.km * 0.18))
+          : undefined,
     });
     if (agg.count < 3) {
       console.warn(

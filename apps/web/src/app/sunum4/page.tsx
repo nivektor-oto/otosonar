@@ -466,7 +466,7 @@ function Kapanis() {
         </div>
       </div>
       <div style={{ marginTop: "auto", fontSize: 12, color: "#94a3b8", textAlign: "center" }}>
-        OtoSonar · NiVector Teknoloji · 2026
+        OtoSonar · NiVector markası · 2026
       </div>
       <FooterBar page={9} total={9} />
     </section>

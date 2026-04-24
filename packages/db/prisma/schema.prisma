@@ -16,16 +16,16 @@ datasource db {
 // ============================================================
 
 enum UserType {
-  BUYER     // B2C - araç alıcısı
-  DEALER    // B2B - galerici
-  BROKER    // Komisyoncu
+  BUYER // B2C - araç alıcısı
+  DEALER // B2B - galerici
+  BROKER // Komisyoncu
   ADMIN
 }
 
 enum DealerVolume {
-  SMALL     // <5 araç/ay
-  MEDIUM    // 5-20 araç/ay
-  LARGE     // 20+ araç/ay
+  SMALL // <5 araç/ay
+  MEDIUM // 5-20 araç/ay
+  LARGE // 20+ araç/ay
 }
 
 enum VerificationStatus {
@@ -35,41 +35,41 @@ enum VerificationStatus {
 }
 
 model User {
-  id             String    @id @default(cuid())
-  customerNumber Int       @unique @default(autoincrement())
-  email          String    @unique
-  phone          String?   @unique
-  fullName       String
-  userType       UserType  @default(BUYER)
-  role           String    @default("USER")   // USER | ADMIN | MODERATOR — admin paneli yetki kolonu
-  disabledAt     DateTime?                     // hesap askıya alma (login engelle)
-  deletedAt      DateTime?                     // soft delete
-  unreadReminders Int      @default(0)         // in-app bildirim sayacı (garaj vb.)
-  passwordHash   String?   // nullable — OAuth ile giriş olabilir
-  avatarUrl      String?
-  emailVerified  DateTime?
-  phoneVerified  DateTime?
-  totpSecret     String?   // galericide zorunlu
-  totpEnabled    Boolean   @default(false)
-  kvkkConsentAt  DateTime?
-  marketingOptIn Boolean   @default(false)
-  quizResult     Json?     // { persona, recommendedTier, answers, completedAt }
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-  lastLoginAt    DateTime?
+  id              String    @id @default(cuid())
+  customerNumber  Int       @unique @default(autoincrement())
+  email           String    @unique
+  phone           String?   @unique
+  fullName        String
+  userType        UserType  @default(BUYER)
+  role            String    @default("USER") // USER | ADMIN | MODERATOR — admin paneli yetki kolonu
+  disabledAt      DateTime? // hesap askıya alma (login engelle)
+  deletedAt       DateTime? // soft delete
+  unreadReminders Int       @default(0) // in-app bildirim sayacı (garaj vb.)
+  passwordHash    String? // nullable — OAuth ile giriş olabilir
+  avatarUrl       String?
+  emailVerified   DateTime?
+  phoneVerified   DateTime?
+  totpSecret      String? // galericide zorunlu
+  totpEnabled     Boolean   @default(false)
+  kvkkConsentAt   DateTime?
+  marketingOptIn  Boolean   @default(false)
+  quizResult      Json? // { persona, recommendedTier, answers, completedAt }
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  lastLoginAt     DateTime?
 
-  dealer        Dealer?
-  broker        Broker?
-  subscriptions Subscription[]
-  analyses      Analysis[]
-  analysisFeedbacks AnalysisFeedback[]
-  priceAlerts   PriceAlert[]
-  savedListings SavedListing[]
-  buyerPrefs    BuyerPreferences?
-  vehicles      UserVehicle[]
-  conversationsAsBuyer   Conversation[] @relation("ConversationBuyer")
-  conversationsAsSeller  Conversation[] @relation("ConversationSeller")
-  sentMessages           Message[]      @relation("MessageSender")
+  dealer                Dealer?
+  broker                Broker?
+  subscriptions         Subscription[]
+  analyses              Analysis[]
+  analysisFeedbacks     AnalysisFeedback[]
+  priceAlerts           PriceAlert[]
+  savedListings         SavedListing[]
+  buyerPrefs            BuyerPreferences?
+  vehicles              UserVehicle[]
+  conversationsAsBuyer  Conversation[]     @relation("ConversationBuyer")
+  conversationsAsSeller Conversation[]     @relation("ConversationSeller")
+  sentMessages          Message[]          @relation("MessageSender")
 
   @@index([userType])
   @@index([createdAt])
@@ -80,14 +80,14 @@ model User {
 }
 
 model BuyerPreferences {
-  id          String   @id @default(cuid())
-  userId      String   @unique
-  budgetMin   Int?
-  budgetMax   Int?
-  brands      String[] // PostgreSQL array
-  cities      String[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  budgetMin Int?
+  budgetMax Int?
+  brands    String[] // PostgreSQL array
+  cities    String[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
@@ -96,7 +96,7 @@ model Dealer {
   id                 String             @id @default(cuid())
   userId             String             @unique
   companyName        String
-  handle             String?            @unique  // public profil slug: /g/{handle}
+  handle             String?            @unique // public profil slug: /g/{handle}
   bio                String?            @db.Text
   phone              String?
   logoUrl            String?
@@ -109,11 +109,11 @@ model Dealer {
   verificationStatus VerificationStatus @default(PENDING)
   verifiedAt         DateTime?
   verifiedByAdminId  String?
-  ibanEncrypted      String?            // app-level AES-256 GCM
+  ibanEncrypted      String? // app-level AES-256 GCM
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
 
-  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user     User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   vehicles Vehicle[]
   apiKeys  DealerApiKey[]
 
@@ -122,16 +122,16 @@ model Dealer {
 }
 
 model DealerApiKey {
-  id          String    @id @default(cuid())
-  dealerId    String
-  dealer      Dealer    @relation(fields: [dealerId], references: [id], onDelete: Cascade)
-  label       String    // "Galeri CRM", "Excel Makro", ...
-  keyHash     String    @unique    // SHA-256 of the raw key
-  prefix      String                // first 8 chars of the raw key, shown for display
-  createdAt   DateTime  @default(now())
-  lastUsedAt  DateTime?
-  revokedAt   DateTime?
-  requestsCount Int     @default(0)
+  id            String    @id @default(cuid())
+  dealerId      String
+  dealer        Dealer    @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  label         String // "Galeri CRM", "Excel Makro", ...
+  keyHash       String    @unique // SHA-256 of the raw key
+  prefix        String // first 8 chars of the raw key, shown for display
+  createdAt     DateTime  @default(now())
+  lastUsedAt    DateTime?
+  revokedAt     DateTime?
+  requestsCount Int       @default(0)
 
   @@index([dealerId])
   @@index([keyHash])
@@ -139,38 +139,38 @@ model DealerApiKey {
 
 // Galericinin stoğundaki bir araç — Excel yerine.
 model Vehicle {
-  id                 String          @id @default(cuid())
+  id                 String        @id @default(cuid())
   dealerId           String
   brand              String
   model              String
   variant            String?
   year               Int
-  plate              String?         @unique
+  plate              String?       @unique
   vin                String?
   km                 Int?
   color              String?
   fuelType           String?
   transmission       String?
-  bodyType           String?         // sedan | suv | hatchback | ...
-  purchasePrice      Int?            // alış fiyatı (TL)
+  bodyType           String? // sedan | suv | hatchback | ...
+  purchasePrice      Int? // alış fiyatı (TL)
   purchaseDate       DateTime?
   purchaseFromWhom   String?
-  expenseTotal       Int             @default(0)  // kozmetik, tamir, detay
-  expensesJson       Json?           // [{label, amountTL, date}]
-  askingPrice        Int?            // satış hedef fiyatı
-  insurancePolicyEnd DateTime?       // sigorta bitiş
-  inspectionDueDate  DateTime?       // vize (muayene) bitiş
-  insuranceType      String?         // iki_aylik | bir_yillik
+  expenseTotal       Int           @default(0) // kozmetik, tamir, detay
+  expensesJson       Json? // [{label, amountTL, date}]
+  askingPrice        Int? // satış hedef fiyatı
+  insurancePolicyEnd DateTime? // sigorta bitiş
+  inspectionDueDate  DateTime? // vize (muayene) bitiş
+  insuranceType      String? // iki_aylik | bir_yillik
   ruhsatPhotoUrl     String?
-  photosJson         Json?           // [string url]
-  status             VehicleStatus   @default(IN_STOCK)
-  listedListingId    String?         // MarketplaceListing.id (yayınlanırsa)
+  photosJson         Json? // [string url]
+  status             VehicleStatus @default(IN_STOCK)
+  listedListingId    String? // MarketplaceListing.id (yayınlanırsa)
   soldAt             DateTime?
   soldPrice          Int?
   soldToName         String?
-  notes              String?         @db.Text
-  createdAt          DateTime        @default(now())
-  updatedAt          DateTime        @updatedAt
+  notes              String?       @db.Text
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
 
   dealer Dealer @relation(fields: [dealerId], references: [id], onDelete: Cascade)
 
@@ -233,14 +233,14 @@ model UserVehicle {
 }
 
 model Broker {
-  id          String   @id @default(cuid())
-  userId      String   @unique
-  displayName String
-  bio         String?
-  city        String
-  publicSlug  String   @unique  // profil URL'i için
-  commissionRate Decimal @default(0.35)  // satış komisyonundan payı (0.35 = %35)
-  createdAt   DateTime @default(now())
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  displayName    String
+  bio            String?
+  city           String
+  publicSlug     String   @unique // profil URL'i için
+  commissionRate Decimal  @default(0.35) // satış komisyonundan payı (0.35 = %35)
+  createdAt      DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
@@ -273,20 +273,20 @@ enum SubscriptionStatus {
 }
 
 model Subscription {
-  id                   String             @id @default(cuid())
-  userId               String
-  tier                 Tier
-  billingPeriod        BillingPeriod      @default(MONTHLY)
-  status               SubscriptionStatus @default(TRIAL)
-  trialEndsAt          DateTime?
-  currentPeriodStart   DateTime?
-  currentPeriodEnd     DateTime?
-  cancelAtPeriodEnd    Boolean            @default(false)
-  paytrSubscriptionRef String?
+  id                    String             @id @default(cuid())
+  userId                String
+  tier                  Tier
+  billingPeriod         BillingPeriod      @default(MONTHLY)
+  status                SubscriptionStatus @default(TRIAL)
+  trialEndsAt           DateTime?
+  currentPeriodStart    DateTime?
+  currentPeriodEnd      DateTime?
+  cancelAtPeriodEnd     Boolean            @default(false)
+  paytrSubscriptionRef  String?
   iyzicoSubscriptionRef String?
-  appleOriginalTxId    String?  // iOS IAP için
-  createdAt            DateTime           @default(now())
-  updatedAt            DateTime           @updatedAt
+  appleOriginalTxId     String? // iOS IAP için
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -306,46 +306,46 @@ enum ListingSource {
 }
 
 model Listing {
-  id              String         @id @default(cuid())
-  source          ListingSource
-  externalUrl     String?
-  externalId      String?        // kaynak platform ilan id
-  rawHtmlR2Key    String?        // ham sayfa arşivi (denetim için)
-  parsedData      Json           // { brand, model, variant, year, km, price, description, photos, ... }
-  title           String?
-  brand           String?
-  model           String?
-  variant         String?
-  year            Int?
-  km              Int?
-  fuelType        String?
-  transmission    String?
-  city            String?
-  askingPrice     Int?
-  descriptionText String?        @db.Text
+  id                String        @id @default(cuid())
+  source            ListingSource
+  externalUrl       String?
+  externalId        String? // kaynak platform ilan id
+  rawHtmlR2Key      String? // ham sayfa arşivi (denetim için)
+  parsedData        Json // { brand, model, variant, year, km, price, description, photos, ... }
+  title             String?
+  brand             String?
+  model             String?
+  variant           String?
+  year              Int?
+  km                Int?
+  fuelType          String?
+  transmission      String?
+  city              String?
+  askingPrice       Int?
+  descriptionText   String?       @db.Text
   submittedByUserId String?
-  createdAt       DateTime       @default(now())
+  createdAt         DateTime      @default(now())
 
   analyses Analysis[]
 
+  @@unique([source, externalId])
   @@index([brand, model, year])
   @@index([city, askingPrice])
   @@index([createdAt])
-  @@unique([source, externalId])
 }
 
 model Analysis {
   id                String   @id @default(cuid())
   listingId         String
   userId            String
-  inputHash         String?  // sha256(brand|model|year|km|city_rounded) — consistency cache key (global)
-  emsalValue        Int?     // tahmini pazar değeri (TL)
+  inputHash         String? // sha256(brand|model|year|km|city_rounded) — consistency cache key (global)
+  emsalValue        Int? // tahmini pazar değeri (TL)
   emsalConfidence   Decimal? // 0-1 arası
-  redFlags          Json     // [{type, severity, detail, repairEstimate}]
-  repairEstimateMin Int?     // toplam tahmini tamir (TL)
+  redFlags          Json // [{type, severity, detail, repairEstimate}]
+  repairEstimateMin Int? // toplam tahmini tamir (TL)
   repairEstimateMax Int?
-  negotiationScore  Int?     // 0-100 pazarlık skoru
-  reportMarkdown    String?  @db.Text  // kullanıcıya gösterilen zengin rapor
+  negotiationScore  Int? // 0-100 pazarlık skoru
+  reportMarkdown    String?  @db.Text // kullanıcıya gösterilen zengin rapor
   aiModelVersion    String   @default("haiku-4.5")
   processingTimeMs  Int?
   createdAt         DateTime @default(now())
@@ -361,14 +361,14 @@ model Analysis {
 // Cache-layer for /api/analyze — aynı araç aynı veriyle 24 saat içinde çağrılırsa
 // AI'a tekrar gitmeden bit-identical cevap dön. Tutarlılık garantisi.
 model AnalysisCache {
-  id            String   @id @default(cuid())
-  inputHash     String   @unique  // sha256(brand|model|year|km_rounded|city_rounded|fuelType|transmission)
-  resultJson    Json     // AnalysisResult snapshot (bit-for-bit replay)
-  metaJson      Json     // AnalyzeMeta snapshot (provider, model, emsalCount, ...)
-  hits          Int      @default(0) // cache hit counter
-  invalidated   Boolean  @default(false) // user negative feedback → bir sonraki çağrıda miss
-  lastHitAt     DateTime @default(now())
-  createdAt     DateTime @default(now())
+  id          String   @id @default(cuid())
+  inputHash   String   @unique // sha256(brand|model|year|km_rounded|city_rounded|fuelType|transmission)
+  resultJson  Json // AnalysisResult snapshot (bit-for-bit replay)
+  metaJson    Json // AnalyzeMeta snapshot (provider, model, emsalCount, ...)
+  hits        Int      @default(0) // cache hit counter
+  invalidated Boolean  @default(false) // user negative feedback → bir sonraki çağrıda miss
+  lastHitAt   DateTime @default(now())
+  createdAt   DateTime @default(now())
 
   @@index([createdAt])
   @@index([invalidated, createdAt])
@@ -379,22 +379,22 @@ model AnalysisCache {
 // ============================================================
 
 model AnalysisFeedback {
-  id             String   @id @default(cuid())
+  id             String  @id @default(cuid())
   userId         String
-  listingUrl     String?  @db.Text
-  inputSnapshot  Json     // VehicleInput (brand, model, year, km, ...)
-  outputSnapshot Json     // AnalysisResult (emsal, redFlags, ...)
-  providerMeta   Json?    // {provider, model, durationMs}
+  listingUrl     String? @db.Text
+  inputSnapshot  Json // VehicleInput (brand, model, year, km, ...)
+  outputSnapshot Json // AnalysisResult (emsal, redFlags, ...)
+  providerMeta   Json? // {provider, model, durationMs}
 
   // User-supplied outcome (filled after the fact)
-  outcome      String?  // BOUGHT | SKIPPED | UNDECIDED
-  accuracy     String?  // CORRECT | WRONG | PARTIAL
-  actualPrice  Int?     // sale/purchase price if bought
-  expertiseOk  Boolean? // true if professional inspection matched report
-  notes        String?  @db.Text
+  outcome     String? // BOUGHT | SKIPPED | UNDECIDED
+  accuracy    String? // CORRECT | WRONG | PARTIAL
+  actualPrice Int? // sale/purchase price if bought
+  expertiseOk Boolean? // true if professional inspection matched report
+  notes       String?  @db.Text
 
-  createdAt    DateTime @default(now())
-  answeredAt   DateTime?
+  createdAt  DateTime  @default(now())
+  answeredAt DateTime?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -414,15 +414,15 @@ enum WaitlistUserType {
 }
 
 model WaitlistEntry {
-  id             String            @id @default(cuid())
-  email          String            @unique
+  id             String           @id @default(cuid())
+  email          String           @unique
   fullName       String?
   userType       WaitlistUserType
   city           String?
   referralSource String?
-  queueNumber    Int               @unique @default(autoincrement())
+  queueNumber    Int              @unique @default(autoincrement())
   ipHash         String?
-  createdAt      DateTime          @default(now())
+  createdAt      DateTime         @default(now())
 
   @@index([userType])
   @@index([createdAt])
@@ -435,7 +435,7 @@ model WaitlistEntry {
 model AuditLog {
   id         String   @id @default(cuid())
   actorId    String?
-  action     String   // "user.login", "subscription.create", "bid.place", ...
+  action     String // "user.login", "subscription.create", "bid.place", ...
   targetType String?
   targetId   String?
   ip         String?
@@ -452,15 +452,15 @@ model AuditLog {
 // ============================================================
 
 model AdminAuditLog {
-  id           String   @id @default(cuid())
-  adminUserId  String   // işlemi yapan admin/moderator User.id
-  action       String   // "user.disable", "listing.approve", "subscription.refund", ...
-  targetType   String?  // "user" | "listing" | "subscription" | ...
-  targetId     String?
-  payload      Json?    // snapshot — reason, before/after özeti
-  ip           String?
-  userAgent    String?
-  createdAt    DateTime @default(now())
+  id          String   @id @default(cuid())
+  adminUserId String // işlemi yapan admin/moderator User.id
+  action      String // "user.disable", "listing.approve", "subscription.refund", ...
+  targetType  String? // "user" | "listing" | "subscription" | ...
+  targetId    String?
+  payload     Json? // snapshot — reason, before/after özeti
+  ip          String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
 
   @@index([adminUserId, createdAt])
   @@index([action, createdAt])
@@ -481,7 +481,7 @@ model AuthToken {
   id        String        @id @default(cuid())
   userId    String
   kind      AuthTokenKind
-  tokenHash String        @unique  // sha256 of raw token
+  tokenHash String        @unique // sha256 of raw token
   expiresAt DateTime
   usedAt    DateTime?
   createdAt DateTime      @default(now())
@@ -491,15 +491,15 @@ model AuthToken {
 }
 
 model UserSession {
-  id           String    @id @default(cuid())
-  userId       String
-  tokenHash    String    @unique
-  userAgent    String?
-  ipHash       String?
-  expiresAt    DateTime
-  revokedAt    DateTime?
-  lastSeenAt   DateTime  @default(now())
-  createdAt    DateTime  @default(now())
+  id         String    @id @default(cuid())
+  userId     String
+  tokenHash  String    @unique
+  userAgent  String?
+  ipHash     String?
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  lastSeenAt DateTime  @default(now())
+  createdAt  DateTime  @default(now())
 
   @@index([userId, revokedAt])
   @@index([expiresAt])
@@ -511,7 +511,7 @@ model UserSession {
 
 model RateLimitBucket {
   id         String   @id @default(cuid())
-  bucketKey  String   @unique  // "ip:1.2.3.4:/api/auth/login"
+  bucketKey  String   @unique // "ip:1.2.3.4:/api/auth/login"
   hits       Int      @default(1)
   windowEnds DateTime
   createdAt  DateTime @default(now())
@@ -524,19 +524,19 @@ model RateLimitBucket {
 // ============================================================
 
 model AnalyticsEvent {
-  id         String   @id @default(cuid())
-  sessionId  String   // anonymous cookie id
-  userId     String?
-  event      String   // "pageview", "cta.click", "signup.complete", ...
-  path       String?
-  referer    String?
-  utmSource  String?
-  utmMedium  String?
+  id          String   @id @default(cuid())
+  sessionId   String // anonymous cookie id
+  userId      String?
+  event       String // "pageview", "cta.click", "signup.complete", ...
+  path        String?
+  referer     String?
+  utmSource   String?
+  utmMedium   String?
   utmCampaign String?
-  country    String?
-  device     String?  // "mobile" | "desktop" | "tablet"
-  metadata   Json?
-  createdAt  DateTime @default(now())
+  country     String?
+  device      String? // "mobile" | "desktop" | "tablet"
+  metadata    Json?
+  createdAt   DateTime @default(now())
 
   @@index([event, createdAt])
   @@index([sessionId])
@@ -563,7 +563,7 @@ model ErrorLog {
   userId      String?
   sessionId   String?
   userAgent   String?
-  fingerprint String     // hash of message+first-stack-frame for grouping
+  fingerprint String // hash of message+first-stack-frame for grouping
   metadata    Json?
   createdAt   DateTime   @default(now())
 
@@ -577,21 +577,21 @@ model ErrorLog {
 // ============================================================
 
 model ReferralCode {
-  id         String   @id @default(cuid())
-  ownerId    String
-  code       String   @unique  // shortish "AHMET42"
-  usesCount  Int      @default(0)
-  createdAt  DateTime @default(now())
+  id        String   @id @default(cuid())
+  ownerId   String
+  code      String   @unique // shortish "AHMET42"
+  usesCount Int      @default(0)
+  createdAt DateTime @default(now())
 
   @@index([ownerId])
 }
 
 model ReferralRedemption {
-  id          String   @id @default(cuid())
-  code        String
-  referredId  String   @unique  // invited user
+  id             String    @id @default(cuid())
+  code           String
+  referredId     String    @unique // invited user
   bonusGrantedAt DateTime?
-  createdAt   DateTime @default(now())
+  createdAt      DateTime  @default(now())
 
   @@index([code])
 }
@@ -611,37 +611,37 @@ enum MarketplaceListingStatus {
 }
 
 model MarketplaceListing {
-  id              String                   @id @default(cuid())
-  sellerId        String                   // User.id (dealer or buyer)
-  brand           String
-  model           String
-  year            Int
-  km              Int
-  city            String
-  bodyType        String?                  // sedan | suv | hatchback | ...
-  askingPrice     Int
-  description     String?                  @db.Text
-  photosJson      Json?                    // array of urls
-  paintMapJson    Json?                    // boya/değişen haritası — per-panel state
-  isAuction       Boolean                  @default(false)
-  auctionEndsAt   DateTime?
-  minBid          Int?                     // açık arttırma için zorunlu asgari teklif
-  autoAcceptAbove Int?                     // bu tutarın üstündeki teklif otomatik kabul
-  isUrgent        Boolean                  @default(false) // "acil sat" bayrağı
-  listingScoreId  String?                  // ListingScore.id
-  status          MarketplaceListingStatus @default(DRAFT)
-  closedAt        DateTime?
-  winningBidId    String?
-  reportCount     Int                      @default(0)       // bildirim sayısı (moderasyon için)
-  moderatedByUserId String?                                  // moderatörün User.id'si
-  moderatedAt     DateTime?
-  rejectionReason String?                  @db.Text           // REJECTED/TAKEDOWN sebebi
-  vin             String?                  // şasi numarası (opsiyonel) — duplicate detection için
-  contactPhoneHash String?                 // sha256(phone) — duplicate + rate limit için (ham telefon saklanmaz)
-  kmRiskScore     Int?                     // 0-100 server-side KM manipülasyon heuristic
-  kmRiskFlags     Json?                    // [string] flag açıklamaları
-  createdAt       DateTime                 @default(now())
-  updatedAt       DateTime                 @updatedAt
+  id                String                   @id @default(cuid())
+  sellerId          String // User.id (dealer or buyer)
+  brand             String
+  model             String
+  year              Int
+  km                Int
+  city              String
+  bodyType          String? // sedan | suv | hatchback | ...
+  askingPrice       Int
+  description       String?                  @db.Text
+  photosJson        Json? // array of urls
+  paintMapJson      Json? // boya/değişen haritası — per-panel state
+  isAuction         Boolean                  @default(false)
+  auctionEndsAt     DateTime?
+  minBid            Int? // açık arttırma için zorunlu asgari teklif
+  autoAcceptAbove   Int? // bu tutarın üstündeki teklif otomatik kabul
+  isUrgent          Boolean                  @default(false) // "acil sat" bayrağı
+  listingScoreId    String? // ListingScore.id
+  status            MarketplaceListingStatus @default(DRAFT)
+  closedAt          DateTime?
+  winningBidId      String?
+  reportCount       Int                      @default(0) // bildirim sayısı (moderasyon için)
+  moderatedByUserId String? // moderatörün User.id'si
+  moderatedAt       DateTime?
+  rejectionReason   String?                  @db.Text // REJECTED/TAKEDOWN sebebi
+  vin               String? // şasi numarası (opsiyonel) — duplicate detection için
+  contactPhoneHash  String? // sha256(phone) — duplicate + rate limit için (ham telefon saklanmaz)
+  kmRiskScore       Int? // 0-100 server-side KM manipülasyon heuristic
+  kmRiskFlags       Json? // [string] flag açıklamaları
+  createdAt         DateTime                 @default(now())
+  updatedAt         DateTime                 @updatedAt
 
   bids          MarketplaceBid[]
   conversations Conversation[]
@@ -675,16 +675,16 @@ enum ListingReportStatus {
 }
 
 model MarketplaceListingReport {
-  id             String              @id @default(cuid())
-  listingId      String
-  listing        MarketplaceListing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
-  reporterUserId String
-  reason         ListingReportReason
-  notes          String?             @db.VarChar(1000)
-  status         ListingReportStatus @default(OPEN)
+  id               String              @id @default(cuid())
+  listingId        String
+  listing          MarketplaceListing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  reporterUserId   String
+  reason           ListingReportReason
+  notes            String?             @db.VarChar(1000)
+  status           ListingReportStatus @default(OPEN)
   reviewedByUserId String?
-  reviewedAt     DateTime?
-  createdAt      DateTime            @default(now())
+  reviewedAt       DateTime?
+  createdAt        DateTime            @default(now())
 
   @@unique([listingId, reporterUserId])
   @@index([listingId, createdAt])
@@ -693,13 +693,13 @@ model MarketplaceListingReport {
 }
 
 model SavedListing {
-  id          String   @id @default(cuid())
-  userId      String
-  listingId   String
-  note        String?  @db.VarChar(200)
-  savedPrice  Int      // fiyat düşüşünü tespit için kaydettiğin anki fiyat
-  notifyOnDrop Boolean @default(true)
-  createdAt   DateTime @default(now())
+  id           String   @id @default(cuid())
+  userId       String
+  listingId    String
+  note         String?  @db.VarChar(200)
+  savedPrice   Int // fiyat düşüşünü tespit için kaydettiğin anki fiyat
+  notifyOnDrop Boolean  @default(true)
+  createdAt    DateTime @default(now())
 
   user    User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   listing MarketplaceListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
@@ -711,47 +711,48 @@ model SavedListing {
 
 // AI ile üretilen ilan iyileştirme skor ve metin önerileri.
 model ListingScore {
-  id            String   @id @default(cuid())
-  listingId     String?  @unique
-  sellerId      String   // (yayından önce skorlanabilir, listing henüz yok)
-  overallScore  Int      // 0-100
-  titleScore    Int
-  priceScore    Int
-  photoScore    Int
-  textScore     Int
-  aiTitle       String?  @db.Text
-  aiDescription String?  @db.Text
-  photoOrderJson Json?   // önerilen foto sıralaması
-  tipsJson      Json?    // iyileştirme önerileri [{label, severity}]
-  createdAt     DateTime @default(now())
+  id             String   @id @default(cuid())
+  listingId      String?  @unique
+  sellerId       String // (yayından önce skorlanabilir, listing henüz yok)
+  overallScore   Int // 0-100
+  titleScore     Int
+  priceScore     Int
+  photoScore     Int
+  textScore      Int
+  aiTitle        String?  @db.Text
+  aiDescription  String?  @db.Text
+  photoOrderJson Json? // önerilen foto sıralaması
+  tipsJson       Json? // iyileştirme önerileri [{label, severity}]
+  createdAt      DateTime @default(now())
+
   @@index([sellerId, createdAt])
 }
 
 // AI tarafından hazırlanan aylık piyasa raporu (499 TL paid tier).
 model MarketTrendReport {
   id          String   @id @default(cuid())
-  period      String   @unique  // "2026-04"
+  period      String   @unique // "2026-04"
   title       String
   summary     String   @db.Text
-  dataJson    Json     // agregrat veri (top 50 model, yön, yüzde değişim)
+  dataJson    Json // agregrat veri (top 50 model, yön, yüzde değişim)
   accessTier  String   @default("PRO") // PLUS | PRO | MAX | PUBLIC
   publishedAt DateTime @default(now())
 }
 
 // Kullanıcının rakip/ilgi fiyat uyarı tanımı.
 model PriceAlert {
-  id              String   @id @default(cuid())
+  id              String    @id @default(cuid())
   userId          String
-  label           String?  // "BMW 3.20 2018+ Konya"
+  label           String? // "BMW 3.20 2018+ Konya"
   brand           String
   model           String?
   yearMin         Int?
   yearMax         Int?
   priceMax        Int?
   cityFilter      String?
-  active          Boolean  @default(true)
+  active          Boolean   @default(true)
   lastTriggeredAt DateTime?
-  createdAt       DateTime @default(now())
+  createdAt       DateTime  @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -760,14 +761,14 @@ model PriceAlert {
 }
 
 model MarketplaceBid {
-  id          String    @id @default(cuid())
-  listingId   String
-  bidderId    String   // dealer user id
-  amount      Int
-  note        String?   @db.Text
-  retracted   Boolean   @default(false)
-  acceptedAt  DateTime?
-  createdAt   DateTime  @default(now())
+  id         String    @id @default(cuid())
+  listingId  String
+  bidderId   String // dealer user id
+  amount     Int
+  note       String?   @db.Text
+  retracted  Boolean   @default(false)
+  acceptedAt DateTime?
+  createdAt  DateTime  @default(now())
 
   listing MarketplaceListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
 
@@ -807,10 +808,10 @@ model PaymentIntent {
   id             String        @id @default(cuid())
   userId         String
   subscriptionId String?
-  amountKurus    Int           // 249_00 = 249.00 TL
+  amountKurus    Int // 249_00 = 249.00 TL
   currency       String        @default("TRY")
-  provider       String        // "iyzico" | "paytr"
-  providerRef    String?       @unique  // idempotency key
+  provider       String // "iyzico" | "paytr"
+  providerRef    String?       @unique // idempotency key
   status         PaymentStatus @default(PENDING)
   failReason     String?
   metadata       Json?
@@ -828,8 +829,8 @@ model PaymentIntent {
 model OAuthAccount {
   id                String   @id @default(cuid())
   userId            String
-  provider          String   // "google" | "apple"
-  providerAccountId String   // sub (subject) id from provider
+  provider          String // "google" | "apple"
+  providerAccountId String // sub (subject) id from provider
   email             String?
   createdAt         DateTime @default(now())
 
@@ -849,35 +850,35 @@ enum DamageSeverity {
 }
 
 model DamageAnalysis {
-  id                   String         @id @default(cuid())
-  userId               String?        // nullable for anonymous
-  sessionId            String?        // anonymous cookie for grouping
-  overallSeverity      DamageSeverity
-  repairEstimateMinTL  Int
-  repairEstimateMaxTL  Int
-  damagesJson          Json           // [{type, location, severity, description}]
-  notes                String?        @db.Text
-  imageHash            String?        // sha256 of image bytes — avoid duplicate stores
-  modelVersion         String         @default("gemini-2.5-flash")
-  durationMs           Int?
-  createdAt            DateTime       @default(now())
+  id                  String         @id @default(cuid())
+  userId              String? // nullable for anonymous
+  sessionId           String? // anonymous cookie for grouping
+  overallSeverity     DamageSeverity
+  repairEstimateMinTL Int
+  repairEstimateMaxTL Int
+  damagesJson         Json // [{type, location, severity, description}]
+  notes               String?        @db.Text
+  imageHash           String? // sha256 of image bytes — avoid duplicate stores
+  modelVersion        String         @default("gemini-2.5-flash")
+  durationMs          Int?
+  createdAt           DateTime       @default(now())
 
   @@index([userId, createdAt])
   @@index([createdAt])
 }
 
 model PlateRecognition {
-  id            String   @id @default(cuid())
-  userId        String?
-  sessionId     String?
-  plate         String?
-  confidence    Float
-  isTurkish     Boolean
-  region        String?
-  imageHash     String?
-  modelVersion  String   @default("gemini-2.5-flash")
-  durationMs    Int?
-  createdAt     DateTime @default(now())
+  id           String   @id @default(cuid())
+  userId       String?
+  sessionId    String?
+  plate        String?
+  confidence   Float
+  isTurkish    Boolean
+  region       String?
+  imageHash    String?
+  modelVersion String   @default("gemini-2.5-flash")
+  durationMs   Int?
+  createdAt    DateTime @default(now())
 
   @@index([userId, createdAt])
 }
@@ -894,13 +895,13 @@ enum CreditKind {
 }
 
 model CreditLedger {
-  id          String     @id @default(cuid())
-  userId      String
-  kind        CreditKind
-  amountDays  Int        // + = gifted days, - = consumed
-  note        String?
-  refId       String?    // referral redemption id, payment intent id, etc.
-  createdAt   DateTime   @default(now())
+  id         String     @id @default(cuid())
+  userId     String
+  kind       CreditKind
+  amountDays Int // + = gifted days, - = consumed
+  note       String?
+  refId      String? // referral redemption id, payment intent id, etc.
+  createdAt  DateTime   @default(now())
 
   @@index([userId, createdAt])
 }
@@ -910,22 +911,22 @@ model CreditLedger {
 // ============================================================
 
 model Conversation {
-  id              String    @id @default(cuid())
-  listingId       String
-  listing         MarketplaceListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
-  buyerId         String
-  buyer           User      @relation("ConversationBuyer", fields: [buyerId], references: [id], onDelete: Cascade)
-  sellerId        String
-  seller          User      @relation("ConversationSeller", fields: [sellerId], references: [id], onDelete: Cascade)
-  lastMessageAt   DateTime  @default(now())
-  lastMessageBody String?   @db.VarChar(500)
-  lastSenderId    String?
-  buyerUnread     Int       @default(0)
-  sellerUnread    Int       @default(0)
-  buyerArchivedAt DateTime?
+  id               String             @id @default(cuid())
+  listingId        String
+  listing          MarketplaceListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  buyerId          String
+  buyer            User               @relation("ConversationBuyer", fields: [buyerId], references: [id], onDelete: Cascade)
+  sellerId         String
+  seller           User               @relation("ConversationSeller", fields: [sellerId], references: [id], onDelete: Cascade)
+  lastMessageAt    DateTime           @default(now())
+  lastMessageBody  String?            @db.VarChar(500)
+  lastSenderId     String?
+  buyerUnread      Int                @default(0)
+  sellerUnread     Int                @default(0)
+  buyerArchivedAt  DateTime?
   sellerArchivedAt DateTime?
-  createdAt       DateTime  @default(now())
-  messages        Message[]
+  createdAt        DateTime           @default(now())
+  messages         Message[]
 
   @@unique([listingId, buyerId])
   @@index([buyerId, lastMessageAt])
@@ -933,14 +934,14 @@ model Conversation {
 }
 
 model Message {
-  id             String   @id @default(cuid())
+  id             String       @id @default(cuid())
   conversationId String
   conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   senderId       String
-  sender         User     @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
-  body           String   @db.VarChar(2000)
+  sender         User         @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  body           String       @db.VarChar(2000)
   readAt         DateTime?
-  createdAt      DateTime @default(now())
+  createdAt      DateTime     @default(now())
 
   @@index([conversationId, createdAt])
   @@index([senderId])
@@ -951,15 +952,15 @@ model Message {
 // ============================================================
 
 model PushSendLog {
-  id           String   @id @default(cuid())
-  userId       String?
-  endpoint     String?
-  title        String
-  body         String?  @db.Text
-  url          String?
-  success      Boolean
-  errorCode    Int?
-  createdAt    DateTime @default(now())
+  id        String   @id @default(cuid())
+  userId    String?
+  endpoint  String?
+  title     String
+  body      String?  @db.Text
+  url       String?
+  success   Boolean
+  errorCode Int?
+  createdAt DateTime @default(now())
 
   @@index([userId, createdAt])
 }
@@ -994,20 +995,140 @@ model KvkkRequest {
 // ============================================================
 
 model ScrapedListing {
-  id          String   @id @default(cuid())
-  source      String   // "arabam" | "sahibinden"
-  sourceUrl   String   @unique
-  brand       String
-  model       String
-  year        Int?
-  km          Int?
-  priceTry    Int?
-  location    String?
-  title       String?  @db.VarChar(300)
-  scrapedAt   DateTime @default(now())
-  dropped     Boolean  @default(false)  // ilan artık yok / 30+ gün eski
+  id           String   @id @default(cuid())
+  source       String // "arabam" | "sahibinden" | "otosonar"
+  sourceUrl    String   @unique
+  sourceId     String? // kaynak sitedeki unique ID (dedup için)
+  brand        String
+  model        String
+  year         Int?
+  km           Int?
+  priceTry     Int?
+  location     String?
+  title        String?  @db.VarChar(300)
+  description  String?  @db.Text
+  photoCount   Int?
+  damageStatus String? // "hasarsız", "boyalı", "değişen var", vb.
+  extras       String[] // ["sunroof", "deri koltuk", vs.]
+  sellerPhone  String? // bcrypt hash veya kısmi — aynı satıcı tespiti için
+  sellerName   String?
+  firstSeenAt  DateTime @default(now())
+  lastSeenAt   DateTime @default(now()) @updatedAt
+  scrapedAt    DateTime @default(now())
+  dropped      Boolean  @default(false) // ilan artık yok / 30+ gün eski
 
-  @@index([brand, model, year])
+  // Deal/fırsat analitiği
+  dealScore         Float? // -1..+1 arası, pozitif = pazarın altında
+  marketPosition    String? // "under" | "market" | "over" | "unknown"
+  emsalCountAtScore Int? // skoru hesaplarken kaç emsal kullanıldı (güvenirlik)
+  kmRisk            Json? // km heuristic skoru ({score, flags})
+
+  histories  ScrapedListingHistory[]
+  dealAlerts DealAlert[]
+
+  @@unique([source, sourceId])
+  @@index([brand, model, year, km, dropped])
   @@index([scrapedAt])
   @@index([dropped, scrapedAt])
+  @@index([lastSeenAt])
+  @@index([dealScore])
+}
+
+// ============================================================
+// SCRAPER v2 — HISTORY, JOBS, RUNS, DEAL ALERTS
+// ============================================================
+
+model ScrapedListingHistory {
+  id         String   @id @default(cuid())
+  listingId  String
+  priceTry   Int
+  km         Int?
+  status     String // "active" | "dropped" | "sold"
+  observedAt DateTime @default(now())
+
+  listing ScrapedListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@index([listingId, observedAt])
+}
+
+model ScraperJob {
+  id          String    @id @default(cuid())
+  jobType     String // "discover_search" | "fetch_detail" | "refresh_listing" | "score_deals"
+  source      String // "arabam" | "sahibinden" | "otosonar"
+  payload     Json // { brand, model, year, page } veya { url } vs.
+  priority    Int       @default(0) // yüksek = önce
+  status      String    @default("pending") // "pending" | "running" | "done" | "failed"
+  scheduledAt DateTime  @default(now())
+  startedAt   DateTime?
+  completedAt DateTime?
+  attempts    Int       @default(0)
+  maxAttempts Int       @default(3)
+  lastError   String?   @db.Text
+  workerId    String? // hangi worker aldı
+  dedupeKey   String?   @unique // aynı job'ı iki kez kuyruğa sokmamak
+
+  @@index([status, priority, scheduledAt])
+  @@index([source, jobType, status])
+}
+
+model ScraperRun {
+  id              String    @id @default(cuid())
+  workerId        String
+  workerType      String // "discovery" | "fetcher" | "parser" | "refresher"
+  source          String
+  startedAt       DateTime  @default(now())
+  completedAt     DateTime?
+  fetchCount      Int       @default(0)
+  successCount    Int       @default(0)
+  errorCount      Int       @default(0)
+  newListings     Int       @default(0)
+  updatedListings Int       @default(0)
+  droppedListings Int       @default(0)
+  proxyIp         String?
+  statusBreakdown Json? // { 200: 1200, 404: 30, 403: 5 }
+  notes           String?   @db.Text
+
+  @@index([source, startedAt])
+  @@index([workerType, startedAt])
+}
+
+model DealAlert {
+  id           String   @id @default(cuid())
+  listingId    String
+  computedAt   DateTime @default(now())
+  dealScore    Float // 0-1, > 0.15 = ciddi fırsat
+  marketMedian Int // emsal medyanı (TRY)
+  marketP25    Int? // pazarın alt çeyreği
+  listingPrice Int
+  savings      Int // (medyan - fiyat)
+  emsalCount   Int // ne kadar emsalden hesaplandı
+  confidence   Float // 0-1, emsal sayısı ve dağılımına göre
+  regionId     String? // hangi şehre özel alert
+  brandModel   String // "Renault Megane" gibi hızlı filtre
+  year         Int
+  km           Int
+
+  listing    ScrapedListing      @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  deliveries DealAlertDelivery[]
+
+  @@index([computedAt, dealScore])
+  @@index([brandModel, year])
+  @@index([regionId, computedAt])
+}
+
+model DealAlertDelivery {
+  id          String    @id @default(cuid())
+  alertId     String
+  dealerId    String // Dealer.id'ye bağlı — soft FK (cross-package ops için)
+  deliveredAt DateTime  @default(now())
+  channel     String // "email" | "push" | "dashboard"
+  opened      Boolean   @default(false)
+  openedAt    DateTime?
+  clicked     Boolean   @default(false)
+  clickedAt   DateTime?
+
+  alert DealAlert @relation(fields: [alertId], references: [id], onDelete: Cascade)
+
+  @@unique([alertId, dealerId, channel])
+  @@index([dealerId, deliveredAt])
 }

@@ -479,7 +479,7 @@ function Kapanis() {
           color: "#94a3b8",
         }}
       >
-        İletişim: kurucu@otosonar.com &nbsp;·&nbsp; NiVector Teknoloji &nbsp;·&nbsp; 2026
+        İletişim: kurucu@otosonar.com &nbsp;·&nbsp; NiVector markası &nbsp;·&nbsp; 2026
       </div>
       <FooterBar page={8} total={8} />
     </section>

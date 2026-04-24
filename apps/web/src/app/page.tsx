@@ -247,10 +247,13 @@ function Footer() {
     <footer className="border-t border-slate-200 bg-white py-8 text-sm text-slate-500 pb-safe">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col md:flex-row items-center justify-between gap-4">
         <LogoLockup size={20} />
-        <div>© 2026 OtoSonar · NiVector Teknoloji Ltd. Şti.</div>
+        <div>© 2026 OtoSonar · Barış Furkan Koyuncu (Şahıs İşletmesi)</div>
         <div className="flex gap-5 flex-wrap justify-center">
           <Link href="/blog" className="hover:text-slate-900 transition">
             Blog
+          </Link>
+          <Link href="/iletisim" className="hover:text-slate-900 transition">
+            İletişim
           </Link>
           <Link href="/gizlilik" className="hover:text-slate-900 transition">
             Gizlilik
@@ -260,6 +263,12 @@ function Footer() {
           </Link>
           <Link href="/sozlesme" className="hover:text-slate-900 transition">
             Üyelik
+          </Link>
+          <Link href="/mesafeli-satis" className="hover:text-slate-900 transition">
+            Mesafeli Satış
+          </Link>
+          <Link href="/iade-iptal" className="hover:text-slate-900 transition">
+            İade
           </Link>
           <a
             href="mailto:destek@otosonar.com"

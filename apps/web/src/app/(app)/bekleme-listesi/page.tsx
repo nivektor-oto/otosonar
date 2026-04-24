@@ -361,7 +361,7 @@ export default function WaitlistPage() {
 
       <footer className="border-t border-border mt-20">
         <div className="max-w-5xl mx-auto px-6 py-8 text-xs text-slate-500 flex flex-col sm:flex-row gap-2 justify-between">
-          <span>© 2026 OtoSonar · NiVector Teknoloji</span>
+          <span>© 2026 OtoSonar · Barış Furkan Koyuncu (Şahıs İşletmesi)</span>
           <span>
             Yardım: <a className="text-slate-300 hover:text-white" href="mailto:destek@otosonar.com">destek@otosonar.com</a>
           </span>

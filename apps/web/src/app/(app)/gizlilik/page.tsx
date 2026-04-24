@@ -13,6 +13,14 @@ export default function PrivacyPage() {
         </p>
 
         <section className="space-y-2">
+          <h2 className="text-lg font-semibold text-white">Veri Sorumlusu</h2>
+          <p>
+            <b>Barış Furkan Koyuncu</b> — Şahıs İşletmesi · VKN: 5811141301 · Vergi levhası: başvuru aşamasında ·
+            İletişim: <a href="mailto:kvkk@otosonar.com" className="text-emerald-400 hover:underline">kvkk@otosonar.com</a>
+          </p>
+        </section>
+
+        <section className="space-y-2">
           <h2 className="text-lg font-semibold text-white">Toplanan Veriler</h2>
           <ul className="list-disc space-y-1 pl-5">
             <li>Hesap bilgileri: ad, e-posta, şifrenin bcrypt hash'i</li>

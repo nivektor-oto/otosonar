@@ -10,9 +10,15 @@ export default function KvkkPage() {
         <section className="space-y-2">
           <h2 className="text-lg font-semibold text-white">1. Veri Sorumlusu</h2>
           <p>
-            OtoSonar ("Platform"), NiVector markası altında işletilmektedir. Veri sorumlusu: <b>NiVector</b>{" "}
-            (iletişim: kurucu@otosonar.com).
+            OtoSonar ("Platform"), NiVector markası altında işletilmektedir. Veri sorumlusu:
           </p>
+          <ul className="list-disc space-y-1 pl-5">
+            <li>Unvan: <b>Barış Furkan Koyuncu</b> (Şahıs İşletmesi)</li>
+            <li>Vergi Kimlik No: 5811141301</li>
+            <li>Vergi Levhası: Başvuru aşamasında (güncellenecektir)</li>
+            <li>E-posta: <a href="mailto:kvkk@otosonar.com" className="text-emerald-400 hover:underline">kvkk@otosonar.com</a></li>
+            <li>Merkez: Konya · Türkiye</li>
+          </ul>
         </section>
 
         <section className="space-y-2">
