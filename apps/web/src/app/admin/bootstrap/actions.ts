@@ -12,6 +12,7 @@ import {
 } from "@/lib/user-auth";
 import { writeAudit } from "@/lib/admin-auth";
 import { logError } from "@/lib/error-log";
+import { isFeatureEnabled } from "@/lib/feature-flags";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { cookies, headers } from "next/headers";
 import { createHash } from "node:crypto";
@@ -31,6 +32,10 @@ export async function bootstrapFirstAdminAction(
   formData: FormData,
 ): Promise<BootstrapResult> {
   try {
+    // Defense-in-depth: action middleware'siz invoke edilse de gate kapalı kalsın.
+    if (!isFeatureEnabled("ADMIN_PANEL_ENABLED")) {
+      return { ok: false, error: "Bu işlem şu anda kullanılamaz." };
+    }
     const ip = await getClientIp();
     const rl = await checkRateLimit(`admin:bootstrap:${ip}`, 3, 600);
     if (!rl.allowed) {

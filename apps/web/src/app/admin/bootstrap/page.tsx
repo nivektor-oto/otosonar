@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { isFeatureEnabled } from "@/lib/feature-flags";
 import { BootstrapForm } from "./bootstrap-form";
 import { ShieldCheck } from "lucide-react";
 
@@ -10,6 +11,10 @@ export const metadata = {
 };
 
 export default async function AdminBootstrapPage() {
+  // Defense-in-depth: middleware matcher anomalisi veya stale module cache
+  // halinde sayfa kendi başına da gate uygulasın. Fail-closed.
+  if (!isFeatureEnabled("ADMIN_PANEL_ENABLED")) notFound();
+
   const adminCount = await prisma.user.count({
     where: { role: "ADMIN", deletedAt: null },
   });
