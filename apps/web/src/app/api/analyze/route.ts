@@ -5,6 +5,7 @@ import { analyzeVehicle, type AnalysisResult, type AnalyzeMeta } from "@/lib/ai"
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/user-auth";
 import { detectKmRisk } from "@/lib/km-heuristic";
+import { logError } from "@/lib/error-log";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -307,6 +308,7 @@ export async function POST(req: NextRequest) {
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Bilinmeyen hata";
     console.error("[analyze] error:", msg);
+    await logError(e, { path: "/api/analyze", metadata: { rawMessage: msg.slice(0, 500) } });
 
     const userMessage = /HTTP 5\d\d|UNAVAILABLE|overloaded|timeout|429/i.test(msg)
       ? "AI geçici olarak meşgul. Birkaç saniye sonra tekrar deneyin."
