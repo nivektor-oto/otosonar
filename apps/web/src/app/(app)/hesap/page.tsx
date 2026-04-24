@@ -139,6 +139,7 @@ export default async function AccountPage() {
           <h2 className="mb-3 text-sm font-semibold">Hızlı erişim</h2>
           <div className="flex flex-wrap gap-2 text-sm">
             <QuickLink href="/analiz">Yeni analiz</QuickLink>
+            <QuickLink href="/hesap/arabalarim">Araçlarım</QuickLink>
             <QuickLink href="/hesap/mesajlar">Mesajlar</QuickLink>
             <QuickLink href="/hesap/favoriler">Favorilerim</QuickLink>
             {user.userType === "DEALER" && <QuickLink href="/hesap/galerici/araclar">Stok araçlarım</QuickLink>}

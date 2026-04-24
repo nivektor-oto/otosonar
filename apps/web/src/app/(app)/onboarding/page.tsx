@@ -33,7 +33,7 @@ export default function OnboardingPage() {
   const goBack = () => setStep((s) => (Math.max(0, s - 1) as Step));
 
   return (
-    <main className="min-h-screen bg-bg text-white flex flex-col">
+    <main className="min-h-dvh bg-bg text-white flex flex-col">
       <nav className="border-b border-border">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link

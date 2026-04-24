@@ -89,22 +89,21 @@ export async function POST(req: Request) {
       },
     });
 
-    // 3 günlük ücretsiz PLUS denemesi — expire'ı cron siler
-    const TRIAL_DAYS = 3;
+    // Freemium: her kayıt FREE tier ACTIVE subscription ile başlar.
+    // Aylık 3 analiz hakkı, 5 favori, chatbot; paywall.ts'den yönetilir.
     const now = new Date();
-    const trialEndsAt = new Date(now.getTime() + TRIAL_DAYS * 24 * 60 * 60 * 1000);
     await prisma.subscription.create({
       data: {
         userId: user.id,
-        tier: "PLUS",
-        status: "TRIAL",
-        trialEndsAt,
+        tier: "FREE",
+        status: "ACTIVE",
         currentPeriodStart: now,
-        currentPeriodEnd: trialEndsAt,
+        // FREE süresiz — currentPeriodEnd null bırakıyoruz (paywall açıkta tutar).
+        currentPeriodEnd: null,
         billingPeriod: "MONTHLY",
       },
     }).catch((err) => {
-      logError(err, { path: "/api/auth/signup", metadata: { step: "trial_subscription" } }).catch(() => undefined);
+      logError(err, { path: "/api/auth/signup", metadata: { step: "free_subscription" } }).catch(() => undefined);
     });
 
     if (referralCode) {

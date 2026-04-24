@@ -123,7 +123,7 @@ export default function WaitlistPage() {
   }
 
   return (
-    <main className="min-h-screen bg-bg text-white">
+    <main className="min-h-dvh bg-bg text-white">
       <nav className="border-b border-border">
         <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">

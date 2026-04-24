@@ -1,10 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import {
   Search,
-  LayoutDashboard,
   Check,
   AlertTriangle,
   Lightbulb,
@@ -15,9 +13,9 @@ import {
   Wrench,
   Sparkles,
   ChevronDown,
+  CheckCircle2,
 } from "lucide-react";
 import { toast } from "sonner";
-import { LogoMark } from "@/components/logo";
 import { parseListingUrl } from "@/lib/listing-url-parser";
 import { AnalysisFeedback } from "@/components/analysis-feedback";
 import { AiDisclaimer } from "@/components/ai-disclaimer";
@@ -53,6 +51,18 @@ interface Meta {
 const LISTING_URL_REGEX =
   /^https?:\/\/(www\.)?(sahibinden\.com|arabam\.com)\//i;
 
+/**
+ * URL'den kaynak platformu tespit et. Analiz input'unun altında rozet olarak gösterilir.
+ * Arabam'ın ergonomi hissini yakalamak için: kullanıcı linki yapıştırdığı an "ok, anladım" feedback'i.
+ */
+function detectPlatform(url: string): { name: string; tone: "sahibinden" | "arabam" } | null {
+  const u = url.trim().toLowerCase();
+  if (!u) return null;
+  if (/sahibinden\.com\//.test(u)) return { name: "Sahibinden", tone: "sahibinden" };
+  if (/arabam\.com\//.test(u)) return { name: "Arabam.com", tone: "arabam" };
+  return null;
+}
+
 export default function AnalysisPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -84,6 +94,9 @@ export default function AnalysisPage() {
     () => LISTING_URL_REGEX.test(form.listingUrl.trim()),
     [form.listingUrl],
   );
+
+  // Arabam-style "algılandı" rozeti için
+  const platform = useMemo(() => detectPlatform(form.listingUrl), [form.listingUrl]);
 
   const fillFromUrl = () => {
     const parsed = parseListingUrl(form.listingUrl);
@@ -202,23 +215,8 @@ export default function AnalysisPage() {
   };
 
   return (
-    <main className="min-h-screen bg-bg text-ink pb-24 lg:pb-0">
-      <nav className="sticky top-0 z-30 bg-white border-b border-slate-200">
-        <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <LogoMark size={24} />
-            <span className="text-lg font-black text-slate-900">OtoSonar</span>
-          </Link>
-          <Link
-            href="/dashboard"
-            className="btn-ghost text-sm inline-flex items-center gap-2"
-          >
-            <LayoutDashboard className="w-4 h-4" aria-hidden /> Panel
-          </Link>
-        </div>
-      </nav>
-
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-6">
+    <main className="min-h-dvh bg-bg text-ink pb-28 lg:pb-0">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-5 sm:space-y-6">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900">
             Araç Analizi
@@ -228,18 +226,18 @@ export default function AnalysisPage() {
           </p>
         </div>
 
-        {/* Tek kart, URL-first akış */}
+        {/* Tek kart, URL-first akış — Arabam-seviye hero input */}
         <div className="card">
           <label
             htmlFor="listing-url"
-            className="block text-sm font-semibold text-slate-700 mb-2"
+            className="block text-sm font-bold text-slate-900 mb-2"
           >
-            İlan linkini yapıştır
+            İlanın linkini yapıştır
           </label>
           <div className="flex flex-col sm:flex-row gap-2">
             <input
               id="listing-url"
-              className="input flex-1 text-base"
+              className="input flex-1 text-base sm:text-lg font-semibold min-h-12"
               placeholder="https://www.sahibinden.com/ilan/..."
               value={form.listingUrl}
               onChange={(e) => update("listingUrl", e.target.value)}
@@ -250,7 +248,7 @@ export default function AnalysisPage() {
               <button
                 onClick={handleAnalyze}
                 disabled={loading}
-                className="btn-primary whitespace-nowrap"
+                className="btn-accent-gradient whitespace-nowrap min-h-12"
               >
                 {loading ? (
                   <>
@@ -268,15 +266,24 @@ export default function AnalysisPage() {
               <button
                 onClick={fillFromUrl}
                 disabled={!form.listingUrl.trim()}
-                className="btn-ghost whitespace-nowrap disabled:opacity-40"
+                className="btn-ghost whitespace-nowrap disabled:opacity-40 min-h-12"
               >
                 Linkden Doldur
               </button>
             )}
           </div>
-          <p className="mt-2 text-xs text-slate-500">
-            Sahibinden / Arabam linki yapıştırdığında doğrudan analiz başlatılır.
-          </p>
+
+          {/* Platform algılandı rozeti — Arabam "anladım" feedback'i */}
+          {platform ? (
+            <div className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800">
+              <CheckCircle2 className="w-3.5 h-3.5" aria-hidden strokeWidth={2.5} />
+              {platform.name} ilanı algılandı
+            </div>
+          ) : (
+            <p className="mt-2 text-xs text-slate-500">
+              Sahibinden / Arabam linki yapıştırdığında doğrudan analiz başlatılır.
+            </p>
+          )}
 
           <div className="mt-4 flex flex-wrap items-center gap-2 text-xs">
             <button
@@ -456,25 +463,27 @@ export default function AnalysisPage() {
         </div>
       </div>
 
-      {/* Mobile sticky CTA */}
-      <div className="fixed bottom-0 left-0 right-0 lg:hidden bg-white/95 backdrop-blur border-t border-slate-200 p-4 z-20">
-        <button
-          onClick={handleAnalyze}
-          disabled={loading}
-          className="btn-primary w-full"
-        >
-          {loading ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin" aria-hidden />
-              Analiz ediliyor...
-            </>
-          ) : (
-            <>
-              <Search className="w-4 h-4" aria-hidden strokeWidth={2.5} />
-              Aracı Analiz Et
-            </>
-          )}
-        </button>
+      {/* Mobile sticky CTA — safe-area bottom + amber gradient (eye-catcher) */}
+      <div className="fixed bottom-0 left-0 right-0 lg:hidden bg-white/95 backdrop-blur border-t border-slate-200 px-4 pt-3 pb-safe z-30">
+        <div className="pb-3">
+          <button
+            onClick={handleAnalyze}
+            disabled={loading}
+            className="btn-accent-gradient w-full min-h-12"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" aria-hidden />
+                Analiz ediliyor...
+              </>
+            ) : (
+              <>
+                <Search className="w-4 h-4" aria-hidden strokeWidth={2.5} />
+                Aracı Analiz Et
+              </>
+            )}
+          </button>
+        </div>
       </div>
     </main>
   );

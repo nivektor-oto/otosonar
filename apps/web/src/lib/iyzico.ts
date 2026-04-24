@@ -21,6 +21,12 @@ import { createHmac, randomUUID } from "node:crypto";
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const Iyzipay = require("iyzipay") as IyzipayConstructor;
 import { prisma } from "@/lib/prisma";
+import {
+  TIER_PRICING,
+  getTierPriceKurus as getTierPriceKurusFromRegistry,
+  type TierKey,
+  type BillingPeriod as TierBillingPeriod,
+} from "@/lib/tiers";
 
 // --------------------------------------------------------------------------
 // Minimal tip tanımları (iyzipay paket tip içermiyor)
@@ -188,34 +194,30 @@ function getClient(): IyzipayInstance {
 // Fiyatlandırma
 // --------------------------------------------------------------------------
 
+// Paid tier seçimleri — FREE checkout'a girmez.
+export type PaidTier = Exclude<TierKey, "FREE">;
+
 export interface CheckoutInput {
   userId: string;
-  tier: "PLUS" | "PRO" | "MAX" | "BAYI_PLUS" | "BAYI_PRO" | "BAYI_MAX";
-  billingPeriod: "MONTHLY" | "YEARLY";
+  tier: PaidTier;
+  billingPeriod: TierBillingPeriod;
   amountKurus: number;
   buyerIp?: string;
 }
 
-const TIER_PRICES_KURUS: Record<CheckoutInput["tier"], number> = {
-  PLUS: 99_00,
-  PRO: 249_00,
-  MAX: 449_00,
-  BAYI_PLUS: 799_00,
-  BAYI_PRO: 1599_00,
-  BAYI_MAX: 3499_00,
-};
+/**
+ * Kuruş cinsinden tier fiyatı. KDV dahil.
+ * `period` verilmezse MONTHLY varsayılır (geriye dönük uyum için).
+ */
+export function getTierPriceKurus(
+  tier: PaidTier,
+  period: TierBillingPeriod = "MONTHLY",
+): number {
+  return getTierPriceKurusFromRegistry(tier, period);
+}
 
-const TIER_LABELS: Record<CheckoutInput["tier"], string> = {
-  PLUS: "OtoSonar Plus",
-  PRO: "OtoSonar Pro",
-  MAX: "OtoSonar Max",
-  BAYI_PLUS: "OtoSonar Bayi Plus",
-  BAYI_PRO: "OtoSonar Bayi Pro",
-  BAYI_MAX: "OtoSonar Bayi Max",
-};
-
-export function getTierPriceKurus(tier: CheckoutInput["tier"]): number {
-  return TIER_PRICES_KURUS[tier];
+function getTierLabel(tier: PaidTier): string {
+  return TIER_PRICING[tier].label;
 }
 
 function kurusToLiraStr(kurus: number): string {
@@ -265,7 +267,7 @@ export async function createCheckoutSession(input: CheckoutInput): Promise<{
     };
   }
 
-  const label = TIER_LABELS[input.tier];
+  const label = getTierLabel(input.tier);
   const priceStr = kurusToLiraStr(input.amountKurus);
   const [firstName, ...rest] = (user.fullName ?? "Müşteri").trim().split(/\s+/);
   const surname = rest.join(" ") || firstName;

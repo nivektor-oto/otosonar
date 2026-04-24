@@ -9,9 +9,11 @@ import { featureDisabledResponse, isFeatureEnabled } from "@/lib/feature-flags";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+// Ücretli tier'lar; FREE checkout'a girmez.
+// Not: Eski "MAX" enum'ı şema uyumluluğu için korunur ama UI'da artık sunulmaz.
 const schema = z
   .object({
-    tier: z.enum(["PLUS", "PRO", "MAX", "BAYI_PLUS", "BAYI_PRO", "BAYI_MAX"]),
+    tier: z.enum(["PLUS", "PRO", "BAYI_PLUS", "BAYI_PRO", "BAYI_MAX"]),
     billingPeriod: z.enum(["MONTHLY", "YEARLY"]).default("MONTHLY"),
   })
   .strict();
@@ -54,9 +56,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: false, error: "validation" }, { status: 400 });
   }
 
-  // Yıllık = 10 aylık fiyat (2 ay hediye).
-  const amountKurus =
-    getTierPriceKurus(parsed.data.tier) * (parsed.data.billingPeriod === "YEARLY" ? 10 : 1);
+  // Registry fiyatı zaten yıllık = 10 aylık (2 ay hediye) — ikinci katlama YOK.
+  const amountKurus = getTierPriceKurus(parsed.data.tier, parsed.data.billingPeriod);
 
   try {
     const result = await createCheckoutSession({

@@ -44,6 +44,7 @@ model User {
   role           String    @default("USER")   // USER | ADMIN | MODERATOR — admin paneli yetki kolonu
   disabledAt     DateTime?                     // hesap askıya alma (login engelle)
   deletedAt      DateTime?                     // soft delete
+  unreadReminders Int      @default(0)         // in-app bildirim sayacı (garaj vb.)
   passwordHash   String?   // nullable — OAuth ile giriş olabilir
   avatarUrl      String?
   emailVerified  DateTime?
@@ -65,6 +66,7 @@ model User {
   priceAlerts   PriceAlert[]
   savedListings SavedListing[]
   buyerPrefs    BuyerPreferences?
+  vehicles      UserVehicle[]
   conversationsAsBuyer   Conversation[] @relation("ConversationBuyer")
   conversationsAsSeller  Conversation[] @relation("ConversationSeller")
   sentMessages           Message[]      @relation("MessageSender")
@@ -184,6 +186,52 @@ enum VehicleStatus {
   SOLD
 }
 
+// ============================================================
+// USER GARAGE (Arabalarım) — bireysel kullanıcı veya galerici
+// kendi aracını takip eder: muayene/sigorta/MTV hatırlatıcıları.
+// ============================================================
+
+model UserVehicle {
+  id                         String    @id @default(cuid())
+  userId                     String
+  plate                      String?   @db.VarChar(20)
+  brand                      String
+  model                      String
+  year                       Int
+  variant                    String?
+  kmCurrent                  Int?
+  kmLastUpdatedAt            DateTime?
+  colorHex                   String?   @db.VarChar(10)
+  fuelType                   String?
+  transmission               String?
+  vin                        String?   @db.VarChar(30)
+  registrationDate           DateTime?
+  inspectionDueAt            DateTime?
+  inspectionNotifyDaysBefore Int       @default(7)
+  insuranceDueAt             DateTime?
+  insuranceNotifyDaysBefore  Int       @default(14)
+  mtvDueAt                   DateTime?
+  mtvNotifyDaysBefore        Int       @default(7)
+  acquiredAt                 DateTime?
+  soldAt                     DateTime?
+  photoUrl                   String?   @db.Text
+  ruhsatPhotoUrl             String?   @db.Text
+  ruhsatOcrResult            Json?
+  lastInspectionReminderAt   DateTime?
+  lastInsuranceReminderAt    DateTime?
+  lastMtvReminderAt          DateTime?
+  notes                      String?   @db.Text
+  createdAt                  DateTime  @default(now())
+  updatedAt                  DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, soldAt])
+  @@index([inspectionDueAt])
+  @@index([insuranceDueAt])
+  @@index([mtvDueAt])
+}
+
 model Broker {
   id          String   @id @default(cuid())
   userId      String   @unique
@@ -202,9 +250,13 @@ model Broker {
 // ============================================================
 
 enum Tier {
+  FREE
   PLUS
   PRO
   MAX
+  BAYI_PLUS
+  BAYI_PRO
+  BAYI_MAX
 }
 
 enum BillingPeriod {

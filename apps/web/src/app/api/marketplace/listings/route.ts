@@ -8,6 +8,11 @@ import { fireMatchingAlerts } from "@/lib/alert-matcher";
 import { findDuplicates, hashPhone } from "@/lib/listing-dedup";
 import { detectKmRisk } from "@/lib/km-heuristic";
 import { logError } from "@/lib/error-log";
+import {
+  checkPaywall,
+  paywallErrorBody,
+  paywallHttpStatus,
+} from "@/lib/paywall";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -74,6 +79,18 @@ export async function POST(req: Request) {
   const parsed = createSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ success: false, error: "validation", details: parsed.error.flatten() }, { status: 400 });
 
+  // Yeni tier paywall (ilan yayınlama aylık limiti) — FREE ilan veremez,
+  // PLUS 1/ay, BAYI_PLUS 10/ay, PRO/BAYI_PRO/BAYI_MAX sınırsız.
+  const paywall = await checkPaywall(user.id, "listing.create", {
+    userType: user.userType,
+  });
+  if (!paywall.ok) {
+    return NextResponse.json(paywallErrorBody(paywall), {
+      status: paywallHttpStatus(paywall),
+    });
+  }
+
+  // Eski legacy quota / 500 TL flat fee akışı — geriye dönük uyum.
   const quota = await evaluateListingQuota(user.id);
   if (!quota.allowed) {
     return NextResponse.json(

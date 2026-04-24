@@ -35,6 +35,72 @@ body {
 }
 
 /* ==========================================================================
+   Safe-area yardımcıları — iPhone notch + Android status bar
+   Header `pt-safe`, footer / mobile sticky CTA `pb-safe` kullanır.
+   ========================================================================== */
+.pt-safe {
+  padding-top: env(safe-area-inset-top);
+}
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.pl-safe {
+  padding-left: env(safe-area-inset-left);
+}
+.pr-safe {
+  padding-right: env(safe-area-inset-right);
+}
+/* min-height'a safe-area bindir (bottom sheet, drawer) */
+.min-h-dvh-safe {
+  min-height: calc(100dvh);
+  min-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+}
+
+/* Hit-target minimum 44x44pt (Apple HIG) / 48x48dp (Material). Mobile menü butonları. */
+.hit-target {
+  min-width: 48px;
+  min-height: 48px;
+}
+
+/* Arabam-style amber/orange gradient CTA */
+.btn-accent-gradient {
+  background: linear-gradient(90deg, #F59E0B 0%, #F97316 100%);
+  color: #111827;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  padding: 14px 22px;
+  border-radius: var(--radius-full);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, filter 0.2s ease;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
+}
+.btn-accent-gradient:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(245, 158, 11, 0.45);
+  filter: brightness(1.04);
+}
+.btn-accent-gradient:active {
+  transform: translateY(0) scale(0.98);
+}
+.btn-accent-gradient:focus-visible {
+  outline: none;
+  box-shadow: var(--ring), 0 10px 24px rgba(245, 158, 11, 0.45);
+}
+.btn-accent-gradient:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  filter: grayscale(0.3);
+}
+
+/* ==========================================================================
    Legacy dark literal override'ları
    Eski sayfalar hâlâ `bg-[#0a0a0f]`, `border-neutral-900`, `text-neutral-100`
    gibi hard-coded Tailwind arbitrary/neutral sınıflar kullanıyor. Tek tek

@@ -253,9 +253,12 @@ export function ChatbotWidget() {
           onClick={() => setOpen(true)}
           data-nopdf
           aria-label="OtoSonar yardımcı asistanı aç"
-          className="fixed bottom-4 right-4 z-40 h-14 w-14 rounded-full bg-amber-500 shadow-lg shadow-amber-500/30 hover:bg-amber-400 hover:shadow-xl hover:shadow-amber-500/40 transition flex items-center justify-center group"
+          style={{
+            bottom: "calc(1rem + env(safe-area-inset-bottom))",
+          }}
+          className="fixed right-4 z-40 h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-amber-500 shadow-lg shadow-amber-500/30 hover:bg-amber-400 hover:shadow-xl hover:shadow-amber-500/40 transition flex items-center justify-center group"
         >
-          <MessageCircle className="w-6 h-6 text-white" strokeWidth={2.2} aria-hidden />
+          <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6 text-white" strokeWidth={2.2} aria-hidden />
           <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-emerald-500 ring-2 ring-white">
             <span className="absolute inset-0 animate-ping rounded-full bg-emerald-500 opacity-60" />
           </span>

@@ -6,6 +6,11 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/user-auth";
 import { detectKmRisk } from "@/lib/km-heuristic";
 import { logError } from "@/lib/error-log";
+import {
+  checkPaywall,
+  paywallErrorBody,
+  paywallHttpStatus,
+} from "@/lib/paywall";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -98,6 +103,20 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // ─── PAYWALL: kimlik + aylık analiz limiti ──────────────────────
+  // Misafir → 401 (hesap aç). FREE → aylık 3 analiz. PLUS → 20/ay. PRO+ → sınırsız.
+  const authedUser = await getCurrentUser();
+  const gate = await checkPaywall(
+    authedUser?.id ?? null,
+    "analyze",
+    { userType: authedUser?.userType },
+  );
+  if (!gate.ok) {
+    return NextResponse.json(paywallErrorBody(gate), {
+      status: paywallHttpStatus(gate),
+    });
+  }
+
   // ─── CACHE LOOKUP ────────────────────────────────────────────
   // Hash hesapla; cache hit ise direkt dön (tutarlılık için bit-identical)
   const inputHash = computeInputHash(data);
@@ -131,7 +150,7 @@ export async function POST(req: NextRequest) {
         // Feedback stub (login'de) — cache'li bile olsa user-specific kayıt gerekli
         let feedbackId: string | null = null;
         try {
-          const user = await getCurrentUser();
+          const user = authedUser;
           if (user) {
             const fb = await prisma.analysisFeedback.create({
               data: {

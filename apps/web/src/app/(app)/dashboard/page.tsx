@@ -44,7 +44,7 @@ export default async function DashboardPage() {
   const isDealer = user.userType === "DEALER";
 
   return (
-    <main className="min-h-screen bg-bg text-white">
+    <main className="min-h-dvh bg-bg text-white">
       <nav className="sticky top-0 z-30 backdrop-blur-lg bg-bg/85 border-b border-border">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">

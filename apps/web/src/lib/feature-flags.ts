@@ -26,6 +26,7 @@ export const FEATURE_FLAG_DEFAULTS = {
   ADMIN_PANEL_ENABLED: false,
   KVKK_ACCOUNT_DELETE_ENABLED: false,
   KVKK_ACCOUNT_EXPORT_ENABLED: false,
+  GARAGE_ENABLED: true,
 } as const satisfies Record<string, boolean>;
 
 export type FeatureFlag = keyof typeof FEATURE_FLAG_DEFAULTS;

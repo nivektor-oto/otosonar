@@ -7,16 +7,23 @@ import { MobileMenu } from "@/components/mobile-menu";
  * OtoSonar app-scope header — Arabam / Sahibinden seviyesinde sade.
  * Logo · 4 link (Analiz, Pazaryeri, Raporlar, Hesap) · CTA.
  * Zemin beyaz, alt border slate — backdrop-blur yok.
+ *
+ * Mobile UX notu:
+ *  - `pt-safe` ile iPhone notch / dinamik status bar'ın üstüne itilmiyor.
+ *  - Hamburger buton 48x48 hit-target (Apple HIG 44pt, Material 48dp).
+ *  - `sticky top-0 z-50` — chatbot widget z-40, sticky filter bar z-20.
  */
 export async function SiteHeader() {
   const user = await getCurrentUser();
 
   return (
-    <header className="sticky top-0 z-40 border-b border-slate-200 bg-white">
-      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
-        <Link href="/" className="flex items-center gap-2">
-          <LogoMark size={24} />
-          <span className="text-lg font-black tracking-tight text-slate-900">OtoSonar</span>
+    <header className="sticky top-0 z-50 border-b border-slate-200 bg-white pt-safe">
+      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-2 px-4">
+        <Link href="/" className="flex items-center gap-2 shrink-0">
+          <LogoMark size={24} className="shrink-0" />
+          <span className="text-base sm:text-lg font-black tracking-tight text-slate-900">
+            OtoSonar
+          </span>
         </Link>
 
         <nav className="hidden items-center gap-1 text-sm text-slate-700 md:flex">

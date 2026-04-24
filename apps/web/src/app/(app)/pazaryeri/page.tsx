@@ -1,13 +1,30 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { ArrowRight, Gauge, MapPin, Plus, Search, Car } from "lucide-react";
+import { ArrowRight, Gauge, MapPin, Plus, Car } from "lucide-react";
+import { PazaryeriFilterBar } from "./filter-bar";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Pazaryeri — OtoSonar" };
 
 const TL = new Intl.NumberFormat("tr-TR", { style: "currency", currency: "TRY", maximumFractionDigits: 0 });
 
-export default async function MarketplacePage() {
+type SearchParams = {
+  q?: string;
+  year?: string;
+  priceRange?: string;
+  kmRange?: string;
+  fuel?: string;
+  gear?: string;
+  city?: string;
+};
+
+export default async function MarketplacePage({
+  searchParams,
+}: {
+  searchParams?: Promise<SearchParams>;
+}) {
+  const sp = (await searchParams) ?? {};
+
   const listings = await prisma.marketplaceListing.findMany({
     where: { status: "ACTIVE" },
     orderBy: { createdAt: "desc" },
@@ -24,7 +41,7 @@ export default async function MarketplacePage() {
     <main className="min-h-dvh bg-bg text-ink">
       {/* Başlık bandı */}
       <div className="border-b border-slate-200 bg-white">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 py-6 flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 py-5 sm:py-6 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 justify-between">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900">
               Pazaryeri
@@ -35,7 +52,7 @@ export default async function MarketplacePage() {
           </div>
           <Link
             href="/pazaryeri/ekle"
-            className="btn-primary inline-flex items-center gap-2 whitespace-nowrap"
+            className="btn-primary inline-flex items-center gap-2 whitespace-nowrap self-start sm:self-auto"
           >
             <Plus className="w-4 h-4" aria-hidden strokeWidth={2.5} />
             İlan Ekle
@@ -43,30 +60,10 @@ export default async function MarketplacePage() {
         </div>
       </div>
 
-      {/* Sticky filter bar — Sahibinden tarzı */}
-      <div className="sticky top-0 z-20 bg-white border-b border-slate-200">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 py-3">
-          <form action="/pazaryeri" method="get" className="flex flex-wrap items-center gap-2">
-            <div className="flex items-center gap-2 flex-1 min-w-[220px] rounded-full border border-slate-200 bg-slate-50 px-3 py-2">
-              <Search className="w-4 h-4 text-slate-500" aria-hidden strokeWidth={2.25} />
-              <input
-                type="text"
-                name="q"
-                placeholder="Marka, model"
-                className="flex-1 bg-transparent text-sm placeholder:text-slate-400 focus:outline-none"
-              />
-            </div>
-            <FilterSelect name="year" label="Yıl" options={yearOptions()} />
-            <FilterSelect name="priceRange" label="Fiyat aralığı" options={PRICE_RANGES} />
-            <FilterSelect name="city" label="Şehir" options={CITY_OPTIONS} />
-            <button type="submit" className="btn-primary text-sm">
-              Ara
-            </button>
-          </form>
-        </div>
-      </div>
+      {/* Sticky filter bar — masaüstü inline, mobilde bottom-sheet */}
+      <PazaryeriFilterBar initial={sp} />
 
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 py-8">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 py-6 sm:py-8">
         {cards.length === 0 ? (
           <EmptyState />
         ) : (
@@ -74,7 +71,7 @@ export default async function MarketplacePage() {
             <div className="mb-4 text-xs text-slate-500">
               <strong className="text-slate-700">{cards.length}</strong> ilan listeleniyor
             </div>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
               {cards.map((l) => (
                 <Link
                   key={l.id}
@@ -137,60 +134,9 @@ export default async function MarketplacePage() {
   );
 }
 
-function FilterSelect({
-  name,
-  label,
-  options,
-}: {
-  name: string;
-  label: string;
-  options: Array<{ value: string; label: string }>;
-}) {
-  return (
-    <select
-      name={name}
-      defaultValue=""
-      aria-label={label}
-      className="rounded-full border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-200"
-    >
-      <option value="">{label}</option>
-      {options.map((o) => (
-        <option key={o.value} value={o.value}>
-          {o.label}
-        </option>
-      ))}
-    </select>
-  );
-}
-
-function yearOptions() {
-  const now = 2026;
-  const opts: Array<{ value: string; label: string }> = [];
-  for (let y = now; y >= now - 20; y--) {
-    opts.push({ value: String(y), label: String(y) });
-  }
-  return opts;
-}
-
-const PRICE_RANGES = [
-  { value: "0-500000", label: "0 - 500.000 TL" },
-  { value: "500000-1000000", label: "500.000 - 1.000.000 TL" },
-  { value: "1000000-2000000", label: "1.000.000 - 2.000.000 TL" },
-  { value: "2000000-", label: "2.000.000 TL +" },
-];
-
-const CITY_OPTIONS = [
-  { value: "istanbul", label: "İstanbul" },
-  { value: "ankara", label: "Ankara" },
-  { value: "izmir", label: "İzmir" },
-  { value: "bursa", label: "Bursa" },
-  { value: "antalya", label: "Antalya" },
-  { value: "konya", label: "Konya" },
-];
-
 function EmptyState() {
   return (
-    <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-12 text-center">
+    <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-8 sm:p-12 text-center">
       <div className="w-16 h-16 mx-auto rounded-2xl bg-amber-100 border border-amber-200 flex items-center justify-center mb-5">
         <Car className="w-8 h-8 text-amber-600" aria-hidden strokeWidth={1.5} />
       </div>

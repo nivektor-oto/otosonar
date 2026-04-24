@@ -17,16 +17,16 @@ import { logError } from "@/lib/error-log";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-type Tier = "PLUS" | "PRO" | "MAX";
+type Tier = "PLUS" | "PRO" | "MAX" | "BAYI_PLUS" | "BAYI_PRO" | "BAYI_MAX";
 const B2C_TIERS: readonly Tier[] = ["PLUS", "PRO", "MAX"];
+const B2B_TIERS: readonly Tier[] = ["BAYI_PLUS", "BAYI_PRO", "BAYI_MAX"];
+const ALL_PAID_TIERS: readonly Tier[] = [...B2C_TIERS, ...B2B_TIERS];
 
 function mapTier(raw: string | undefined): { tier: Tier; isB2B: boolean } | null {
   if (!raw) return null;
-  if (B2C_TIERS.includes(raw as Tier)) return { tier: raw as Tier, isB2B: false };
-  if (raw === "BAYI_PLUS") return { tier: "PLUS", isB2B: true };
-  if (raw === "BAYI_PRO") return { tier: "PRO", isB2B: true };
-  if (raw === "BAYI_MAX") return { tier: "MAX", isB2B: true };
-  return null;
+  if (!(ALL_PAID_TIERS as readonly string[]).includes(raw)) return null;
+  const tier = raw as Tier;
+  return { tier, isB2B: (B2B_TIERS as readonly string[]).includes(tier) };
 }
 
 async function handleToken(token: string | null): Promise<{

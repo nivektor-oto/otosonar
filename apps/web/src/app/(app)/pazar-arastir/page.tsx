@@ -126,7 +126,7 @@ export default function PazarArastirPage() {
   };
 
   return (
-    <main className="min-h-screen bg-bg text-white pb-24 lg:pb-0">
+    <main className="min-h-dvh bg-bg text-white pb-24 lg:pb-0">
       <nav className="sticky top-0 z-30 backdrop-blur-lg bg-bg/85 border-b border-border">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">

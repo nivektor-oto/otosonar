@@ -4,10 +4,17 @@ import type { Tier } from "@prisma/client";
 export const LISTING_FEE_TL = 500;
 export const B2C_FREE_LIFETIME = 2;
 
+// Yeni tier paywall'i `lib/paywall.ts` üstünden aylık limitleri zorluyor.
+// Bu tablo legacy fallback — -1 = sınırsız, 0 = ilan yok.
+// BAYI_PLUS=10/ay, BAYI_PRO/BAYI_MAX/PRO = sınırsız (paywall sınırsızda bypass).
 const DEALER_MONTHLY_QUOTA: Record<Tier, number> = {
-  PLUS: 7,
-  PRO: 15,
-  MAX: 25,
+  FREE: 0,
+  PLUS: 1,
+  PRO: -1,
+  MAX: -1, // legacy — artık teklif edilmiyor
+  BAYI_PLUS: 10,
+  BAYI_PRO: -1,
+  BAYI_MAX: -1,
 };
 
 export type QuotaResult =
@@ -52,6 +59,10 @@ export async function evaluateListingQuota(userId: string): Promise<QuotaResult>
       where: { sellerId: userId, createdAt: { gte: periodStart }, status: { not: "DRAFT" } },
     });
     const limit = DEALER_MONTHLY_QUOTA[activeSub.tier];
+    // -1 = sınırsız (PRO / BAYI_PRO / BAYI_MAX).
+    if (limit === -1) {
+      return { allowed: true, reason: "dealer_quota", freeRemaining: 9_999, limit: -1, used };
+    }
     if (used >= limit) {
       return { allowed: false, reason: "dealer_over", priceTL: LISTING_FEE_TL, limit, used };
     }
