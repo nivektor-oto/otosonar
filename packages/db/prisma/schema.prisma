@@ -935,3 +935,27 @@ model KvkkRequest {
   @@index([type, completedAt])
   @@index([emailHash])
 }
+
+// ============================================================
+// SCRAPED LISTING POOL — external market data (Arabam, Sahibinden)
+// Otopatron v3 operator tarafından yazılır, AI aggregates tarafından okunur.
+// ============================================================
+
+model ScrapedListing {
+  id          String   @id @default(cuid())
+  source      String   // "arabam" | "sahibinden"
+  sourceUrl   String   @unique
+  brand       String
+  model       String
+  year        Int?
+  km          Int?
+  priceTry    Int?
+  location    String?
+  title       String?  @db.VarChar(300)
+  scrapedAt   DateTime @default(now())
+  dropped     Boolean  @default(false)  // ilan artık yok / 30+ gün eski
+
+  @@index([brand, model, year])
+  @@index([scrapedAt])
+  @@index([dropped, scrapedAt])
+}

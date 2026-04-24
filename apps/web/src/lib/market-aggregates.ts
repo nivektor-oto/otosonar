@@ -15,6 +15,7 @@ export type SampleListing = {
   askingPrice: number;
   city: string;
   createdAt: string;
+  source?: "marketplace" | "arabam" | "sahibinden";
 };
 
 export type MarketAgg = {
@@ -97,6 +98,7 @@ type ListingRow = {
   askingPrice: number;
   city: string;
   createdAt: Date;
+  source: "marketplace" | "arabam" | "sahibinden";
 };
 
 async function queryListings(params: {
@@ -128,7 +130,7 @@ async function queryListings(params: {
     where.city = { equals: params.city, mode: "insensitive" };
   }
 
-  return prisma.marketplaceListing.findMany({
+  const mpRows = await prisma.marketplaceListing.findMany({
     where,
     take: 200,
     orderBy: { createdAt: "desc" },
@@ -142,6 +144,123 @@ async function queryListings(params: {
       createdAt: true,
     },
   });
+
+  return mpRows.map((r) => ({
+    brand: r.brand,
+    model: r.model,
+    year: r.year,
+    km: r.km,
+    askingPrice: r.askingPrice,
+    city: r.city,
+    createdAt: r.createdAt,
+    source: "marketplace" as const,
+  }));
+}
+
+// Scraped havuzdan (Arabam/Sahibinden) eşleşen ilanları getir.
+// dropped=false, priceTry/km/year NOT NULL filtresi. Sessiz fail (ham pazar verisi
+// yoksa MarketplaceListing'e fallback, analiz hiç bozulmasın).
+async function queryScrapedListings(params: {
+  brand: string;
+  model?: string;
+  yearMin?: number;
+  yearMax?: number;
+  city?: string;
+}): Promise<ListingRow[]> {
+  try {
+    const where: {
+      brand: { equals: string; mode: "insensitive" };
+      model?: { contains: string; mode: "insensitive" };
+      year?: { gte?: number; lte?: number };
+      location?: { contains: string; mode: "insensitive" };
+      dropped: boolean;
+      priceTry: { not: null };
+      km: { not: null };
+    } = {
+      brand: { equals: params.brand, mode: "insensitive" },
+      dropped: false,
+      priceTry: { not: null },
+      km: { not: null },
+    };
+    if (params.model) {
+      where.model = { contains: params.model, mode: "insensitive" };
+    }
+    if (params.yearMin != null || params.yearMax != null) {
+      where.year = {};
+      if (params.yearMin != null) where.year.gte = params.yearMin;
+      if (params.yearMax != null) where.year.lte = params.yearMax;
+    }
+    if (params.city) {
+      // ScrapedListing.location "Istanbul / Kadikoy" gibi serbest metin — contains filtresi
+      where.location = { contains: params.city, mode: "insensitive" };
+    }
+
+    const scRows = await prisma.scrapedListing.findMany({
+      where,
+      take: 300,
+      orderBy: { scrapedAt: "desc" },
+      select: {
+        brand: true,
+        model: true,
+        year: true,
+        km: true,
+        priceTry: true,
+        location: true,
+        scrapedAt: true,
+        source: true,
+      },
+    });
+
+    return scRows
+      .filter((r) => r.year != null && r.km != null && r.priceTry != null)
+      .map((r) => ({
+        brand: r.brand,
+        model: r.model,
+        year: r.year as number,
+        km: r.km as number,
+        askingPrice: r.priceTry as number,
+        city: r.location ?? "",
+        createdAt: r.scrapedAt,
+        source:
+          r.source === "sahibinden"
+            ? ("sahibinden" as const)
+            : ("arabam" as const),
+      }));
+  } catch (err) {
+    console.warn(
+      "[market-agg] scraped pool query failed:",
+      err instanceof Error ? err.message : err,
+    );
+    return [];
+  }
+}
+
+// Marketplace + ScrapedListing birleşik sorgu. Dedupe için brand+model+year+km
+// tuple'ına göre tekilleştirir (aynı araç iki kaynakta da olabilir — marketplace
+// önceliklidir).
+async function queryCombinedListings(params: {
+  brand: string;
+  model?: string;
+  yearMin?: number;
+  yearMax?: number;
+  city?: string;
+}): Promise<ListingRow[]> {
+  const [mp, sc] = await Promise.all([
+    queryListings(params),
+    queryScrapedListings(params),
+  ]);
+
+  const seen = new Set<string>();
+  const merged: ListingRow[] = [];
+  for (const r of [...mp, ...sc]) {
+    const key = `${r.brand.toLowerCase()}|${r.model.toLowerCase()}|${r.year}|${Math.round(r.km / 1000)}|${r.askingPrice}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    merged.push(r);
+  }
+  // createdAt desc
+  merged.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  return merged;
 }
 
 function emptyAgg(): MarketAgg {
@@ -172,11 +291,11 @@ export async function computeMarketAggregates(
   const resolvedYearMin =
     yearMin != null && params.yearMax == null ? yearMin - 2 : yearMin;
 
-  // 1) Tercih: aynı şehir
+  // 1) Tercih: aynı şehir (marketplace + scraped pool)
   let rows: ListingRow[] = [];
   if (params.city) {
     try {
-      rows = await queryListings({
+      rows = await queryCombinedListings({
         brand: params.brand,
         model: params.model,
         yearMin: resolvedYearMin,
@@ -194,7 +313,7 @@ export async function computeMarketAggregates(
   // 2) Şehirde <5 sonuç varsa şehirsiz tekrar sorgula
   if (rows.length < 5) {
     try {
-      rows = await queryListings({
+      rows = await queryCombinedListings({
         brand: params.brand,
         model: params.model,
         yearMin: resolvedYearMin,
@@ -245,6 +364,7 @@ export async function computeMarketAggregates(
         askingPrice: r.askingPrice,
         city: r.city,
         createdAt: r.createdAt.toISOString(),
+        source: r.source,
       })),
     };
     setCached(key, agg);
@@ -300,10 +420,23 @@ export function aggregatesAsPromptText(agg: MarketAgg): string {
     return `Gerçek pazar verisi: Bu araç için yeterli (3+) gerçek emsal yok. ${tail} Tahminin belirsizliği yüksek — emsalConfidence ≤ 0.4 olmalı ve summary'de belirsizliği belirt.`;
   }
 
+  const sourceLabel = (s: SampleListing): string => {
+    switch (s.source) {
+      case "arabam":
+        return "Arabam.com";
+      case "sahibinden":
+        return "Sahibinden";
+      case "marketplace":
+        return "OtoSonar";
+      default:
+        return "OtoSonar";
+    }
+  };
+
   const samples = agg.sampleListings
     .map(
       (s) =>
-        `  - ${s.year} ${s.brand} ${s.model}, ${s.km.toLocaleString("tr-TR")} km, ${s.askingPrice.toLocaleString("tr-TR")} TL (${s.city})`,
+        `  - ${s.year} ${s.brand} ${s.model}, ${s.km.toLocaleString("tr-TR")} km, ${s.askingPrice.toLocaleString("tr-TR")} TL (${s.city}) [${sourceLabel(s)}]`,
     )
     .join("\n");
 
@@ -312,7 +445,7 @@ export function aggregatesAsPromptText(agg: MarketAgg): string {
     : "-";
 
   return [
-    `Gerçek pazar verisi (OtoSonar marketplace, ${agg.count} eşleşme, tarih aralığı ${range}):`,
+    `Gerçek pazar verisi (OtoSonar marketplace + Arabam pool, ${agg.count} eşleşme, tarih aralığı ${range}):`,
     `  Ortalama fiyat: ${fmtTl(agg.priceAvg)} (medyan ${fmtTl(agg.priceMedian)}, p25 ${fmtTl(agg.priceP25)}, p75 ${fmtTl(agg.priceP75)})`,
     `  Ortalama km: ${fmtKm(agg.kmAvg)} (medyan ${fmtKm(agg.kmMedian)})`,
     `  Örnek ilanlar:`,
