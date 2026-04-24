@@ -124,16 +124,84 @@ export default function OnboardingPage() {
   );
 }
 
+type RecommendedTier = "PLUS" | "PRO" | "BAYI_PLUS" | "BAYI_PRO" | "BAYI_MAX";
+
 function getRecommendedTier(
   userType: UserType,
   volume: DealerVolume
-): "Plus" | "Pro" | "Max" {
-  if (userType === "buyer") return "Pro";
-  if (volume === "small") return "Plus";
-  if (volume === "medium") return "Pro";
-  if (volume === "large") return "Max";
-  return "Pro";
+): RecommendedTier {
+  if (userType === "buyer") return "PRO";
+  if (volume === "small") return "BAYI_PLUS";
+  if (volume === "medium") return "BAYI_PRO";
+  if (volume === "large") return "BAYI_MAX";
+  return "BAYI_PRO";
 }
+
+const TIER_DISPLAY: Record<
+  RecommendedTier,
+  { label: string; priceMonthly: string; priceYearly: string; items: string[] }
+> = {
+  PLUS: {
+    label: "OtoSonar Plus",
+    priceMonthly: "79",
+    priceYearly: "790",
+    items: [
+      "20 analiz / ay",
+      "5 fiyat alarmı",
+      "1 ilan / ay",
+      "KM risk skoru",
+      "Chatbot erişimi",
+    ],
+  },
+  PRO: {
+    label: "OtoSonar Pro",
+    priceMonthly: "149",
+    priceYearly: "1.490",
+    items: [
+      "Sınırsız analiz",
+      "Sınırsız fiyat alarmı",
+      "Sınırsız ilan",
+      "Boya-hasar tarayıcı",
+      "Duplicate algılayıcı",
+      "Trend raporu erişimi",
+    ],
+  },
+  BAYI_PLUS: {
+    label: "Galerici Plus",
+    priceMonthly: "299",
+    priceYearly: "2.990",
+    items: [
+      "50 analiz / ay",
+      "10 ilan / ay",
+      "Galerici paneli",
+      "KM risk + duplicate uyarısı",
+    ],
+  },
+  BAYI_PRO: {
+    label: "Galerici Pro",
+    priceMonthly: "499",
+    priceYearly: "4.990",
+    items: [
+      "Sınırsız analiz + ilan",
+      "Stok yönetimi paneli",
+      "WhatsApp Bot entegrasyonu",
+      "Fırsat tarayıcı günlük 5",
+      "Pazaryeri öncelikli görünüm",
+    ],
+  },
+  BAYI_MAX: {
+    label: "Galerici Max",
+    priceMonthly: "833",
+    priceYearly: "9.990",
+    items: [
+      "Galerici Pro'nun tamamı",
+      "Doğrulama rozeti",
+      "API erişimi",
+      "Öncelikli destek",
+      "Pazaryeri komisyonda indirim",
+    ],
+  },
+};
 
 function ProgressBar({ step }: { step: Step }) {
   const pct = ((step + 1) / 5) * 100;
@@ -292,48 +360,21 @@ function StepRecommendation({
   userType,
   onNext,
 }: {
-  tier: "Plus" | "Pro" | "Max";
+  tier: RecommendedTier;
   userType: UserType;
   onNext: () => void;
 }) {
-  const data = {
-    Plus: {
-      price: userType === "dealer" ? "799" : "99",
-      items: [
-        userType === "dealer" ? "50 analiz / ay" : "25 analiz / ay",
-        "Temel VIN sorgu",
-        "Fiyat tahmini",
-      ],
-    },
-    Pro: {
-      price: userType === "dealer" ? "1.599" : "249",
-      items: [
-        "Sınırsız analiz",
-        "Günde 20 fırsat bildirimi",
-        "Marketplace erişimi",
-        "Km/boya oynama uyarısı",
-        userType === "dealer" ? "WhatsApp bot" : "Aile paylaşımı",
-      ],
-    },
-    Max: {
-      price: userType === "dealer" ? "3.499" : "449",
-      items: [
-        "Tüm Pro özellikleri",
-        "AI sahtecilik alarmı",
-        "Plaka takip",
-        userType === "dealer" ? "Komisyoncu araçları" : "Aile 3 kullanıcı",
-        userType === "dealer" ? "API erişimi" : "Öncelikli destek",
-        userType === "dealer" ? "Marketplace komisyon %50 indirim" : "",
-      ].filter(Boolean),
-    },
-  }[tier];
+  const info = TIER_DISPLAY[tier];
+  const data = { price: info.priceMonthly, priceYearly: info.priceYearly, items: info.items };
+  const _userType = userType;
+  void _userType;
 
   const headline =
-    tier === "Pro"
-      ? "En uygun paketin 🎯"
-      : tier === "Max"
-      ? "Sana Max öneriyoruz"
-      : "Sana Plus öneriyoruz";
+    tier === "PRO" || tier === "BAYI_PRO"
+      ? `En uygun paketin: ${info.label}`
+      : tier === "BAYI_MAX"
+      ? `Sana ${info.label} öneriyoruz`
+      : `Sana ${info.label} öneriyoruz`;
 
   return (
     <div>
@@ -341,26 +382,26 @@ function StepRecommendation({
         {headline}
       </h2>
       <p className="text-slate-400 mb-8">
-        {tier === "Max"
-          ? "Ölçeğin için özel tasarlanmış Max paket, her kuruşunu fazlasıyla geri kazandıracak."
-          : tier === "Pro"
-          ? "En çok tercih edilen paket — işinin büyüklüğüne tam oturuyor."
+        {tier === "BAYI_MAX"
+          ? "Büyük ölçekli galerici operasyonları için — sınırsız her şey + öncelikli destek."
+          : tier === "BAYI_PRO" || tier === "PRO"
+          ? "En çok tercih edilen paket — sınırsız analiz, sınırsız ilan, işinin üstünde."
           : "Başlangıç için harika — büyüdükçe yükseltebilirsin."}
       </p>
 
-      <div className="card border-2 border-accent shadow-[0_0_0_1px_rgba(99,102,241,0.3),0_20px_50px_rgba(99,102,241,0.2)]">
+      <div className="card border-2 border-accent shadow-[0_0_0_1px_rgba(245,158,11,0.3),0_20px_50px_rgba(245,158,11,0.2)]">
         <div className="flex items-start justify-between mb-4">
           <div>
-            <div className="text-2xl font-bold tracking-tight">{tier}</div>
+            <div className="text-2xl font-bold tracking-tight">{info.label}</div>
             <div className="text-xs text-slate-400 mt-1">
-              {userType === "dealer" ? "Galerici" : "Bireysel"} paket
+              {userType === "dealer" ? "Galerici" : "Bireysel"} paket · KDV dahil
             </div>
           </div>
           <div className="text-right">
             <div className="text-4xl font-black gradient-text tabular-nums">
               {data.price}
             </div>
-            <div className="text-xs text-slate-400">TL / ay</div>
+            <div className="text-xs text-slate-400">TL / ay · yıllık {data.priceYearly} TL</div>
           </div>
         </div>
         <ul className="space-y-2 mb-5">
@@ -376,12 +417,12 @@ function StepRecommendation({
           ))}
         </ul>
         <div className="text-xs text-slate-400 italic border-t border-border pt-3">
-          🎁 İlk 3 gün ücretsiz · kredi kartı gerekmez · istediğin zaman iptal
+          ✓ 30 gün para iade · istediğin zaman iptal · sözleşmesiz abonelik
         </div>
       </div>
 
       <button onClick={onNext} className="btn-primary mt-8 w-full">
-        {tier} ile devam et{" "}
+        {info.label} ile devam et{" "}
         <ArrowRight className="w-4 h-4" aria-hidden strokeWidth={2.5} />
       </button>
     </div>
@@ -479,21 +520,24 @@ function StepFinish({
   email,
   onStart,
 }: {
-  tier: "Plus" | "Pro" | "Max";
+  tier: RecommendedTier;
   userType: UserType;
   email: string;
   onStart: () => void;
 }) {
+  const info = TIER_DISPLAY[tier];
   return (
     <div className="text-center">
       <div className="w-20 h-20 mx-auto rounded-full bg-success/15 border-2 border-success/40 flex items-center justify-center mb-6 animate-fade-up">
         <Check className="w-10 h-10 text-success" strokeWidth={3} aria-hidden />
       </div>
       <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-3 animate-fade-up [animation-delay:80ms]">
-        Hoş geldin! 🎉
+        Hoş geldin!
       </h2>
       <p className="text-slate-400 mb-8 animate-fade-up [animation-delay:160ms]">
-        <span className="text-white font-semibold">{tier}</span> paketinde <span className="text-accent font-semibold">3 gün ücretsiz denemen</span> başladı. İstediğin zaman iptal — kart çekilmez.
+        Hesabın hazır. <span className="text-white font-semibold">{info.label}</span> paketine{" "}
+        <span className="text-accent font-semibold">/fiyatlar</span> sayfasından istediğin an geçebilirsin.
+        Ücretsiz olarak ayda 3 analiz yapabilirsin — 30 gün para iade garantisi her pakette.
       </p>
       <div className="card text-left mb-8 animate-fade-up [animation-delay:240ms]">
         <div className="text-xs text-slate-400 uppercase tracking-wider mb-3 font-semibold">
