@@ -5,7 +5,7 @@ import { logError } from "@/lib/error-log";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 /**
  * Shared cron entry. Hit by Vercel Cron (or external scheduler) every hour.

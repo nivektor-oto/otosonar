@@ -8,7 +8,7 @@ import { prisma } from "@/lib/prisma";
 import { detectKmRisk } from "@/lib/km-heuristic";
 
 export const runtime = "nodejs";
-export const maxDuration = 60;
+export const maxDuration = 120;
 
 const schema = z.object({
   brand: z.string().min(2).max(40),

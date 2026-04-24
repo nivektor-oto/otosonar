@@ -6,7 +6,7 @@ import { logError } from "@/lib/error-log";
 import { isFeatureEnabled, featureDisabledResponse } from "@/lib/feature-flags";
 
 export const runtime = "nodejs";
-export const maxDuration = 60;
+export const maxDuration = 120;
 
 const schema = z.object({
   brand: z.string().min(2).max(40),

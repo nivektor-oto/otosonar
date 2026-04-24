@@ -3,7 +3,7 @@ import { z } from "zod";
 import { buybackAnalysis } from "@/lib/ai";
 
 export const runtime = "nodejs";
-export const maxDuration = 60;
+export const maxDuration = 120;
 
 const inputSchema = z
   .object({
