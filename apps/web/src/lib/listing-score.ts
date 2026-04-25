@@ -6,19 +6,22 @@ import {
   type MarketAgg,
 } from "@/lib/market-aggregates";
 
+// Tavanlar AI'in tipik çıktısının %30 üzerinde (parse fail spike'larını
+// kapatmak için). Prompt 60-150 kelime istiyor → ~1000 char tipik;
+// 3000 char tavan güvenli marj. UI tarafı uzun çıktıyı kendi truncate eder.
 export const listingScoreSchema = z.object({
   overallScore: z.number().int().min(0).max(100),
   titleScore: z.number().int().min(0).max(100),
   priceScore: z.number().int().min(0).max(100),
   photoScore: z.number().int().min(0).max(100),
   textScore: z.number().int().min(0).max(100),
-  aiTitle: z.string().min(5).max(120),
-  aiDescription: z.string().min(50).max(1500),
-  photoOrder: z.array(z.string().min(3).max(30)).min(2).max(12),
+  aiTitle: z.string().min(5).max(200),
+  aiDescription: z.string().min(50).max(3000),
+  photoOrder: z.array(z.string().min(3).max(60)).min(2).max(12),
   tips: z
     .array(
       z.object({
-        label: z.string().min(3).max(200),
+        label: z.string().min(3).max(280),
         severity: z.enum(["info", "warning", "critical"]),
       }),
     )
@@ -51,8 +54,8 @@ SADECE JSON döndür, başka metin YAZMA. Şema:
   "priceScore": <0-100>,
   "photoScore": <0-100>,
   "textScore": <0-100>,
-  "aiTitle": "<Türkçe, 50-80 karakter, çekici, km+paket+durum ipuçları, emoji YOK>",
-  "aiDescription": "<Türkçe, 120-400 kelime, 4-6 paragraf: 1) Araç özet 2) Bakım-masraf 3) Öne çıkan özellikler 4) Satış gerekçesi 5) Takas notu (opsiyonel) — doğal konuşma tonu>",
+  "aiTitle": "<Türkçe, 50-80 karakter (kesinlikle 120 karakteri aşma), çekici, km+paket+durum ipuçları, emoji YOK>",
+  "aiDescription": "<Türkçe, 80-180 kelime (kesinlikle 250 kelimeyi aşma), 3-5 kısa paragraf: 1) Araç özet 2) Bakım-masraf 3) Öne çıkan özellikler 4) Satış gerekçesi 5) Takas notu (opsiyonel) — doğal konuşma tonu, gereksiz dolgu YOK>",
   "photoOrder": [ "<önerilen foto konseptleri, çekilmesi istenen 6-8 adet: '3/4 ön açı','3/4 arka açı','yan profil','iç konsol','motor bölümü','anahtar+ruhsat','bagaj','farlı'>" ],
   "tips": [
     { "label": "<Türkçe 1 cümle iyileştirme önerisi>", "severity": "info|warning|critical" }
@@ -113,7 +116,7 @@ export async function scoreListing(
       const start = Date.now();
       const out = await callAnthropic(msg, anthropicKey);
       return {
-        result: listingScoreSchema.parse(out),
+        result: validateOrLog(out, "anthropic"),
         provider: "anthropic",
         durationMs: Date.now() - start,
         emsalCount: agg?.count ?? null,
@@ -126,13 +129,26 @@ export async function scoreListing(
     const start = Date.now();
     const out = await callGemini(msg, geminiKey);
     return {
-      result: listingScoreSchema.parse(out),
+      result: validateOrLog(out, "gemini"),
       provider: "gemini",
       durationMs: Date.now() - start,
       emsalCount: agg?.count ?? null,
     };
   }
   throw new Error("AI yapılandırılmamış");
+}
+
+// Schema parse fail'lerini görünür kılar — otopatron'un raporladığı
+// listing-score 500 spike'larının kök nedenini teşhis için.
+function validateOrLog(raw: unknown, provider: string): ListingScoreResult {
+  const r = listingScoreSchema.safeParse(raw);
+  if (r.success) return r.data;
+  const issues = r.error.issues
+    .slice(0, 5)
+    .map((i) => `${i.path.join(".")}: ${i.message}`)
+    .join("; ");
+  console.warn(`[ai] listing-score schema-fail provider=${provider} issues=${issues}`);
+  throw r.error;
 }
 
 function fmt(v: ScoreInput): string {
