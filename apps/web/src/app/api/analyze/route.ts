@@ -35,8 +35,10 @@ const inputSchema = z
 
 type AnalyzeInput = z.infer<typeof inputSchema>;
 
-// 24 saat cache TTL
-const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+// 7 gün cache TTL — tutarlılık için. Kullanıcı aynı aracı saatler/günler sonra
+// tekrar girince aynı emsal değerini görmeli. Pazar verisi değiştiğinde
+// invalidated=true ile manuel/otomatik temizlenebilir.
+const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 /**
  * Consistency bucket hash. Aynı aracın varyasyonlarını aynı cache slot'una düşür.

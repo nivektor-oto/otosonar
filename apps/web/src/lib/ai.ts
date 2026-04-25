@@ -204,6 +204,54 @@ function sanitizeUserInput(text: string): string {
 
 // ─── Ana entry point ─────────────────────────────────────────
 
+/**
+ * Gerçek pazar verisinden deterministik bir emsalValue + confidence türetir.
+ * AI'ın tahminini ezme amaçlı: agg yeterliyse AI'ın çıktısını override edeceğiz.
+ * count<3 veya median yoksa null döner — o durumda AI tahminine güveniyoruz.
+ */
+function computeDeterministicEmsal(
+  input: VehicleInput,
+  agg: MarketAgg | null,
+): { emsalValue: number; emsalConfidence: number } | null {
+  if (!agg || agg.count < 3 || agg.priceMedian == null) return null;
+
+  const medianPrice = agg.priceMedian;
+  const medianKm = agg.kmMedian;
+
+  // KM düzeltmesi: medyandan 10K km uzaklaştıkça ±%1.5
+  let kmFactor = 1.0;
+  if (typeof input.km === "number" && medianKm != null) {
+    const kmDeltaPer10k = (input.km - medianKm) / 10_000;
+    kmFactor = Math.max(0.65, Math.min(1.18, 1 - kmDeltaPer10k * 0.015));
+  }
+
+  // Hasar/boya düzeltmesi (input.damageStatus + description'tan keyword bazlı)
+  let damageFactor = 1.0;
+  const dmgText = `${input.damageStatus ?? ""} ${input.description ?? ""}`.toLowerCase();
+  if (/ağır hasar|ağır tramerli|hurda|pert/.test(dmgText)) damageFactor = 0.65;
+  else if (/[4-9]\s*parça|çok parça|5\s*parça|6\s*parça/.test(dmgText)) damageFactor = 0.82;
+  else if (/[23]\s*parça|boyalı|tramerli/.test(dmgText)) damageFactor = 0.92;
+
+  const emsalValue = Math.round(medianPrice * kmFactor * damageFactor);
+
+  // Confidence: emsal sayısı + dağılım kalitesine göre
+  let emsalConfidence: number;
+  if (agg.count >= 15) emsalConfidence = 0.88;
+  else if (agg.count >= 10) emsalConfidence = 0.78;
+  else if (agg.count >= 7) emsalConfidence = 0.68;
+  else if (agg.count >= 5) emsalConfidence = 0.55;
+  else emsalConfidence = 0.42;
+
+  // P25-P75 spread'i medyana göre çok büyükse confidence düşür
+  if (agg.priceP25 != null && agg.priceP75 != null && medianPrice > 0) {
+    const spread = (agg.priceP75 - agg.priceP25) / medianPrice;
+    if (spread > 0.4) emsalConfidence = Math.max(0.3, emsalConfidence - 0.15);
+    else if (spread > 0.25) emsalConfidence = Math.max(0.35, emsalConfidence - 0.08);
+  }
+
+  return { emsalValue, emsalConfidence: Math.round(emsalConfidence * 100) / 100 };
+}
+
 export async function analyzeVehicle(
   input: VehicleInput
 ): Promise<{ result: AnalysisResult; meta: AnalyzeMeta }> {
@@ -212,19 +260,33 @@ export async function analyzeVehicle(
   if (input.brand) {
     try {
       const baseYear = input.year ?? 2020;
+      // KM toleransı dar: %12, 10K-30K cap. Geniş tolerans medyanı bozar.
       const kmTolerance =
         typeof input.km === "number"
-          ? Math.max(15_000, Math.round(input.km * 0.18))
+          ? Math.max(10_000, Math.min(30_000, Math.round(input.km * 0.12)))
           : undefined;
       agg = await computeMarketAggregates({
         brand: input.brand,
         model: input.model,
-        yearMin: baseYear - 2,
-        yearMax: baseYear + 2,
+        yearMin: baseYear - 1,
+        yearMax: baseYear + 1,
         city: input.city,
         targetKm: input.km,
         kmTolerance,
       });
+      // Aynı yıl ±1'de yetersiz emsal → ±2'ye genişlet (model ve markaya kalır)
+      if (agg.count < 5) {
+        const wider = await computeMarketAggregates({
+          brand: input.brand,
+          model: input.model,
+          yearMin: baseYear - 2,
+          yearMax: baseYear + 2,
+          city: input.city,
+          targetKm: input.km,
+          kmTolerance,
+        });
+        if (wider.count > agg.count) agg = wider;
+      }
       if (agg.count < 3) {
         console.warn(
           `[ai] low-data warning: analyze brand=${input.brand} model=${input.model ?? "-"} year=${input.year ?? "-"} emsalCount=${agg.count}`,
@@ -238,47 +300,26 @@ export async function analyzeVehicle(
     }
   }
 
-  const userMessage = agg
-    ? `${aggregatesAsPromptText(agg)}\n\n${formatVehicleForPrompt(input)}`
-    : formatVehicleForPrompt(input);
+  const deterministic = computeDeterministicEmsal(input, agg);
+  const hintLine = deterministic
+    ? `\n\nDETERMİNİSTİK EMSAL HESABI (TR pazarından, ${agg?.count} ilan üzerinden hesaplandı): ${deterministic.emsalValue.toLocaleString("tr-TR")} TL — emsalValue alanında AYNEN bu sayıyı kullan, kendi tahminini yapma. emsalConfidence=${deterministic.emsalConfidence}.`
+    : "";
 
-  const geminiKey = process.env.GEMINI_API_KEY;
+  const userMessage = (agg
+    ? `${aggregatesAsPromptText(agg)}${hintLine}\n\n${formatVehicleForPrompt(input)}`
+    : `${hintLine}\n\n${formatVehicleForPrompt(input)}`).trim();
+
   const anthropicKey = process.env.ANTHROPIC_API_KEY;
+  const geminiKey = process.env.GEMINI_API_KEY;
 
-  if (geminiKey) {
-    try {
-      const start = Date.now();
-      const { result, retried } = await callGeminiWithRetry(userMessage, geminiKey);
-      const validated = enforceConsistency(analysisSchema.parse(result));
-      const durationMs = Date.now() - start;
-      console.info(`[ai] analyze ok provider=gemini model=gemini-2.5-flash retried=${retried} ms=${durationMs}`);
-      return {
-        result: validated,
-        meta: {
-          provider: "gemini",
-          model: "gemini-2.5-flash",
-          durationMs,
-          retried,
-          emsalCount: agg?.count ?? null,
-        },
-      };
-    } catch (e) {
-      const msg = e instanceof Error ? e.message.slice(0, 200) : String(e);
-      if (!anthropicKey) {
-        console.warn(`[ai] analyze primary_fail provider=gemini fallback=unavailable err=${msg}`);
-        throw e;
-      }
-      console.warn(`[ai] analyze primary_fail provider=gemini fallback=anthropic/claude-haiku-4-5 err=${msg}`);
-    }
-  }
-
+  // Anthropic primary (Gemini ücreti tükendi 2026-04-26). Gemini fallback.
   if (anthropicKey) {
     const start = Date.now();
     try {
       const result = await callAnthropic(userMessage, anthropicKey);
-      const validated = enforceConsistency(analysisSchema.parse(result));
+      const validated = enforceConsistency(analysisSchema.parse(result), deterministic);
       const durationMs = Date.now() - start;
-      console.info(`[ai] analyze ok provider=anthropic model=claude-haiku-4-5 ms=${durationMs} via=fallback`);
+      console.info(`[ai] analyze ok provider=anthropic model=claude-haiku-4-5 ms=${durationMs} emsalCount=${agg?.count ?? 0} det=${deterministic ? "yes" : "no"}`);
       return {
         result: validated,
         meta: {
@@ -287,11 +328,40 @@ export async function analyzeVehicle(
           durationMs,
           retried: 0,
           emsalCount: agg?.count ?? null,
+          emsalListings: agg?.sampleListings,
         },
       };
     } catch (e) {
       const msg = e instanceof Error ? e.message.slice(0, 200) : String(e);
-      console.error(`[ai] analyze fallback_fail provider=anthropic err=${msg}`);
+      if (!geminiKey) {
+        console.warn(`[ai] analyze primary_fail provider=anthropic fallback=unavailable err=${msg}`);
+        throw e;
+      }
+      console.warn(`[ai] analyze primary_fail provider=anthropic fallback=gemini err=${msg}`);
+    }
+  }
+
+  if (geminiKey) {
+    try {
+      const start = Date.now();
+      const { result, retried } = await callGeminiWithRetry(userMessage, geminiKey);
+      const validated = enforceConsistency(analysisSchema.parse(result), deterministic);
+      const durationMs = Date.now() - start;
+      console.info(`[ai] analyze ok provider=gemini model=gemini-2.5-flash retried=${retried} ms=${durationMs} via=fallback`);
+      return {
+        result: validated,
+        meta: {
+          provider: "gemini",
+          model: "gemini-2.5-flash",
+          durationMs,
+          retried,
+          emsalCount: agg?.count ?? null,
+          emsalListings: agg?.sampleListings,
+        },
+      };
+    } catch (e) {
+      const msg = e instanceof Error ? e.message.slice(0, 200) : String(e);
+      console.error(`[ai] analyze fallback_fail provider=gemini err=${msg}`);
       throw e;
     }
   }
@@ -299,8 +369,18 @@ export async function analyzeVehicle(
   throw new Error("AI yapılandırılmamış");
 }
 
-/** Şema-sonrası tutarlılık enforce eder. */
-function enforceConsistency(r: AnalysisResult): AnalysisResult {
+/**
+ * Şema-sonrası tutarlılık enforce eder.
+ * Deterministik emsal varsa AI'ın emsalValue/emsalConfidence çıktısını override eder.
+ */
+function enforceConsistency(
+  r: AnalysisResult,
+  deterministic?: { emsalValue: number; emsalConfidence: number } | null,
+): AnalysisResult {
+  if (deterministic) {
+    r.emsalValue = deterministic.emsalValue;
+    r.emsalConfidence = deterministic.emsalConfidence;
+  }
   const sumFlagsRepair = r.redFlags.reduce(
     (s, f) => s + (f.repairEstimateTL ?? 0),
     0
@@ -346,8 +426,8 @@ async function callGemini(userMessage: string, apiKey: string): Promise<unknown>
     systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
     contents: [{ role: "user", parts: [{ text: userMessage }] }],
     generationConfig: {
-      temperature: 0.15,
-      topP: 0.95,
+      temperature: 0,
+      topP: 0.1,
       responseMimeType: "application/json",
       maxOutputTokens: 8000,
       thinkingConfig: { thinkingBudget: 0 },
@@ -393,7 +473,7 @@ async function callAnthropic(
   const response = await client.messages.create({
     model: "claude-haiku-4-5-20251001",
     max_tokens: 4096,
-    temperature: 0.15,
+    temperature: 0,
     system: [
       {
         type: "text",
@@ -423,9 +503,36 @@ function parseJsonResponse(raw: string): unknown {
   }
   try {
     return JSON.parse(cleaned);
-  } catch (e) {
-    const reason = e instanceof Error ? e.message : "unknown";
-    throw new Error(`AI JSON parse fail (${reason})`);
+  } catch {
+    // Haiku/Gemini bazen JSON sonrası açıklayıcı metin bırakır.
+    // İlk dengeli {…} ya da […] bloğunu çıkar ve onu parse et.
+    const start = cleaned.search(/[\{\[]/);
+    if (start < 0) throw new Error("AI JSON parse fail (no JSON found)");
+    const open = cleaned[start];
+    const close = open === "{" ? "}" : "]";
+    let depth = 0;
+    let inStr = false;
+    let esc = false;
+    for (let i = start; i < cleaned.length; i++) {
+      const c = cleaned[i];
+      if (esc) { esc = false; continue; }
+      if (c === "\\") { esc = true; continue; }
+      if (c === '"') { inStr = !inStr; continue; }
+      if (inStr) continue;
+      if (c === open) depth++;
+      else if (c === close) {
+        depth--;
+        if (depth === 0) {
+          try {
+            return JSON.parse(cleaned.slice(start, i + 1));
+          } catch (e2) {
+            const reason = e2 instanceof Error ? e2.message : "unknown";
+            throw new Error(`AI JSON parse fail (${reason})`);
+          }
+        }
+      }
+    }
+    throw new Error("AI JSON parse fail (unbalanced JSON)");
   }
 }
 
@@ -610,7 +717,7 @@ export async function marketResearch(
       const response = await client.messages.create({
         model: "claude-haiku-4-5-20251001",
         max_tokens: 4096,
-        temperature: 0.15,
+        temperature: 0,
         system: [
           { type: "text", text: MARKET_SYSTEM_PROMPT, cache_control: { type: "ephemeral" } },
         ],
@@ -681,8 +788,8 @@ async function callGeminiMarket(
       systemInstruction: { parts: [{ text: MARKET_SYSTEM_PROMPT }] },
       contents: [{ role: "user", parts: [{ text: userMessage }] }],
       generationConfig: {
-        temperature: 0.15,
-        topP: 0.95,
+        temperature: 0,
+        topP: 0.1,
         responseMimeType: "application/json",
         maxOutputTokens: 8000,
         thinkingConfig: { thinkingBudget: 0 },
@@ -1024,8 +1131,8 @@ async function callGeminiBuyback(userMessage: string, apiKey: string): Promise<u
       systemInstruction: { parts: [{ text: BUYBACK_SYSTEM_PROMPT }] },
       contents: [{ role: "user", parts: [{ text: userMessage }] }],
       generationConfig: {
-        temperature: 0.15,
-        topP: 0.95,
+        temperature: 0,
+        topP: 0.1,
         responseMimeType: "application/json",
         maxOutputTokens: 8000,
         thinkingConfig: { thinkingBudget: 0 },
@@ -1054,7 +1161,7 @@ async function callAnthropicBuyback(userMessage: string, apiKey: string): Promis
   const msg = await client.messages.create({
     model: "claude-haiku-4-5",
     max_tokens: 4096,
-    temperature: 0.15,
+    temperature: 0,
     system: [{ type: "text", text: BUYBACK_SYSTEM_PROMPT, cache_control: { type: "ephemeral" } }],
     messages: [{ role: "user", content: userMessage }],
   });
