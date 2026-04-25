@@ -107,26 +107,27 @@ export async function scoreListing(
   const geminiKey = process.env.GEMINI_API_KEY;
   const anthropicKey = process.env.ANTHROPIC_API_KEY;
 
-  if (geminiKey) {
+  // Anthropic primary (Gemini ücretli kredi tükendi). Gemini fallback.
+  if (anthropicKey) {
     try {
       const start = Date.now();
-      const out = await callGemini(msg, geminiKey);
+      const out = await callAnthropic(msg, anthropicKey);
       return {
         result: listingScoreSchema.parse(out),
-        provider: "gemini",
+        provider: "anthropic",
         durationMs: Date.now() - start,
         emsalCount: agg?.count ?? null,
       };
     } catch (e) {
-      if (!anthropicKey) throw e;
+      if (!geminiKey) throw e;
     }
   }
-  if (anthropicKey) {
+  if (geminiKey) {
     const start = Date.now();
-    const out = await callAnthropic(msg, anthropicKey);
+    const out = await callGemini(msg, geminiKey);
     return {
       result: listingScoreSchema.parse(out),
-      provider: "anthropic",
+      provider: "gemini",
       durationMs: Date.now() - start,
       emsalCount: agg?.count ?? null,
     };
@@ -152,6 +153,38 @@ function fmt(v: ScoreInput): string {
   return lines.join("\n");
 }
 
+// Robust JSON extractor — fence + trailing text tolerant.
+function parseJsonLoose(raw: string): unknown {
+  let s = raw.trim();
+  if (s.startsWith("```")) {
+    s = s.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
+  }
+  try {
+    return JSON.parse(s);
+  } catch {
+    const start = s.search(/[\{\[]/);
+    if (start < 0) throw new Error("no JSON");
+    const open = s[start];
+    const close = open === "{" ? "}" : "]";
+    let depth = 0;
+    let inStr = false;
+    let esc = false;
+    for (let i = start; i < s.length; i++) {
+      const c = s[i];
+      if (esc) { esc = false; continue; }
+      if (c === "\\") { esc = true; continue; }
+      if (c === '"') { inStr = !inStr; continue; }
+      if (inStr) continue;
+      if (c === open) depth++;
+      else if (c === close) {
+        depth--;
+        if (depth === 0) return JSON.parse(s.slice(start, i + 1));
+      }
+    }
+    throw new Error("unbalanced JSON");
+  }
+}
+
 async function callGemini(userMsg: string, key: string): Promise<unknown> {
   const res = await fetch(
     "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
@@ -161,7 +194,7 @@ async function callGemini(userMsg: string, key: string): Promise<unknown> {
       body: JSON.stringify({
         systemInstruction: { role: "user", parts: [{ text: SYSTEM }] },
         contents: [{ role: "user", parts: [{ text: userMsg }] }],
-        generationConfig: { temperature: 0.15, topP: 0.95, maxOutputTokens: 2500, responseMimeType: "application/json" },
+        generationConfig: { temperature: 0, topP: 0.1, maxOutputTokens: 2500, responseMimeType: "application/json" },
       }),
     },
   );
@@ -169,7 +202,7 @@ async function callGemini(userMsg: string, key: string): Promise<unknown> {
   const json: { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> } = await res.json();
   const text = json.candidates?.[0]?.content?.parts?.[0]?.text;
   if (!text) throw new Error("gemini empty");
-  return JSON.parse(text);
+  return parseJsonLoose(text);
 }
 
 async function callAnthropic(userMsg: string, key: string): Promise<unknown> {
@@ -177,11 +210,11 @@ async function callAnthropic(userMsg: string, key: string): Promise<unknown> {
   const res = await client.messages.create({
     model: "claude-haiku-4-5",
     max_tokens: 2500,
-    temperature: 0.15,
+    temperature: 0,
     system: [{ type: "text", text: SYSTEM, cache_control: { type: "ephemeral" } }],
     messages: [{ role: "user", content: userMsg }],
   });
   const block = res.content.find((b) => b.type === "text") as { type: "text"; text: string } | undefined;
   if (!block) throw new Error("anthropic empty");
-  return JSON.parse(block.text.trim().replace(/^```json\s*|\s*```$/g, ""));
+  return parseJsonLoose(block.text);
 }

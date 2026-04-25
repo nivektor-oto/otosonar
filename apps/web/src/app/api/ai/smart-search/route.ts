@@ -11,8 +11,9 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import Anthropic from "@anthropic-ai/sdk";
-import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+import { checkRateLimit } from "@/lib/rate-limit";
 import { logError } from "@/lib/error-log";
+import { getCurrentUser } from "@/lib/user-auth";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -157,8 +158,15 @@ async function callAnthropic(query: string, apiKey: string): Promise<unknown> {
 }
 
 export async function POST(req: Request) {
-  const ip = await getClientIp();
-  const rl = await checkRateLimit(`ai.smart-search:ip:${ip}`, 60, 600);
+  // Auth ZORUNLU — anonim AI bypass kapatıldı (cost burn vektörü).
+  const user = await getCurrentUser();
+  if (!user) {
+    return NextResponse.json(
+      { success: false, error: "unauthenticated" },
+      { status: 401 },
+    );
+  }
+  const rl = await checkRateLimit(`ai.smart-search:user:${user.id}`, 60, 600);
   if (!rl.allowed) {
     return NextResponse.json({ success: false, error: "rate_limited" }, { status: 429 });
   }

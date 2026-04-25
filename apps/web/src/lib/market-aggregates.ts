@@ -33,6 +33,7 @@ export type MarketAgg = {
 export interface MarketAggregateParams {
   brand: string;
   model?: string;
+  variant?: string; // opsiyonel — Polo R-Line vs Trend gibi varyant kirliliğini düşürmek için
   yearMin?: number;
   yearMax?: number;
   city?: string;
@@ -338,6 +339,15 @@ export async function computeMarketAggregates(
         (params.kmTolerance as number),
     );
     if (band.length >= 3) rows = band;
+  }
+
+  // 4) Outlier trim — top %10 + alt %10 kırp (Civic Type R, Polo R-Line gibi
+  // premium varyantlar medyanı şişiriyordu). Kalan satır en az 3 olmalı.
+  if (rows.length >= 8) {
+    const sortedByPrice = [...rows].sort((a, b) => a.askingPrice - b.askingPrice);
+    const trimCount = Math.floor(sortedByPrice.length * 0.1);
+    const trimmed = sortedByPrice.slice(trimCount, sortedByPrice.length - trimCount);
+    if (trimmed.length >= 3) rows = trimmed;
   }
 
   if (rows.length < 3) {

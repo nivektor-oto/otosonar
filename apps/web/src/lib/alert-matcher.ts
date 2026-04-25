@@ -28,30 +28,36 @@ export async function fireMatchingAlerts(listing: ListingLike): Promise<void> {
       take: 200,
     });
 
-    for (const alert of alerts) {
-      if (alert.yearMin && listing.year < alert.yearMin) continue;
-      if (alert.yearMax && listing.year > alert.yearMax) continue;
-      if (alert.priceMax && listing.askingPrice > alert.priceMax) continue;
-      if (alert.cityFilter && alert.cityFilter.toLowerCase() !== listing.city.toLowerCase()) continue;
+    const sixHoursAgo = Date.now() - 6 * 3600_000;
+    const matching = alerts.filter((alert) => {
+      if (alert.yearMin && listing.year < alert.yearMin) return false;
+      if (alert.yearMax && listing.year > alert.yearMax) return false;
+      if (alert.priceMax && listing.askingPrice > alert.priceMax) return false;
+      if (alert.cityFilter && alert.cityFilter.toLowerCase() !== listing.city.toLowerCase()) return false;
+      if (alert.lastTriggeredAt && alert.lastTriggeredAt.getTime() > sixHoursAgo) return false;
+      return true;
+    });
+    if (matching.length === 0) return;
 
-      // Push once per alert per listing (simple debounce via lastTriggeredAt for same day)
-      const sixHoursAgo = Date.now() - 6 * 3600_000;
-      if (alert.lastTriggeredAt && alert.lastTriggeredAt.getTime() > sixHoursAgo) continue;
+    const title = `${listing.brand} ${listing.model} · ${listing.year}`;
+    const body = `${listing.askingPrice.toLocaleString("tr-TR")} ₺ · ${listing.city}`;
+    const now = new Date();
 
-      const title = `${listing.brand} ${listing.model} · ${listing.year}`;
-      const body = `${listing.askingPrice.toLocaleString("tr-TR")} ₺ · ${listing.city}`;
+    // Paralel push + tek batched update — eski for-loop seri zincir N+1'di.
+    await Promise.all(
+      matching.map((alert) =>
+        sendToUser(alert.userId, {
+          title,
+          body,
+          url: `/pazaryeri/${listing.id}`,
+        }).catch(() => undefined),
+      ),
+    );
 
-      await sendToUser(alert.userId, {
-        title,
-        body,
-        url: `/pazaryeri/${listing.id}`,
-      }).catch(() => undefined);
-
-      await prisma.priceAlert.update({
-        where: { id: alert.id },
-        data: { lastTriggeredAt: new Date() },
-      }).catch(() => undefined);
-    }
+    await prisma.priceAlert.updateMany({
+      where: { id: { in: matching.map((a) => a.id) } },
+      data: { lastTriggeredAt: now },
+    }).catch(() => undefined);
   } catch {
     // noop
   }

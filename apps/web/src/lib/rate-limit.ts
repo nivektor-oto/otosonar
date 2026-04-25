@@ -7,9 +7,30 @@ export interface RateLimitResult {
   resetsAt: Date;
 }
 
+// Auth-kritik scope prefix'leri — DB hatasında fail-CLOSED.
+// (Diğer scope'larda fail-open: pazaryeri filter gibi cosmetic limit'ler için
+// DB hıçkırığı tüm trafiği bricklemesin.)
+const FAIL_CLOSED_PREFIXES = [
+  "auth.login",
+  "auth.signup",
+  "auth.reset",
+  "auth.verify",
+  "founder.login",
+  "checkout",
+  "iyzico",
+  "totp",
+];
+
+function isAuthCritical(key: string): boolean {
+  return FAIL_CLOSED_PREFIXES.some((p) => key.startsWith(p));
+}
+
 /**
  * Postgres-backed rate limiter. Durable across serverless invocations.
  * Key format: "scope:identifier" (e.g., "auth.login:ip:1.2.3.4").
+ *
+ * Auth-kritik scope'larda DB hatasında **fail-closed** (bypass riskine karşı).
+ * Diğer scope'larda fail-open (legit trafiği brickleme).
  */
 export async function checkRateLimit(
   key: string,
@@ -47,7 +68,10 @@ export async function checkRateLimit(
       resetsAt: updated.windowEnds,
     };
   } catch {
-    // Fail-open on DB errors so we don't brick legitimate traffic.
+    if (isAuthCritical(key)) {
+      // Brute-force/payment bypass riskine karşı kilitli kal.
+      return { allowed: false, remaining: 0, resetsAt: windowEnds };
+    }
     return { allowed: true, remaining: max, resetsAt: windowEnds };
   }
 }

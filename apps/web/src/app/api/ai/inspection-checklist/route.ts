@@ -240,18 +240,18 @@ export async function POST(req: Request) {
     );
   }
 
-  // 2. Auth (opsiyonel — misafir izinli)
-  let userId: string | null = null;
-  try {
-    const user = await getCurrentUser();
-    userId = user?.id ?? null;
-  } catch {
-    userId = null;
+  // 2. Auth ZORUNLU — misafir izni kapatıldı (paywall bypass + AI cost burn).
+  const user = await getCurrentUser();
+  if (!user) {
+    return NextResponse.json(
+      { error: "unauthenticated", message: "Bu özelliği kullanmak için giriş yapın." },
+      { status: 401 },
+    );
   }
+  const userId = user.id;
 
-  // 3. Rate limit. 30/10dk per IP/user.
-  const ip = await getClientIp();
-  const rlKey = userId ? `ai-checklist:${userId}` : `ai-checklist:guest:${ip}`;
+  // 3. Rate limit. 30/10dk per user.
+  const rlKey = `ai-checklist:${userId}`;
   const rl = await checkRateLimit(rlKey, 30, 600);
   if (!rl.allowed) {
     return NextResponse.json(

@@ -66,6 +66,23 @@ export async function POST(req: NextRequest) {
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Bilinmeyen hata";
     console.error("[market] error:", msg);
+
+    // Veri yetersizliği (schema parse / empty aggregate) → 422 graceful
+    if (
+      /schema|parse|invalid_type|empty|too small|undefined/i.test(msg) ||
+      e instanceof z.ZodError
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "data_insufficient",
+          message:
+            "Bu marka/model/şehir kombinasyonu için yeterli veri yok. Daha geniş bir filtre deneyin (örn. sadece marka).",
+        },
+        { status: 422 },
+      );
+    }
+
     const userMessage = /HTTP 5\d\d|UNAVAILABLE|overloaded|timeout|429/i.test(msg)
       ? "AI geçici olarak meşgul. Birkaç saniye sonra tekrar deneyin."
       : "Araştırma başarısız oldu.";

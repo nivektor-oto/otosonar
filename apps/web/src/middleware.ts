@@ -59,6 +59,33 @@ export function middleware(req: NextRequest) {
   res.headers.set("X-Frame-Options", "DENY");
   res.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
   res.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+
+  // Production-only: HSTS — Vercel zaten HTTPS, HSTS preload eligible.
+  if (process.env.NODE_ENV === "production") {
+    res.headers.set(
+      "Strict-Transport-Security",
+      "max-age=63072000; includeSubDomains; preload",
+    );
+  }
+
+  // CSP — Iyzico 3DS iframe, Vercel Blob CDN, Google OAuth, Gemini fonts izin.
+  // unsafe-inline next/script + Next runtime için zorunlu (nonce-based geçiş ileride).
+  const csp = [
+    "default-src 'self'",
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.iyzipay.com https://accounts.google.com https://www.googletagmanager.com",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "img-src 'self' data: blob: https: https://*.public.blob.vercel-storage.com https://*.arabam.com https://*.sahibinden.com",
+    "font-src 'self' data: https://fonts.gstatic.com",
+    "connect-src 'self' https://*.iyzipay.com https://accounts.google.com https://generativelanguage.googleapis.com https://api.anthropic.com",
+    "frame-src 'self' https://*.iyzipay.com https://sandbox-api.iyzipay.com https://accounts.google.com",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self' https://*.iyzipay.com",
+    "frame-ancestors 'none'",
+    "upgrade-insecure-requests",
+  ].join("; ");
+  res.headers.set("Content-Security-Policy", csp);
+
   return res;
 }
 

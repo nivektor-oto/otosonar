@@ -5,6 +5,9 @@ import { useEffect, useState } from "react";
 export function OAuthButtons({ mode }: { mode: "giris" | "kayit" }) {
   const [google, setGoogle] = useState(false);
   const [apple, setApple] = useState(false);
+  // ref'i ilk render'da SSR/CSR aynı (null) — sonra effect'te set edilir.
+  // Hydration mismatch'i (#418) önler.
+  const [ref, setRef] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/auth/config")
@@ -14,9 +17,8 @@ export function OAuthButtons({ mode }: { mode: "giris" | "kayit" }) {
         setApple(!!d.apple);
       })
       .catch(() => undefined);
+    setRef(new URLSearchParams(window.location.search).get("ref"));
   }, []);
-
-  const ref = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("ref") : null;
 
   return (
     <div className="space-y-2">

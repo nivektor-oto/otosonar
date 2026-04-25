@@ -29,9 +29,10 @@ export const maxDuration = 30;
 const vehicleSchema = z.object({
   brand: z.string().min(1).max(60),
   model: z.string().min(1).max(80),
-  year: z.number().int().min(1980).max(2100),
-  km: z.number().int().min(0).max(2_000_000),
-  askingPrice: z.number().int().min(0).max(50_000_000),
+  year: z.number().int().min(1980).max(2027),
+  // Sane bounds — extreme değerler AI schema'sını parse-fail yapıyor (502 burn).
+  km: z.number().int().min(100).max(1_000_000),
+  askingPrice: z.number().int().min(10_000).max(20_000_000),
   location: z.string().max(120).optional(),
 });
 

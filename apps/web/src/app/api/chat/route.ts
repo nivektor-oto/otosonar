@@ -98,13 +98,28 @@ async function buildUserContext(): Promise<ChatUserContext | undefined> {
 }
 
 export async function POST(req: Request) {
+  const contentType = req.headers.get("content-type") ?? "";
+  // 415 erkenden: çoklu kabul (multipart audio veya json text). Diğerlerine kapalı.
+  if (
+    !contentType.includes("multipart/form-data") &&
+    !contentType.includes("application/json")
+  ) {
+    return NextResponse.json(
+      { success: false, error: "invalid_content_type" },
+      { status: 415 },
+    );
+  }
+
+  // Anonim chat'i sıkı limit (cost burn vektörü). Auth user için cömert.
   const ip = await getClientIp();
-  const rl = await checkRateLimit(`chat:ip:${ip}`, 25, 600);
+  const user = await getCurrentUser().catch(() => null);
+  const rlKey = user ? `chat:user:${user.id}` : `chat:ip:${ip}`;
+  const rlMax = user ? 25 : 5;
+  const rl = await checkRateLimit(rlKey, rlMax, 600);
   if (!rl.allowed) {
     return NextResponse.json({ success: false, error: "rate_limited" }, { status: 429 });
   }
 
-  const contentType = req.headers.get("content-type") ?? "";
   let userMessage: string;
   let history: Array<{ role: "user" | "assistant"; content: string }> = [];
   let transcript: string | undefined;

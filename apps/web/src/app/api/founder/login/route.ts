@@ -5,6 +5,7 @@ import {
   mintSessionToken,
   verifyFounderCredentials,
 } from "@/lib/founder-auth";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 
@@ -19,6 +20,23 @@ export async function POST(req: Request) {
     return NextResponse.json(
       { success: false, error: "content-type application/json olmalı" },
       { status: 415 },
+    );
+  }
+
+  // Brute-force koruması — admin endpoint, çok sıkı.
+  const ip = await getClientIp();
+  const rlIp = await checkRateLimit(`founder.login:ip:${ip}`, 5, 900); // 5 / 15dk per IP
+  if (!rlIp.allowed) {
+    return NextResponse.json(
+      { success: false, error: "rate_limited", retryAt: rlIp.resetsAt.toISOString() },
+      { status: 429 },
+    );
+  }
+  const rlGlobal = await checkRateLimit("founder.login:global", 30, 3600); // 30 / saat global
+  if (!rlGlobal.allowed) {
+    return NextResponse.json(
+      { success: false, error: "rate_limited" },
+      { status: 429 },
     );
   }
 
