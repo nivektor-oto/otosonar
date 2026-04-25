@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Send } from "lucide-react";
 import { toast } from "sonner";
+import { AiReplySuggestions } from "@/components/ai-reply-suggestions";
 
 type Msg = {
   id: string;
@@ -189,24 +190,30 @@ export function ThreadClient({
       </div>
 
       <div className="sticky bottom-0 border-t border-neutral-800 bg-[#12121a]/95 px-4 py-3 backdrop-blur">
-        <div className="mx-auto flex max-w-3xl items-end gap-2">
-          <textarea
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            onKeyDown={onKeyDown}
-            placeholder="Mesajını yaz…"
-            rows={1}
-            maxLength={2000}
-            className="max-h-40 flex-1 resize-none rounded-lg border border-neutral-800 bg-[#0a0a0f] px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
+        <div className="mx-auto flex max-w-3xl flex-col gap-2">
+          <AiReplySuggestions
+            conversationId={conversationId}
+            onPick={(text) => setDraft(text)}
           />
-          <button
-            onClick={send}
-            disabled={sending || draft.trim().length === 0}
-            className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-lg bg-emerald-500 px-4 text-sm font-semibold text-black hover:bg-emerald-400 disabled:opacity-50"
-          >
-            <Send className="h-4 w-4" />
-            Gönder
-          </button>
+          <div className="flex items-end gap-2">
+            <textarea
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              onKeyDown={onKeyDown}
+              placeholder="Mesajını yaz…"
+              rows={1}
+              maxLength={2000}
+              className="max-h-40 flex-1 resize-none rounded-lg border border-neutral-800 bg-[#0a0a0f] px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
+            />
+            <button
+              onClick={send}
+              disabled={sending || draft.trim().length === 0}
+              className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-lg bg-emerald-500 px-4 text-sm font-semibold text-black hover:bg-emerald-400 disabled:opacity-50"
+            >
+              <Send className="h-4 w-4" />
+              Gönder
+            </button>
+          </div>
         </div>
       </div>
     </main>

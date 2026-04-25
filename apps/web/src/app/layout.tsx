@@ -6,7 +6,6 @@ import { CookieBanner } from "@/components/cookie-banner";
 import { AnalyticsTracker } from "@/components/analytics-tracker";
 import { ErrorReporter } from "@/components/error-reporter";
 import { ThirdPartyAnalytics } from "@/components/third-party-analytics";
-import { ChatbotWidget } from "@/components/chatbot/chatbot-widget";
 import "../styles/globals.css";
 
 const inter = Inter({
@@ -102,7 +101,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThirdPartyAnalytics />
         <ErrorReporter />
         <CookieBanner />
-        <ChatbotWidget />
         <Toaster
           position="top-right"
           theme="light"

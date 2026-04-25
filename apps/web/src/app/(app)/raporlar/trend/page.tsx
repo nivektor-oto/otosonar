@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/user-auth";
 import Link from "next/link";
 import { TrendingUp, Lock } from "lucide-react";
+import { TrendInsights } from "@/components/trend-insights";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Aylık Piyasa Trend Raporu — OtoSonar" };
@@ -116,6 +117,8 @@ function ReportBody({
         <h2 className="text-2xl font-bold tracking-tight mt-1">{title}</h2>
         <p className="mt-3 text-sm text-slate-300 leading-relaxed">{summary}</p>
       </div>
+
+      <TrendInsights timeWindowDays={30} />
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <MetricCard label="Toplam ilan" value={data.totalListings.toLocaleString("tr-TR")} />

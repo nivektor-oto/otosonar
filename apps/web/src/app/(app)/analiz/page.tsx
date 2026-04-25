@@ -20,6 +20,7 @@ import { parseListingUrl } from "@/lib/listing-url-parser";
 import { AnalysisFeedback } from "@/components/analysis-feedback";
 import { AiDisclaimer } from "@/components/ai-disclaimer";
 import { VoiceRecorder, type VoiceExtracted } from "@/components/voice-recorder";
+import { AiInspectionChecklist } from "@/components/ai-inspection-checklist";
 
 interface RedFlag {
   type: string;
@@ -459,7 +460,14 @@ export default function AnalysisPage() {
         <div aria-live="polite">
           {!result && !loading && !error && <EmptyState />}
           {loading && <LoadingState />}
-          {result && <ResultPanel result={result} meta={meta} feedbackId={feedbackId} />}
+          {result && (
+            <ResultPanel
+              result={result}
+              meta={meta}
+              feedbackId={feedbackId}
+              form={form}
+            />
+          )}
         </div>
       </div>
 
@@ -590,16 +598,36 @@ function LoadingState() {
   );
 }
 
+interface AnalysisFormState {
+  brand: string;
+  model: string;
+  year: string;
+  km: string;
+  fuelType: string;
+  transmission: string;
+  damageStatus: string;
+}
+
 function ResultPanel({
   result,
   meta,
   feedbackId,
+  form,
 }: {
   result: AnalysisResult;
   meta: Meta | null;
   feedbackId: string | null;
+  form: AnalysisFormState;
 }) {
   const TL = new Intl.NumberFormat("tr-TR", { style: "currency", currency: "TRY", maximumFractionDigits: 0 });
+  const yearNum = form.year ? parseInt(form.year, 10) : NaN;
+  const kmNum = form.km ? parseInt(form.km.replace(/\D/g, ""), 10) : NaN;
+  const canShowChecklist =
+    !!form.brand.trim() &&
+    !!form.model.trim() &&
+    Number.isFinite(yearNum) &&
+    yearNum >= 1980 &&
+    yearNum <= 2100;
   return (
     <div className="space-y-4 animate-fade-in">
       {/* Mini disclaimer chip (sarı arka plan, küçük) */}
@@ -759,6 +787,20 @@ function ResultPanel({
       )}
 
       <AnalysisFeedback feedbackId={feedbackId} />
+
+      {canShowChecklist && (
+        <AiInspectionChecklist
+          vehicle={{
+            brand: form.brand.trim(),
+            model: form.model.trim(),
+            year: yearNum,
+            km: Number.isFinite(kmNum) ? kmNum : undefined,
+            fuelType: form.fuelType || undefined,
+            transmission: form.transmission || undefined,
+            damageStatus: form.damageStatus || undefined,
+          }}
+        />
+      )}
     </div>
   );
 }

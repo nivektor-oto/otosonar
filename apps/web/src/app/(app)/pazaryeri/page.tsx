@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { ArrowRight, Gauge, MapPin, Plus, Car } from "lucide-react";
 import { PazaryeriFilterBar } from "./filter-bar";
+import { SmartSearchBar } from "@/components/smart-search-bar";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Pazaryeri — OtoSonar" };
@@ -59,6 +60,9 @@ export default async function MarketplacePage({
           </Link>
         </div>
       </div>
+
+      {/* OtoSonar AI — doğal dilde akıllı arama */}
+      <SmartSearchBar />
 
       {/* Sticky filter bar — masaüstü inline, mobilde bottom-sheet */}
       <PazaryeriFilterBar initial={sp} />

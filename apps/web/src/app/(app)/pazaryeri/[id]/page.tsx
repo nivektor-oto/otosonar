@@ -7,6 +7,7 @@ import { AcceptBidButton } from "./accept-button";
 import { MessageSellerButton } from "./message-seller-button";
 import { SaveListingButton } from "./save-button";
 import { ReportListingButton } from "./report-button";
+import { NegotiationCoachPanel } from "@/components/negotiation-coach-panel";
 
 export const dynamic = "force-dynamic";
 
@@ -103,6 +104,23 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
           <div className="mt-4 text-3xl font-bold text-emerald-400">
             {TL.format(listing.askingPrice)}
           </div>
+
+          {!isOwner && (
+            <div className="mt-4">
+              <NegotiationCoachPanel
+                listingId={listing.id}
+                vehicle={{
+                  brand: listing.brand,
+                  model: listing.model,
+                  year: listing.year,
+                  km: listing.km,
+                  askingPrice: listing.askingPrice,
+                  location: listing.city,
+                }}
+              />
+            </div>
+          )}
+
           {listing.description && (
             <p className="mt-4 whitespace-pre-wrap text-sm text-neutral-300">{listing.description}</p>
           )}

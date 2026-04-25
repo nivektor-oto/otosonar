@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Plus, Trash2, Check, AlertTriangle, X } from "lucide-react";
+import { Plus, Trash2, Check, AlertTriangle, X, Sparkles } from "lucide-react";
+import { ListingCoachPanel } from "@/components/listing-coach-panel";
 
 type Status = "IN_STOCK" | "LISTED" | "RESERVED" | "SOLD";
 
@@ -32,6 +33,7 @@ export function VehicleManager({ initialVehicles }: { initialVehicles: Vehicle[]
   const router = useRouter();
   const [vehicles, setVehicles] = useState(initialVehicles);
   const [adding, setAdding] = useState(false);
+  const [coachOpenId, setCoachOpenId] = useState<string | null>(null);
 
   async function onCreate(v: Partial<Vehicle>) {
     const res = await fetch("/api/dealer/vehicles", {
@@ -120,7 +122,16 @@ export function VehicleManager({ initialVehicles }: { initialVehicles: Vehicle[]
             </thead>
             <tbody>
               {vehicles.map((v) => (
-                <VehicleRow key={v.id} v={v} onDelete={onDelete} onMarkSold={onMarkSold} />
+                <VehicleRow
+                  key={v.id}
+                  v={v}
+                  onDelete={onDelete}
+                  onMarkSold={onMarkSold}
+                  coachOpen={coachOpenId === v.id}
+                  onToggleCoach={() =>
+                    setCoachOpenId((prev) => (prev === v.id ? null : v.id))
+                  }
+                />
               ))}
             </tbody>
           </table>
@@ -134,10 +145,14 @@ function VehicleRow({
   v,
   onDelete,
   onMarkSold,
+  coachOpen,
+  onToggleCoach,
 }: {
   v: Vehicle;
   onDelete: (id: string) => void;
   onMarkSold: (id: string) => void;
+  coachOpen: boolean;
+  onToggleCoach: () => void;
 }) {
   const totalCost = (v.purchasePrice ?? 0) + (v.expenseTotal ?? 0);
   const margin = v.askingPrice && totalCost ? v.askingPrice - totalCost : null;
@@ -145,6 +160,7 @@ function VehicleRow({
   const vizeSoon = vizeDate && vizeDate.getTime() - Date.now() < 60 * 86400 * 1000;
 
   return (
+    <>
     <tr className="border-t border-border hover:bg-panel/40">
       <td className="px-4 py-3">
         <div className="font-semibold text-white font-mono text-xs">
@@ -205,6 +221,16 @@ function VehicleRow({
         )}
       </td>
       <td className="px-3 py-3 text-right whitespace-nowrap">
+        <button
+          onClick={onToggleCoach}
+          className={`text-[11px] mr-2 font-semibold inline-flex items-center gap-1 ${
+            coachOpen ? "text-emerald-300" : "text-emerald-400 hover:text-emerald-300"
+          }`}
+          aria-label="AI İlan Koçu"
+        >
+          <Sparkles className="w-3.5 h-3.5" aria-hidden strokeWidth={2.5} />
+          AI Koç
+        </button>
         {v.status !== "SOLD" && (
           <button
             onClick={() => onMarkSold(v.id)}
@@ -222,6 +248,14 @@ function VehicleRow({
         </button>
       </td>
     </tr>
+    {coachOpen && (
+      <tr className="border-t border-border bg-panel/20">
+        <td colSpan={10} className="px-4 py-4">
+          <ListingCoachPanel vehicleId={v.id} />
+        </td>
+      </tr>
+    )}
+    </>
   );
 }
 
