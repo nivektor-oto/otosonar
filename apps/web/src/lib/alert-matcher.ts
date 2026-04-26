@@ -40,7 +40,7 @@ export async function fireMatchingAlerts(listing: ListingLike): Promise<void> {
     if (matching.length === 0) return;
 
     const title = `${listing.brand} ${listing.model} · ${listing.year}`;
-    const body = `${listing.askingPrice.toLocaleString("tr-TR")} ₺ · ${listing.city}`;
+    const body = `${listing.askingPrice.toLocaleString("tr-TR")} TL · ${listing.city}`;
     const now = new Date();
 
     // Paralel push + tek batched update — eski for-loop seri zincir N+1'di.

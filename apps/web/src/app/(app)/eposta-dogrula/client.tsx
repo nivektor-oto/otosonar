@@ -30,7 +30,7 @@ export function VerifyEmailClient() {
       </p>
     );
   }
-  if (state === "loading") return <p className="text-sm text-neutral-400">Doğrulanıyor…</p>;
+  if (state === "loading") return <p className="text-sm text-neutral-400">Doğrulanıyor...</p>;
   if (state === "ok") {
     return (
       <div className="rounded-xl border border-emerald-700/40 bg-emerald-900/20 p-4 text-sm text-emerald-200">

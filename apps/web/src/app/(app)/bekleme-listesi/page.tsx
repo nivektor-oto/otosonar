@@ -176,7 +176,7 @@ export default function WaitlistPage() {
               <Perk
                 icon={<CheckCircle2 size={18} aria-hidden />}
                 title="Kurucu fiyatı — hayat boyu sabit"
-                desc="Plus: 249₺ → 149₺ | Pro: 449₺ → 269₺ — ilk yıldan sonra da artmaz."
+                desc="Plus: 249 TL → 149 TL | Pro: 449 TL → 269 TL — ilk yıldan sonra da artmaz."
               />
               <Perk
                 icon={<Users size={18} aria-hidden />}

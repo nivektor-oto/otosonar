@@ -9,7 +9,7 @@ const rows: { label: string; otosonar: Cell; sahibinden: Cell; arabam: Cell; exp
   { label: "Galerici kâr motoru (stok / marj)", otosonar: "yes", sahibinden: "no", arabam: "no", expertise: "no" },
   { label: "Pazarlık skoru", otosonar: "yes", sahibinden: "no", arabam: "no", expertise: "no" },
   { label: "Analiz süresi", otosonar: "8 saniye", sahibinden: "—", arabam: "—", expertise: "2-3 gün" },
-  { label: "Maliyet", otosonar: "99–3.499 ₺/ay", sahibinden: "İlan ücreti", arabam: "İlan ücreti", expertise: "500–2.000 ₺/kez" },
+  { label: "Maliyet", otosonar: "99–3.499 TL/ay", sahibinden: "İlan ücreti", arabam: "İlan ücreti", expertise: "500–2.000 TL/kez" },
 ];
 
 function Dot({ v }: { v: Cell }) {

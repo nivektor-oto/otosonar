@@ -24,8 +24,14 @@ const schema = z.object({
 }).strict();
 
 export async function POST(req: Request) {
+  // Auth durumuna göre ayrı kova: anonim çağrı havuzu daraltıldı, auth'lu
+  // kullanıcılar normal limit. Maliyet sızıntısı + rakip scraping vektörü
+  // koruması (audit 2026-04-26).
+  const user = await getCurrentUser();
   const ip = await getClientIp();
-  const rl = await checkRateLimit(`listing-score:ip:${ip}`, 10, 600);
+  const rlKey = user ? `listing-score:user:${user.id}` : `listing-score:anon:${ip}`;
+  const rlMax = user ? 20 : 3;
+  const rl = await checkRateLimit(rlKey, rlMax, 600);
   if (!rl.allowed) {
     return NextResponse.json({ success: false, error: "rate_limited" }, { status: 429 });
   }
@@ -40,9 +46,6 @@ export async function POST(req: Request) {
   try {
     const { result, provider: _provider, durationMs, emsalCount } = await scoreListing(parsed.data);
     void _provider;
-
-    // Auth'lu kullanıcıya snapshot kaydet
-    const user = await getCurrentUser();
     if (user) {
       await prisma.listingScore.create({
         data: {

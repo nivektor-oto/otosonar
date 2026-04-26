@@ -303,7 +303,7 @@ export function AddVehicleForm() {
               }}
               className="text-xs"
             />
-            {uploading === "photo" && <div className="text-xs text-amber-400">Yükleniyor…</div>}
+            {uploading === "photo" && <div className="text-xs text-amber-400">Yükleniyor...</div>}
             {photoUrl && <div className="text-xs text-emerald-400">Yüklendi</div>}
           </div>
           <div className="space-y-2">
@@ -317,7 +317,7 @@ export function AddVehicleForm() {
               }}
               className="text-xs"
             />
-            {uploading === "ruhsat" && <div className="text-xs text-amber-400">Yükleniyor…</div>}
+            {uploading === "ruhsat" && <div className="text-xs text-amber-400">Yükleniyor...</div>}
             {ruhsatPhotoUrl && (
               <div className="text-xs text-emerald-400">
                 Yüklendi · OCR kuyrukta (VIN/tescil tarihi otomatik doldurulacak)

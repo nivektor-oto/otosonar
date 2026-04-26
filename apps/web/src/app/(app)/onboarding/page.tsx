@@ -465,7 +465,7 @@ function StepAccount({
             autoComplete="name"
           />
         </Field>
-        <Field label="Email">
+        <Field label="E-posta">
           <input
             type="email"
             value={email}
@@ -476,7 +476,7 @@ function StepAccount({
             autoComplete="email"
           />
           {email.length > 0 && !emailValid && (
-            <p className="text-xs text-danger mt-1.5">Geçerli bir email adresi girin</p>
+            <p className="text-xs text-danger mt-1.5">Geçerli bir e-posta adresi girin</p>
           )}
         </Field>
         <Field label="Telefon">

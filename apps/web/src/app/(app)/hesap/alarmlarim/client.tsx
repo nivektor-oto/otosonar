@@ -96,7 +96,7 @@ export function AlertsClient({ initial }: { initial: Alert[] }) {
                     </span>
                   )}
                   {a.priceMax && (
-                    <span>max {a.priceMax.toLocaleString("tr-TR")} ₺</span>
+                    <span>max {a.priceMax.toLocaleString("tr-TR")} TL</span>
                   )}
                   {a.cityFilter && <span>{a.cityFilter}</span>}
                 </div>

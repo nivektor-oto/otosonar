@@ -149,25 +149,25 @@ export default async function ScraperAdminPage() {
         <Panel title="Kuyruk durumu">
           <ul className="space-y-2 text-sm">
             <li className="flex justify-between">
-              <span>Pending</span>
+              <span>Bekleyen</span>
               <span className="tabular-nums text-amber-400">
                 {(queueBy["pending"] ?? 0).toLocaleString("tr-TR")}
               </span>
             </li>
             <li className="flex justify-between">
-              <span>Running</span>
+              <span>Çalışan</span>
               <span className="tabular-nums text-blue-400">
                 {(queueBy["running"] ?? 0).toLocaleString("tr-TR")}
               </span>
             </li>
             <li className="flex justify-between">
-              <span>Done</span>
+              <span>Tamamlanan</span>
               <span className="tabular-nums text-emerald-400">
                 {(queueBy["done"] ?? 0).toLocaleString("tr-TR")}
               </span>
             </li>
             <li className="flex justify-between">
-              <span>Failed</span>
+              <span>Başarısız</span>
               <span className="tabular-nums text-red-400">
                 {(queueBy["failed"] ?? 0).toLocaleString("tr-TR")}
               </span>
@@ -278,13 +278,13 @@ export default async function ScraperAdminPage() {
                         {a.listing?.location ?? "-"}
                       </td>
                       <td className="py-2 pr-3 text-right tabular-nums">
-                        {a.listingPrice.toLocaleString("tr-TR")} ₺
+                        {a.listingPrice.toLocaleString("tr-TR")} TL
                       </td>
                       <td className="py-2 pr-3 text-right tabular-nums text-neutral-400">
-                        {a.marketMedian.toLocaleString("tr-TR")} ₺
+                        {a.marketMedian.toLocaleString("tr-TR")} TL
                       </td>
                       <td className="py-2 pr-3 text-right tabular-nums text-emerald-400">
-                        {a.savings.toLocaleString("tr-TR")} ₺
+                        {a.savings.toLocaleString("tr-TR")} TL
                       </td>
                       <td className="py-2 pr-3 text-right tabular-nums">
                         %{Math.round(a.dealScore * 100)}

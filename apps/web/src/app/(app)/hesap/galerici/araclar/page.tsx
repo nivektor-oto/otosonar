@@ -53,7 +53,7 @@ export default async function DealerVehiclesPage() {
             <Stat label="Satıldı" value={String(summary.sold)} />
             <Stat
               label="Toplam yatırım"
-              value={`${summary.totalInvested.toLocaleString("tr-TR")} ₺`}
+              value={`${summary.totalInvested.toLocaleString("tr-TR")} TL`}
               accent
             />
           </div>

@@ -175,21 +175,21 @@ function VehicleRow({
         {v.km ? `${v.km.toLocaleString("tr-TR")} km` : "—"}
       </td>
       <td className="px-3 py-3 tabular-nums text-slate-300">
-        {v.purchasePrice ? `${v.purchasePrice.toLocaleString("tr-TR")} ₺` : "—"}
+        {v.purchasePrice ? `${v.purchasePrice.toLocaleString("tr-TR")} TL` : "—"}
       </td>
       <td className="px-3 py-3 tabular-nums text-slate-300">
-        {v.expenseTotal ? `${v.expenseTotal.toLocaleString("tr-TR")} ₺` : "—"}
+        {v.expenseTotal ? `${v.expenseTotal.toLocaleString("tr-TR")} TL` : "—"}
       </td>
       <td className="px-3 py-3 tabular-nums">
         {v.askingPrice ? (
           <>
             <div className="text-white font-semibold">
-              {v.askingPrice.toLocaleString("tr-TR")} ₺
+              {v.askingPrice.toLocaleString("tr-TR")} TL
             </div>
             {margin != null && (
               <div className={`text-[10px] ${margin > 0 ? "text-emerald-400" : "text-red-400"}`}>
                 marj {margin > 0 ? "+" : ""}
-                {margin.toLocaleString("tr-TR")} ₺
+                {margin.toLocaleString("tr-TR")} TL
               </div>
             )}
           </>
@@ -216,7 +216,7 @@ function VehicleRow({
         <StatusBadge status={v.status} />
         {v.status === "SOLD" && v.soldPrice && (
           <div className="text-[10px] text-emerald-400 mt-1 tabular-nums">
-            {v.soldPrice.toLocaleString("tr-TR")} ₺
+            {v.soldPrice.toLocaleString("tr-TR")} TL
           </div>
         )}
       </td>

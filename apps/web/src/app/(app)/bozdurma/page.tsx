@@ -902,5 +902,5 @@ function RedFlagItem({ flag }: { flag: RedFlag }) {
 }
 
 function fmt(n: number): string {
-  return `${n.toLocaleString("tr-TR")} ₺`;
+  return `${n.toLocaleString("tr-TR")} TL`;
 }

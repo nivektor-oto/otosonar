@@ -449,11 +449,11 @@ export async function POST(req: Request) {
           path: "/api/ai/trend-insights",
           level: "ERROR",
           userId,
-          metadata: { provider: "gemini", note: "no_fallback" },
+          metadata: { provider: "otosonar-ai", tier: "primary", note: "no_fallback" },
         });
         return NextResponse.json({ error: "ai_failed" }, { status: 502 });
       }
-      console.warn(`[ai-trend] gemini_fail fallback=anthropic err=${msg}`);
+      console.warn(`[ai-trend] primary_fail fallback=secondary err=${msg}`);
     }
   }
 
@@ -466,7 +466,7 @@ export async function POST(req: Request) {
         path: "/api/ai/trend-insights",
         level: "ERROR",
         userId,
-        metadata: { provider: "anthropic" },
+        metadata: { provider: "otosonar-ai", tier: "secondary" },
       });
       return NextResponse.json({ error: "ai_failed" }, { status: 502 });
     }

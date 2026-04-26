@@ -240,11 +240,11 @@ export async function POST(req: Request) {
           path: "/api/ai/chat",
           level: "ERROR",
           userId: userId ?? undefined,
-          metadata: { provider: "gemini", note: "no_fallback" },
+          metadata: { provider: "otosonar-ai", tier: "primary", note: "no_fallback" },
         });
         return NextResponse.json({ error: "ai_failed" }, { status: 502 });
       }
-      console.warn(`[ai-chat] gemini_fail fallback=anthropic err=${msg}`);
+      console.warn(`[ai-chat] primary_fail fallback=secondary err=${msg}`);
     }
   }
 
@@ -256,7 +256,7 @@ export async function POST(req: Request) {
         path: "/api/ai/chat",
         level: "ERROR",
         userId: userId ?? undefined,
-        metadata: { provider: "anthropic" },
+        metadata: { provider: "otosonar-ai", tier: "secondary" },
       });
       return NextResponse.json({ error: "ai_failed" }, { status: 502 });
     }

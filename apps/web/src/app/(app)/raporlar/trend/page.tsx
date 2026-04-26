@@ -122,7 +122,7 @@ function ReportBody({
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <MetricCard label="Toplam ilan" value={data.totalListings.toLocaleString("tr-TR")} />
-        <MetricCard label="Ortalama fiyat" value={`${data.avgPrice.toLocaleString("tr-TR")} ₺`} />
+        <MetricCard label="Ortalama fiyat" value={`${data.avgPrice.toLocaleString("tr-TR")} TL`} />
         <MetricCard label="Ortalama km" value={`${data.avgKm.toLocaleString("tr-TR")} km`} />
       </div>
 
@@ -144,7 +144,7 @@ function ReportBody({
                 <td className="py-2 font-semibold text-white">{b.brand}</td>
                 <td className="py-2 text-right tabular-nums">{b.count}</td>
                 <td className="py-2 text-right tabular-nums text-slate-300">
-                  {b.avgPrice.toLocaleString("tr-TR")} ₺
+                  {b.avgPrice.toLocaleString("tr-TR")} TL
                 </td>
               </tr>
             ))}

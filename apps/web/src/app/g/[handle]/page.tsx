@@ -172,7 +172,7 @@ export default async function DealerPublicProfile({
                   </div>
                   <div className="mt-3 flex items-baseline justify-between">
                     <div className="text-lg font-black tabular-nums gradient-text">
-                      {l.askingPrice.toLocaleString("tr-TR")} ₺
+                      {l.askingPrice.toLocaleString("tr-TR")} TL
                     </div>
                     {l.bidCount > 0 && (
                       <div className="text-[10px] text-amber-400 font-semibold">
