@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/user-auth";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
@@ -48,6 +49,10 @@ const createSchema = z
     acquiredAt: isoDate.optional(),
     photoUrl: z.string().url().max(2000).optional(),
     ruhsatPhotoUrl: z.string().url().max(2000).optional(),
+    ruhsatOcrResult: z
+      .record(z.string(), z.unknown())
+      .refine((v) => JSON.stringify(v).length < 8000, "ruhsat_too_large")
+      .optional(),
     notes: z.string().max(2000).optional(),
   })
   .strict();
@@ -130,6 +135,7 @@ export async function POST(req: Request) {
       acquiredAt: d.acquiredAt ?? null,
       photoUrl: d.photoUrl ?? null,
       ruhsatPhotoUrl: d.ruhsatPhotoUrl ?? null,
+      ruhsatOcrResult: (d.ruhsatOcrResult ?? undefined) as Prisma.InputJsonValue | undefined,
       notes: d.notes ?? null,
     },
   });

@@ -1,7 +1,8 @@
 /**
- * Vision wrapper (primary + fallback) — hasar tespiti + plaka OCR.
- * `/api/damage-detect` ve `/api/plate-ocr` tarafından kullanılır.
+ * Vision wrapper (primary + fallback) — hasar tespiti + plaka OCR + ruhsat OCR.
+ * `/api/damage-detect`, `/api/plate-ocr` ve `/api/ruhsat-ocr` tarafından kullanılır.
  */
+import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 
 const DAMAGE_SEVERITY = ["YOK", "HAFIF", "ORTA", "AGIR"] as const;
@@ -166,4 +167,148 @@ export async function readPlate(
     throw new Error("Plate parse failed: " + JSON.stringify(parsed.error.flatten()).slice(0, 200));
   }
   return { result: parsed.data, model: "gemini-2.5-flash", durationMs: Date.now() - start };
+}
+
+// ============================================================
+// Ruhsat OCR (araç ruhsatından alan çıkarma) — Anthropic Vision
+// ============================================================
+
+export const ruhsatSchema = z.object({
+  plate: z.string().max(20).nullable(),
+  brand: z.string().max(40).nullable(),
+  model: z.string().max(80).nullable(),
+  year: z.number().int().min(1950).max(2035).nullable(),
+  variant: z.string().max(80).nullable(),
+  vin: z.string().max(30).nullable(),
+  motorNumber: z.string().max(40).nullable(),
+  engineCc: z.number().int().min(50).max(20000).nullable(),
+  fuelType: z.enum(["benzin", "dizel", "lpg", "hybrid", "elektrik"]).nullable(),
+  color: z.string().max(40).nullable(),
+  registrationDate: z.string().max(10).nullable(), // YYYY-MM-DD
+  inspectionDueAt: z.string().max(10).nullable(), // YYYY-MM-DD
+  ownerName: z.string().max(120).nullable(),
+  vehicleClass: z.string().max(40).nullable(), // Otomobil / Kamyonet / Motosiklet
+  netWeightKg: z.number().int().min(0).max(10000).nullable(),
+  maxLoadKg: z.number().int().min(0).max(50000).nullable(),
+  seatCount: z.number().int().min(1).max(60).nullable(),
+  confidence: z.number().min(0).max(1),
+  notes: z.string().max(500).nullable(),
+});
+
+export type RuhsatResult = z.infer<typeof ruhsatSchema>;
+
+const RUHSAT_PROMPT = `Sen OtoSonar'ın Türk araç ruhsatı OCR uzmanısın. Verilen fotoğraf bir Türkiye araç ruhsatıdır (yeni format e-Devlet ruhsatı veya eski mavi/kırmızı karne).
+
+GÖREV: Ruhsattaki tüm önemli alanları oku ve aşağıdaki JSON şemasına uygun çıktı üret.
+
+ALAN EŞLEME (Türkçe ruhsat → JSON anahtarı):
+- Plaka No / Tescil Plakası → plate (format: "34 ABC 123")
+- Markası / Marka → brand (örn: "Renault", "BMW", "Toyota" — sadece marka, model değil)
+- Tipi / Ticari Adı / Model → model (örn: "Megane", "320i", "Corolla")
+- Model Yılı → year (4 haneli)
+- Tip / Versiyon / Donanım → variant (varsa, örn: "Touch Plus")
+- Şasi No / VIN → vin (17 karakterli alfanumerik)
+- Motor No → motorNumber
+- Motor Hacmi (cm³) → engineCc (sadece sayı, örn: 1598)
+- Yakıt Türü → fuelType ("benzin"/"dizel"/"lpg"/"hybrid"/"elektrik" — Türkçe değer eşle)
+- Rengi → color
+- İlk Tescil Tarihi / Tescil Tarihi → registrationDate (YYYY-MM-DD formatına çevir; "12.05.2018" → "2018-05-12")
+- Muayene Geçerlilik Sonu / Fenni Muayene Tarihi → inspectionDueAt (YYYY-MM-DD)
+- Sahibi / Adı Soyadı → ownerName (kişi/kurum adı)
+- Cinsi / Sınıfı → vehicleClass ("Otomobil", "Kamyonet", "Motosiklet" vb.)
+- Net Ağırlık (kg) → netWeightKg
+- İstiap Haddi (kg) → maxLoadKg
+- Koltuk Adedi → seatCount
+
+KURALLAR:
+1. Bir alan ruhsatta yoksa veya okunamıyorsa o alanın değeri null olmalı (boş string değil).
+2. Tarih formatı KESİNLİKLE YYYY-MM-DD (ISO). Türkçe ruhsatlar genelde DD.MM.YYYY yazar — ÇEVİR.
+3. Plaka format: il kodu + boşluk + harfler + boşluk + rakamlar ("34 ABC 123").
+4. Yakıt türünü normalize et: "Benzinli"→"benzin", "Motorin"→"dizel", "LPG"/"Bi-Yakıt"→"lpg", "Hibrit"→"hybrid", "Elektrikli"→"elektrik". Tanımsızsa null.
+5. confidence: 0-1 arası genel okuma güveni. Bulanık/eksik fotoğrafsa düşür.
+6. notes: kısa not (örn: "muayene tarihi okunamadı", "ruhsat fotoğrafı bulanık") — yoksa null.
+7. Ruhsat değilse veya araç ruhsatı tespit edilemezse confidence=0 ver, plate=null, notes="ruhsat tespit edilemedi".
+
+SADECE JSON döndür, başka metin yok:
+{
+  "plate": "34 ABC 123" | null,
+  "brand": "..." | null,
+  "model": "..." | null,
+  "year": 2020 | null,
+  "variant": "..." | null,
+  "vin": "..." | null,
+  "motorNumber": "..." | null,
+  "engineCc": 1598 | null,
+  "fuelType": "benzin"|"dizel"|"lpg"|"hybrid"|"elektrik"|null,
+  "color": "..." | null,
+  "registrationDate": "YYYY-MM-DD" | null,
+  "inspectionDueAt": "YYYY-MM-DD" | null,
+  "ownerName": "..." | null,
+  "vehicleClass": "..." | null,
+  "netWeightKg": 1200 | null,
+  "maxLoadKg": 500 | null,
+  "seatCount": 5 | null,
+  "confidence": 0.0-1.0,
+  "notes": "..." | null
+}`;
+
+function extractJson(text: string): unknown {
+  const cleaned = text.trim().replace(/^```json\s*|\s*```$/g, "").replace(/^```\s*|\s*```$/g, "");
+  try {
+    return JSON.parse(cleaned);
+  } catch {
+    const m = cleaned.match(/\{[\s\S]*\}/);
+    if (!m) throw new Error("Ruhsat OCR JSON parse başarısız");
+    return JSON.parse(m[0]);
+  }
+}
+
+export async function readRuhsat(
+  imageBase64: string,
+  imageMime: "image/jpeg" | "image/png" | "image/webp",
+): Promise<{ result: RuhsatResult; model: string; durationMs: number }> {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) throw new Error("ANTHROPIC_API_KEY missing");
+
+  const start = Date.now();
+  const client = new Anthropic({ apiKey, timeout: 55_000 });
+
+  // 1 retry on transient errors
+  let lastErr: unknown = null;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const response = await client.messages.create({
+        model: "claude-haiku-4-5",
+        max_tokens: 1500,
+        temperature: 0,
+        system: [{ type: "text", text: RUHSAT_PROMPT, cache_control: { type: "ephemeral" } }],
+        messages: [
+          {
+            role: "user",
+            content: [
+              { type: "image", source: { type: "base64", media_type: imageMime, data: imageBase64 } },
+              { type: "text", text: "Bu Türk araç ruhsatını oku ve JSON üret." },
+            ],
+          },
+        ],
+      });
+      const block = response.content.find((b) => b.type === "text");
+      if (!block || block.type !== "text") throw new Error("vision boş cevap");
+      const raw = extractJson(block.text);
+      const parsed = ruhsatSchema.safeParse(raw);
+      if (!parsed.success) {
+        throw new Error(
+          "Ruhsat parse failed: " + JSON.stringify(parsed.error.flatten()).slice(0, 300),
+        );
+      }
+      return { result: parsed.data, model: "otosonar-ai-v1", durationMs: Date.now() - start };
+    } catch (e) {
+      lastErr = e;
+      // retry only on overload / 5xx
+      const msg = e instanceof Error ? e.message : String(e);
+      if (!/(overload|529|503|429|timeout|ETIMEDOUT)/i.test(msg)) break;
+      await new Promise((r) => setTimeout(r, 800 * (attempt + 1)));
+    }
+  }
+  throw lastErr instanceof Error ? lastErr : new Error("ruhsat OCR failed");
 }
