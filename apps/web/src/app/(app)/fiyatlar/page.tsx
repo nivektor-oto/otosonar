@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getCurrentUser } from "@/lib/user-auth";
 import { resolveUserTier } from "@/lib/paywall";
+import { loadExternalCheckoutUrls } from "@/lib/payment-providers";
 import { PricingView } from "./pricing-view";
 
 export const metadata: Metadata = {
@@ -14,10 +15,15 @@ export const dynamic = "force-dynamic";
 export default async function FiyatlarPage() {
   const user = await getCurrentUser();
   const tier = user ? await resolveUserTier(user.id) : undefined;
+  const externalCheckoutUrls = loadExternalCheckoutUrls();
 
   return (
     <main className="min-h-dvh">
-      <PricingView currentTier={tier} isAuthenticated={!!user} />
+      <PricingView
+        currentTier={tier}
+        isAuthenticated={!!user}
+        externalCheckoutUrls={externalCheckoutUrls}
+      />
     </main>
   );
 }

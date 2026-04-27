@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Check, X, User, Building2, Sparkles } from "lucide-react";
+import { Check, X, User, Building2, Sparkles, ExternalLink } from "lucide-react";
 import {
   TIER_PRICING,
   B2C_TIERS,
@@ -12,6 +12,7 @@ import {
   formatKurusToTL,
   monthlyEquivalentKurus,
 } from "@/lib/tiers";
+import type { ExternalCheckoutMap } from "@/lib/payment-providers";
 
 type Audience = "b2c" | "b2b";
 
@@ -109,9 +110,14 @@ const COMPARISON: ComparisonFeature[] = [
 interface Props {
   currentTier?: TierKey;
   isAuthenticated: boolean;
+  externalCheckoutUrls?: ExternalCheckoutMap;
 }
 
-export function PricingView({ currentTier, isAuthenticated }: Props) {
+export function PricingView({
+  currentTier,
+  isAuthenticated,
+  externalCheckoutUrls,
+}: Props) {
   const [audience, setAudience] = useState<Audience>("b2c");
   const [billing, setBilling] = useState<BillingPeriod>("MONTHLY");
 
@@ -171,6 +177,7 @@ export function PricingView({ currentTier, isAuthenticated }: Props) {
             billing={billing}
             currentTier={currentTier}
             isAuthenticated={isAuthenticated}
+            externalUrl={externalCheckoutUrls?.[t]?.[billing]}
           />
         ))}
       </div>
@@ -269,16 +276,19 @@ function TierCard({
   billing,
   currentTier,
   isAuthenticated,
+  externalUrl,
 }: {
   tier: TierKey;
   billing: BillingPeriod;
   currentTier?: TierKey;
   isAuthenticated: boolean;
+  externalUrl?: string;
 }) {
   const conf = TIER_PRICING[tier];
   const isFree = tier === "FREE";
   const isCurrent = currentTier === tier;
   const isFeatured = conf.badge === "EN POPÜLER" || conf.badge === "GALERİCİ FAVORİSİ";
+  const hasExternal = !isFree && !isCurrent && Boolean(externalUrl);
 
   const monthlyEq = monthlyEquivalentKurus(tier, billing);
   const yearlyKurus = conf.yearlyKurus;
@@ -287,7 +297,9 @@ function TierCard({
     ? isAuthenticated
       ? "/dashboard"
       : "/kayit"
-    : `/onboarding?tier=${tier}&billing=${billing.toLowerCase()}`;
+    : hasExternal
+      ? externalUrl!
+      : `/onboarding?tier=${tier}&billing=${billing.toLowerCase()}`;
 
   const ctaLabel = isFree
     ? isAuthenticated
@@ -295,7 +307,9 @@ function TierCard({
       : "Hesap aç"
     : isCurrent
       ? "Mevcut paketiniz"
-      : "Bu paketi seç";
+      : hasExternal
+        ? "Hemen Satın Al"
+        : "Bu paketi seç";
 
   return (
     <div
@@ -377,6 +391,18 @@ function TierCard({
         <div className="text-center py-3 rounded-full font-bold bg-accent/10 text-accent border border-accent/30">
           {ctaLabel}
         </div>
+      ) : hasExternal ? (
+        <a
+          href={ctaHref}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`text-center py-3 rounded-full font-bold transition inline-flex items-center justify-center gap-2 ${
+            isFeatured ? "btn-primary" : "btn-ghost"
+          }`}
+        >
+          {ctaLabel}
+          <ExternalLink className="w-4 h-4" aria-hidden strokeWidth={2.5} />
+        </a>
       ) : (
         <Link
           href={ctaHref}
