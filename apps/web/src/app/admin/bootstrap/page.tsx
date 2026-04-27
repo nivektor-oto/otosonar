@@ -11,6 +11,9 @@ export const metadata = {
 };
 
 export default async function AdminBootstrapPage() {
+  // KVKK 6698 m.12/5 — endpoint default fail-closed; insan
+  // BOOTSTRAP_ENABLED=true geçici set ettiği bootstrap penceresi dışında 404.
+  if (process.env.BOOTSTRAP_ENABLED !== "true") notFound();
   // Defense-in-depth: middleware matcher anomalisi veya stale module cache
   // halinde sayfa kendi başına da gate uygulasın. Fail-closed.
   if (!isFeatureEnabled("ADMIN_PANEL_ENABLED")) notFound();
