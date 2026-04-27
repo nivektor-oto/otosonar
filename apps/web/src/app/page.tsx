@@ -15,6 +15,7 @@ import { LogoMark, LogoLockup } from "@/components/logo";
 import { MobileMenu } from "@/components/mobile-menu";
 import { PricingTabs } from "@/components/pricing-tabs";
 import { InstallPrompt } from "@/components/install-prompt";
+import { PageTour } from "@/components/page-tour";
 
 /**
  * OtoSonar Landing — Arabam / Sahibinden seviyesinde sade.
@@ -24,6 +25,31 @@ import { InstallPrompt } from "@/components/install-prompt";
 export default async function HomePage() {
   return (
     <main className="min-h-dvh bg-bg text-ink">
+      <PageTour
+        id="landing"
+        version={1}
+        startDelayMs={1500}
+        steps={[
+          {
+            title: "OtoSonar nedir?",
+            body: "Türkiye'nin AI destekli araç değerleme + galerici pazaryeri platformu. Sahibinden veya arabam.com ilan linkini yapıştır, 8 saniyede emsal değer + gizli arıza + pazarlık skoru çıkar.",
+          },
+          {
+            selector: "a[href='/analiz']",
+            title: "Hemen Analiz Et",
+            body: "Tek bir ilan linki yeterli. Üye olmadan da deneyebilirsin (limit: günde 3 analiz).",
+          },
+          {
+            selector: "a[href='/pazaryeri']",
+            title: "Pazaryeri",
+            body: "AI doğrulamalı galerici ilanları. DealAlert rozetli ilanlar bayi ortalamasının altında — fırsat avlamak için ideal.",
+          },
+          {
+            title: "Galerici misin?",
+            body: "Lansmana özel Kurucu Paket: 30K TL tek ödeme, 12 ay sınırsız AI + kendi mağaza vitrin sayfası. /iletisim'den bize yaz.",
+          },
+        ]}
+      />
       <Nav />
       <Hero />
       <TrustStrip />

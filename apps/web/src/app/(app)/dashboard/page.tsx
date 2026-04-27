@@ -14,6 +14,7 @@ import {
   ArrowUpRight,
 } from "lucide-react";
 import { LogoMark } from "@/components/logo";
+import { PageTour } from "@/components/page-tour";
 import { getCurrentUser } from "@/lib/user-auth";
 import { prisma } from "@/lib/prisma";
 
@@ -45,6 +46,28 @@ export default async function DashboardPage() {
 
   return (
     <main className="min-h-dvh bg-bg text-white">
+      <PageTour
+        id="dashboard"
+        version={1}
+        steps={[
+          {
+            title: `Hoş geldin, ${user.fullName.split(" ")[0]}!`,
+            body: "OtoSonar kontrol paneline hoş geldin. Burada araçlarını analiz eder, geçmiş raporlarını görür, hesap ayarlarını yönetirsin. Sadece 30 saniye — turu atlayabilir veya istediğin zaman /hesap sayfasından tekrar açabilirsin.",
+          },
+          {
+            selector: "a[href='/analiz']",
+            title: "Yeni Analiz",
+            body: "Plaka, fotoğraf veya VIN ile araç analizi başlatmak için buradan başla. AI çift-model doğrulama ile arıza, hasar ve fiyat skorunu birkaç saniyede çıkarır.",
+            cta: "Şimdi denemek istersen tıkla.",
+          },
+          {
+            title: "Devam et",
+            body: isDealer
+              ? "Galerici hesabıyla kontrol panelinde ilan performansın, DealAlert listen ve müşteri sorularını göreceksin. Pazaryeri sayfasına da göz at."
+              : "Alıcı hesabıyla geçmiş analizlerin, beğendiğin ilanlar ve fiyat takibin burada toplanır. İlk analizden sonra panel zenginleşir.",
+          },
+        ]}
+      />
       <nav className="sticky top-0 z-30 backdrop-blur-lg bg-bg/85 border-b border-border">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">

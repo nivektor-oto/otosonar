@@ -8,6 +8,7 @@ import { SessionsSection } from "./sessions-section";
 import { PushToggle } from "./push-toggle";
 import { LogoutButton } from "./logout-button";
 import { ReferralMomentum } from "@/components/referral-momentum";
+import { PageTour, RestartTourButton } from "@/components/page-tour";
 
 const REFERRAL_BONUS_DAYS = 30;
 
@@ -67,6 +68,20 @@ export default async function AccountPage() {
 
   return (
     <main className="px-4 py-10 text-neutral-100">
+      <PageTour
+        id="hesap"
+        version={1}
+        steps={[
+          {
+            title: "Hesap sayfası",
+            body: "Müşteri numaran, kayıt bilgilerin, oturumlarına dair detaylar ve abonelik durumu bu sayfada toplanır.",
+          },
+          {
+            title: "Turları yeniden göster",
+            body: "OtoSonar'ı keşfederken kaçırdığın bir tur olduğunu düşünüyorsan, sayfaların altındaki 'Turu yeniden göster' bağlantısı ile her zaman tekrar açabilirsin.",
+          },
+        ]}
+      />
       <div className="mx-auto max-w-4xl space-y-6">
         <header className="flex flex-wrap items-center justify-between gap-4">
           <div>
@@ -76,6 +91,19 @@ export default async function AccountPage() {
           </div>
           <LogoutButton />
         </header>
+
+        <div className="rounded-xl border border-orange-500/30 bg-orange-500/5 p-4 text-sm">
+          <div className="font-semibold text-orange-300 mb-1">Tur Yardımı</div>
+          <p className="text-neutral-300 mb-2">
+            OtoSonar'da kaçırdığın bir özellik mi var? Sayfa turlarını buradan tekrar açabilirsin.
+          </p>
+          <div className="flex flex-wrap gap-3">
+            <RestartTourButton id="dashboard">Kontrol Paneli turu</RestartTourButton>
+            <RestartTourButton id="analiz">Analiz turu</RestartTourButton>
+            <RestartTourButton id="pazaryeri">Pazaryeri turu</RestartTourButton>
+            <RestartTourButton id="landing">Ana sayfa turu</RestartTourButton>
+          </div>
+        </div>
 
         {!user.emailVerified && (
           <div className="rounded-xl border border-amber-700/40 bg-amber-900/20 p-4 text-sm text-amber-200">

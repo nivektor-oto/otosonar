@@ -12,6 +12,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { LogoMark } from "@/components/logo";
+import { PageTour } from "@/components/page-tour";
 import { toast } from "sonner";
 
 type Step = 0 | 1 | 2 | 3 | 4;
@@ -34,6 +35,25 @@ export default function OnboardingPage() {
 
   return (
     <main className="min-h-dvh bg-bg text-white flex flex-col">
+      <PageTour
+        id="onboarding"
+        version={1}
+        steps={[
+          {
+            title: "Hoş geldin!",
+            body: "Sana en uygun deneyimi açabilmek için 4 hızlı soru. Bu sadece bir kerelik — cevaplarına göre kontrol panelin, fiyat tarifesi ve özellikler kişiselleşir.",
+          },
+          {
+            title: "Alıcı mı, Galerici mi?",
+            body: "Alıcı: araç satın almak isteyen birey. Galerici: ikinci el otomobil ticareti yapan profesyonel. Her ikisi için OtoSonar farklı modlar açar.",
+          },
+          {
+            title: "Sonra ne olur?",
+            body: "Bilgilerini girdikten sonra dashboard'a yönlendirilirsin. AI analiz, pazaryeri, raporlar — hepsi açık olacak.",
+            cta: "Hazırsan adımlara başla.",
+          },
+        ]}
+      />
       <nav className="border-b border-border">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link

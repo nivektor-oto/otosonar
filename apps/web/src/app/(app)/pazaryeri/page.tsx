@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { ArrowRight, Gauge, MapPin, Plus, Car } from "lucide-react";
 import { PazaryeriFilterBar } from "./filter-bar";
 import { SmartSearchBar } from "@/components/smart-search-bar";
+import { PageTour } from "@/components/page-tour";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Pazaryeri — OtoSonar" };
@@ -40,6 +41,26 @@ export default async function MarketplacePage({
 
   return (
     <main className="min-h-dvh bg-bg text-ink">
+      <PageTour
+        id="pazaryeri"
+        version={1}
+        steps={[
+          {
+            title: "OtoSonar Pazaryeri",
+            body: "Galericilerin OtoSonar'a özel sürdüğü ilanlar burada toplanır. Her ilan AI tarafından çapraz doğrulanır — fiyat, kilometre, hasar geçmişi otomatik kontrol edilir.",
+          },
+          {
+            selector: "h1",
+            title: "Filtre + Akıllı Arama",
+            body: "Arama çubuğuna 'altında 500K BMW 3 serisi' gibi doğal cümle yazabilirsin — AI sorguyu marka, model, fiyat ve yıl filtresine çevirir.",
+          },
+          {
+            title: "DealAlert nedir?",
+            body: "Bayi ortalamasının %15+ altındaki ilanlara kırmızı 'FIRSAT' rozeti düşer. Pazaryeri ana akışında bu rozetli kartlar üste çıkar.",
+            cta: "Galericiyseniz: ilan açtığınızda OtoSonar otomatik fiyat skor verir.",
+          },
+        ]}
+      />
       {/* Başlık bandı */}
       <div className="border-b border-slate-200 bg-white">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 py-5 sm:py-6 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 justify-between">

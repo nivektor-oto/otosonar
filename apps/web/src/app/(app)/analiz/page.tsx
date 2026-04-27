@@ -21,6 +21,7 @@ import { AnalysisFeedback } from "@/components/analysis-feedback";
 import { AiDisclaimer } from "@/components/ai-disclaimer";
 import { VoiceRecorder, type VoiceExtracted } from "@/components/voice-recorder";
 import { AiInspectionChecklist } from "@/components/ai-inspection-checklist";
+import { PageTour } from "@/components/page-tour";
 
 interface RedFlag {
   type: string;
@@ -217,6 +218,30 @@ export default function AnalysisPage() {
 
   return (
     <main className="min-h-dvh bg-bg text-ink pb-28 lg:pb-0">
+      <PageTour
+        id="analiz"
+        version={1}
+        steps={[
+          {
+            title: "Araç Analizi nasıl çalışır?",
+            body: "Sahibinden veya arabam.com ilan linkini yapıştır — OtoSonar AI çift-model doğrulama ile 8 saniyede emsal değer, gizli arıza ve pazarlık skorunu çıkarır.",
+          },
+          {
+            selector: "#listing-url",
+            title: "İlan linkini buraya yapıştır",
+            body: "Tarayıcıda ilanı aç, adres çubuğundan linki kopyala, buraya yapıştır. Plaka veya VIN ile de analiz mümkün.",
+            cta: "Hazırsan linki yapıştır ve 'Analiz Et' tıkla.",
+          },
+          {
+            title: "Sonuç ne içerir?",
+            body: "Emsal değer (Türkiye geneli ortalama), pazarlık skoru (1-10), kırmızı bayraklar (km riski, hasar geçmişi, hızlı satış uyarısı), tahmini onarım maliyeti ve indirim önerisi.",
+          },
+          {
+            title: "AI Sınırları",
+            body: "Tüm yorumlar tahmindir, gerçek ekspertiz yerine geçmez. Ciddi alımlardan önce yetkili servis ekspertizi şart. OtoSonar 'doğru karar vermene yardımcı olur', 'karar verir' demez.",
+          },
+        ]}
+      />
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-5 sm:space-y-6">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900">
