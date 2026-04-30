@@ -7,6 +7,7 @@ export function SiteFooter() {
         <div className="flex flex-wrap items-center justify-between gap-4">
           <span>© {new Date().getFullYear()} NiVector — OtoSonar</span>
           <nav className="flex flex-wrap gap-4">
+            <Link href="/projeler" className="hover:text-slate-900">Projeler</Link>
             <Link href="/kvkk" className="hover:text-slate-900">KVKK</Link>
             <Link href="/gizlilik" className="hover:text-slate-900">Gizlilik</Link>
             <Link href="/sozlesme" className="hover:text-slate-900">Sözleşme</Link>
