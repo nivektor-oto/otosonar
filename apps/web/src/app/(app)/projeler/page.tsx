@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "NiVector Ekosistemi — OtoSonar",
   description:
-    "OtoSonar'ı yapan ekibin tüm projeleri tek sayfada. 8 ürün, 75 mikroservis, 12 Mayıs 2026 lansman. Yatırımcı ve sponsorlara açık demo bağlantıları.",
+    "OtoSonar'ı yapan kurucu ekibin canlı projeleri tek sayfada. 75 mikroservis, 12 Mayıs 2026 lansman. Yatırımcı ve sponsorlara açık demo bağlantıları.",
 };
 
 type StatusKind = "production" | "beta" | "mvp" | "sandbox" | "paper";
@@ -23,7 +23,7 @@ const PROJECTS: Project[] = [
     description:
       "Sahibinden + Arabam.com ilan akışını çekiyor, çift-model AI doğrulamasıyla 'fırsat araç' / 'şişirilmiş fiyat' tespiti yapıyor. Galericilere CRM, alıcılara DealAlert. Lansman 12 Mayıs 2026.",
     href: "https://otosonar.com",
-    status: { kind: "production", label: "PRODUCTION 200" },
+    status: { kind: "production", label: "PRODUCTION" },
   },
   {
     name: "NiVector Atölye",
@@ -61,7 +61,7 @@ const PROJECTS: Project[] = [
     name: "Trader Dashboard",
     tagline: "Algoritmik ticaret paneli (paper-mode)",
     description:
-      "60+ Python modül, paper-mode 9/10 test başarısı. Diversifikasyon aracı, lokal-only, kapalı.",
+      "60+ Python modül, paper-mode 9/10 test başarısı. Diversifikasyon aracı, gerçek para yönetmez — yatırımcı tarafına okuma erişimi açık.",
     href: "https://acts-fleet-crossword-physical.trycloudflare.com",
     status: { kind: "paper", label: "PAPER MODE" },
   },
@@ -90,19 +90,19 @@ export default function ProjelerPage() {
             </h1>
             <p className="mt-4 text-base text-slate-600 sm:text-lg">
               24 yaşında bir kurucudan, Konya'dan, sıfır sermaye —{" "}
-              <b className="text-slate-800">8 ürün</b>,{" "}
+              <b className="text-slate-800">6 canlı ürün</b>,{" "}
               <b className="text-slate-800">75 mikroservis</b>,{" "}
-              <b className="text-slate-800">12 Mayıs 2026 lansman</b>.
+              <b className="text-slate-800">12 Mayıs 2026 OtoSonar lansmanı</b>.
             </p>
             <div className="mt-6 flex flex-wrap items-center justify-center gap-2 text-xs text-slate-600">
               <span className="rounded-full bg-slate-100 px-3 py-1 font-medium">
-                75 mikroservis
+                Tek geliştirici
               </span>
               <span className="rounded-full bg-slate-100 px-3 py-1 font-medium">
-                8 entegrasyon
+                Bootstrap (sıfır dış sermaye)
               </span>
               <span className="rounded-full bg-rose-100 px-3 py-1 font-medium text-rose-800">
-                12 Mayıs lansman
+                12 Mayıs 2026 lansman
               </span>
             </div>
           </div>
@@ -150,7 +150,8 @@ export default function ProjelerPage() {
             </a>
           </div>
           <p className="mt-6 text-xs text-slate-400">
-            Tüm linkler kalıcıdır. Bağlantı değişirse bu sayfa otomatik güncellenir.
+            Demo bağlantıları periyodik yenilenir. Bağlantıyla ilgili sorun yaşarsanız WhatsApp'tan
+            yazın, anında güncel link gönderilir.
           </p>
         </div>
       </section>
