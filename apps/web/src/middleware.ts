@@ -68,7 +68,8 @@ export function middleware(req: NextRequest) {
     );
   }
 
-  // CSP — Iyzico 3DS iframe, Vercel Blob CDN, Google OAuth, Gemini fonts izin.
+  // CSP — Iyzico 3DS iframe, Vercel Blob CDN, Google OAuth, font CDN izin.
+  // AI provider çağrıları server-side (Next.js API route) yapılır, tarayıcı connect-src'de değil.
   // unsafe-inline next/script + Next runtime için zorunlu (nonce-based geçiş ileride).
   const csp = [
     "default-src 'self'",
@@ -76,8 +77,8 @@ export function middleware(req: NextRequest) {
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "img-src 'self' data: blob: https: https://*.public.blob.vercel-storage.com https://*.arabam.com https://*.sahibinden.com",
     "font-src 'self' data: https://fonts.gstatic.com",
-    "connect-src 'self' https://*.iyzipay.com https://accounts.google.com https://generativelanguage.googleapis.com https://api.anthropic.com",
-    "frame-src 'self' https://*.iyzipay.com https://sandbox-api.iyzipay.com https://accounts.google.com",
+    "connect-src 'self' https://*.iyzipay.com https://accounts.google.com",
+    "frame-src 'self' https://*.iyzipay.com https://accounts.google.com",
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self' https://*.iyzipay.com",
