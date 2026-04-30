@@ -10,7 +10,7 @@ export function SiteFooter() {
             <Link href="/kvkk" className="hover:text-slate-900">KVKK</Link>
             <Link href="/gizlilik" className="hover:text-slate-900">Gizlilik</Link>
             <Link href="/sozlesme" className="hover:text-slate-900">Sözleşme</Link>
-            <Link href="/cerez" className="hover:text-slate-900">Çerezler</Link>
+            <Link href="/cerezler" className="hover:text-slate-900">Çerezler</Link>
             <a href="mailto:kurucu@otosonar.com" className="hover:text-slate-900">İletişim</a>
           </nav>
         </div>
