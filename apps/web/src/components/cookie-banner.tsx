@@ -38,7 +38,7 @@ export function CookieBanner() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p>
           Zorunlu oturum çerezleri ve anonim analitik çerezler kullanıyoruz.{" "}
-          <Link href="/cerez" className="text-emerald-400 hover:underline">
+          <Link href="/cerezler" className="text-emerald-400 hover:underline">
             Detay
           </Link>
         </p>

@@ -6,10 +6,11 @@ let cached: Transporter | null = null;
 function getTransporter(): Transporter | null {
   if (cached) return cached;
 
-  const gmailUser = process.env.GMAIL_USER ?? "nivektorna@gmail.com";
+  // Kişisel Gmail fallback'i kaldırıldı — env ile zorunlu olarak set edilir.
+  const gmailUser = process.env.GMAIL_USER;
   const gmailPass = process.env.GMAIL_APP_PASSWORD?.replace(/\s+/g, "");
 
-  if (gmailPass) {
+  if (gmailUser && gmailPass) {
     cached = nodemailer.createTransport({
       service: "gmail",
       auth: { user: gmailUser, pass: gmailPass },
@@ -47,7 +48,9 @@ export async function sendEmail(input: SendInput): Promise<{ ok: boolean; id?: s
 
   const from =
     process.env.EMAIL_FROM ??
-    `OtoSonar <${process.env.GMAIL_USER ?? "nivektorna@gmail.com"}>`;
+    (process.env.GMAIL_USER
+      ? `OtoSonar <${process.env.GMAIL_USER}>`
+      : "OtoSonar <noreply@otosonar.com>");
 
   try {
     const info = await t.sendMail({

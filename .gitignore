@@ -53,3 +53,5 @@ packages/db/node_modules/.prisma/
 # Cron logs (agentler workspace related)
 cron/logs/
 cron/locks/
+.env.production
+.env.*.local

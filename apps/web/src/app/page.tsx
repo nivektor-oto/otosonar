@@ -288,7 +288,10 @@ function Footer() {
             KVKK
           </Link>
           <Link href="/sozlesme" className="hover:text-slate-900 transition">
-            Üyelik
+            Sözleşme
+          </Link>
+          <Link href="/cerezler" className="hover:text-slate-900 transition">
+            Çerezler
           </Link>
           <Link href="/mesafeli-satis" className="hover:text-slate-900 transition">
             Mesafeli Satış

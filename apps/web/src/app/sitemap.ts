@@ -21,7 +21,7 @@ const STATIC_PATHS: { path: string; priority: number; changeFrequency: MetadataR
   { path: "/kvkk", priority: 0.3, changeFrequency: "yearly" },
   { path: "/gizlilik", priority: 0.3, changeFrequency: "yearly" },
   { path: "/sozlesme", priority: 0.3, changeFrequency: "yearly" },
-  { path: "/cerez", priority: 0.3, changeFrequency: "yearly" },
+  { path: "/cerezler", priority: 0.3, changeFrequency: "yearly" },
   { path: "/mesafeli-satis", priority: 0.3, changeFrequency: "yearly" },
   { path: "/iade-iptal", priority: 0.3, changeFrequency: "yearly" },
   { path: "/iletisim", priority: 0.4, changeFrequency: "yearly" },
